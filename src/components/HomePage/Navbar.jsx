@@ -1,38 +1,178 @@
-import React from 'react';
-import { FaSearch, FaShoppingCart } from 'react-icons/fa';
+"use client"
+
+import { useState } from "react"
+import { Link } from "react-router-dom"
+import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
 import '../../style/Homepagestyle.css';
 
 const Navbar = () => {
+  const [isOpen, setIsOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+
+  const navLinks = [
+    { to: "/", label: "HOME", active: true },
+    { to: "/about", label: "ABOUT" },
+    { to: "/coming-soon", label: "COMING SOON" },
+    { to: "/top-seller", label: "TOP SELLER" },
+    { to: "/books", label: "BOOKS" },
+    { to: "/author", label: "AUTHOR" },
+    { to: "/blog", label: "BLOG" },
+    { to: "/contact", label: "CONTACT" },
+  ]
+
+  const toggleMobileMenu = () => {
+    setIsOpen(!isOpen)
+  }
+
+  const toggleDropdown = () => {
+    setIsDropdownOpen(!isDropdownOpen)
+  }
+
+  const closeMobileMenu = () => {
+    setIsOpen(false)
+  }
+
+  const closeDropdown = () => {
+    setIsDropdownOpen(false)
+  }
+
   return (
-    <header className="publishing-company-navbar">
-      {/* Company Name - Top Line */}
-      <div className="company-title">
-        <h1>BookShare</h1>
-      </div>
-
-      {/* Navigation Links - Bottom Line */}
-      <nav className="main-navigation">
-        <div className="container">
-          <ul className="nav-links">
-            <li><a href="#" className="active">HOME</a></li>
-            <li><a href="#">ABOUT</a></li>
-            <li><a href="#">COMING SOON</a></li>
-            <li><a href="#">TOP SELLER</a></li>
-            <li><a href="#">BOOKS</a></li>
-            <li><a href="#">AUTHOR</a></li>
-            <li><a href="#">BLOG</a></li>
-            <li><a href="#">CONTACT</a></li>
-          </ul>
-
-          {/* Icons on the right */}
-          <div className="nav-icons">
-            <a href="#"><FaSearch /></a>
-            <a href="#"><FaShoppingCart /></a>
+    <>
+      <header className="bookshare-navbar">
+        {/* Company Title */}
+        <div className="navbar-header">
+          <div className="navbar-content-wrapper">
+            <div className="navbar-header-container">
+              <Link to="/" className="company-title-link">
+                <h1 className="company-title">
+                  Book<span className="company-title-accent">Share</span>
+                </h1>
+                <p className="company-subtitle">Publishing Excellence Since 2024</p>
+              </Link>
+            </div>
           </div>
         </div>
-      </nav>
-    </header>
-  );
-};
 
-export default Navbar;
+        {/* Navigation */}
+        <nav className="navbar-nav">
+          <div className="navbar-content-wrapper">
+            <div className="navbar-content">
+              {/* Desktop Navigation - Left Side */}
+              <div className="nav-links-desktop">
+                {navLinks.map((link) => (
+                  <Link key={link.label} to={link.to} className={`nav-link ${link.active ? "active" : ""}`}>
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+
+              {/* Right Side Actions - Positioned at the edge */}
+              <div className="navbar-actions">
+                {/* Search Icon */}
+                <button className="icon-button" title="Search">
+                  <FaSearch size={18} />
+                  <span className="sr-only">Search</span>
+                </button>
+
+                {/* Shopping Cart */}
+                <button className="icon-button cart-badge" title="Shopping Cart">
+                  <FaShoppingCart size={18} />
+                  <span className="cart-count">3</span>
+                  <span className="sr-only">Shopping cart</span>
+                </button>
+
+                {/* User Account Dropdown */}
+                <div className={`dropdown ${isDropdownOpen ? "open" : ""}`}>
+                  <button className="icon-button" onClick={toggleDropdown} title="User Account">
+                    <FaUser size={16} />
+                    <span className="sr-only">User account</span>
+                  </button>
+                  <div className="dropdown-content">
+                    <Link to="/login" className="dropdown-item" onClick={closeDropdown}>
+                      Sign In
+                    </Link>
+                    <Link to="/register" className="dropdown-item" onClick={closeDropdown}>
+                      Create Account
+                    </Link>
+                    <div className="dropdown-separator"></div>
+                    <Link to="/profile" className="dropdown-item" onClick={closeDropdown}>
+                      My Profile
+                    </Link>
+                    <Link to="/orders" className="dropdown-item" onClick={closeDropdown}>
+                      My Orders
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Auth Buttons - Desktop */}
+                <div className="auth-buttons-desktop">
+                  <Link to="/login" className="btn btn-outline">
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="btn btn-primary">
+                    Register
+                  </Link>
+                </div>
+
+                {/* Mobile Menu Toggle */}
+                <button className="mobile-menu-toggle icon-button" onClick={toggleMobileMenu} title="Menu">
+                  <FaBars size={20} />
+                  <span className="sr-only">Toggle menu</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </nav>
+      </header>
+
+      {/* Mobile Menu Overlay */}
+      <div className={`overlay ${isOpen ? "open" : ""}`} onClick={closeMobileMenu}></div>
+
+      {/* Mobile Menu */}
+      <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
+        <div className="mobile-menu-content">
+          {/* Close Button */}
+          <button className="icon-button mobile-close-button" onClick={closeMobileMenu} title="Close Menu">
+            <FaTimes size={20} />
+          </button>
+
+          {/* Mobile Auth Buttons */}
+          <div className="mobile-auth-section">
+            <Link to="/register" className="btn btn-primary" onClick={closeMobileMenu}>
+              Create Account
+            </Link>
+            <Link to="/login" className="btn btn-outline" onClick={closeMobileMenu}>
+              Sign In
+            </Link>
+          </div>
+
+          {/* Mobile Navigation Links */}
+          <div className="mobile-nav-links">
+            {navLinks.map((link) => (
+              <Link
+                key={link.label}
+                to={link.to}
+                onClick={closeMobileMenu}
+                className={`mobile-nav-link ${link.active ? "active" : ""}`}
+              >
+                {link.label}
+              </Link>
+            ))}
+          </div>
+
+          {/* Mobile Account Links */}
+          <div className="mobile-account-section">
+            <Link to="/profile" className="mobile-account-link" onClick={closeMobileMenu}>
+              My Profile
+            </Link>
+            <Link to="/orders" className="mobile-account-link" onClick={closeMobileMenu}>
+              My Orders
+            </Link>
+          </div>
+        </div>
+      </div>
+    </>
+  )
+}
+
+export default Navbar
