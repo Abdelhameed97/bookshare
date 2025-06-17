@@ -3,11 +3,13 @@
 import { useState } from "react"
 import { Link } from "react-router-dom"
 import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
+import SearchModal from '../SearchModal'
 import '../../style/Homepagestyle.css';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const navLinks = [
     { to: "/", label: "HOME", active: true },
@@ -34,6 +36,10 @@ const Navbar = () => {
 
   const closeDropdown = () => {
     setIsDropdownOpen(false)
+  }
+
+  const toggleSearch = () => {
+    setIsSearchOpen(!isSearchOpen)
   }
 
   return (
@@ -69,7 +75,7 @@ const Navbar = () => {
               {/* Right Side Actions - Positioned at the edge */}
               <div className="navbar-actions">
                 {/* Search Icon */}
-                <button className="icon-button" title="Search">
+                <button className="icon-button" title="Search" onClick={toggleSearch}>
                   <FaSearch size={18} />
                   <span className="sr-only">Search</span>
                 </button>
@@ -80,29 +86,6 @@ const Navbar = () => {
                   <span className="cart-count">3</span>
                   <span className="sr-only">Shopping cart</span>
                 </button>
-
-                {/* User Account Dropdown */}
-                <div className={`dropdown ${isDropdownOpen ? "open" : ""}`}>
-                  <button className="icon-button" onClick={toggleDropdown} title="User Account">
-                    <FaUser size={16} />
-                    <span className="sr-only">User account</span>
-                  </button>
-                  <div className="dropdown-content">
-                    <Link to="/login" className="dropdown-item" onClick={closeDropdown}>
-                      Sign In
-                    </Link>
-                    <Link to="/register" className="dropdown-item" onClick={closeDropdown}>
-                      Create Account
-                    </Link>
-                    <div className="dropdown-separator"></div>
-                    <Link to="/profile" className="dropdown-item" onClick={closeDropdown}>
-                      My Profile
-                    </Link>
-                    <Link to="/orders" className="dropdown-item" onClick={closeDropdown}>
-                      My Orders
-                    </Link>
-                  </div>
-                </div>
 
                 {/* Auth Buttons - Desktop */}
                 <div className="auth-buttons-desktop">
@@ -124,6 +107,9 @@ const Navbar = () => {
           </div>
         </nav>
       </header>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
       {/* Mobile Menu Overlay */}
       <div className={`overlay ${isOpen ? "open" : ""}`} onClick={closeMobileMenu}></div>

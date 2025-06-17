@@ -1,62 +1,89 @@
-
-
 "use client"
 import { Heart, Eye, ShoppingCart, Star } from "lucide-react"
+import { useState, useEffect } from "react"
 import '../../style/Homepagestyle.css';
 
 const NewReleases = () => {
-  const books = [
-    {
-      id: 1,
-      image: "/placeholder.svg?height=300&width=200",
-      price: "$12.00",
-      originalPrice: null,
-      title: "You Are Your Only Limit",
-      author: "By John Nathan Muller",
-      rating: 4.8,
-      reviews: 124,
-      badge: "Bestseller",
-      category: "Self-Help",
-    },
-    {
-      id: 2,
-      image: "/placeholder.svg?height=300&width=200",
-      price: "$8.00",
-      originalPrice: "$12.00",
-      title: "101 Essays That Will Change The Way Your Thinks",
-      author: "By John Nathan Muller",
-      rating: 4.6,
-      reviews: 89,
-      badge: "Sale",
-      category: "Philosophy",
-    },
-    {
-      id: 3,
-      image: "/placeholder.svg?height=300&width=200",
-      price: "$12.00",
-      originalPrice: null,
-      title: "Your Soul Is A River",
-      author: "By John Nathan Muller",
-      rating: 4.9,
-      reviews: 156,
-      badge: "New",
-      category: "Poetry",
-    },
-  ]
+  const [books, setBooks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchLatestBooks = async () => {
+      try {
+        const response = await fetch('http://localhost:8000/api/books');
+        if (!response.ok) {
+          throw new Error('Failed to fetch books');
+        }
+        const data = await response.json();
+        // Get the latest 3 books
+        const latestBooks = data.data.slice(0, 3).map(book => ({
+          id: book.id,
+          image: book.images?.[0]
+            ? (book.images[0].startsWith('http')
+                ? book.images[0]
+                : `http://localhost:8000/storage/${book.images[0]}`)
+            : "/placeholder.svg?height=300&width=200",
+          price: `$${book.price}`,
+          originalPrice: book.rental_price ? `$${book.rental_price}` : null,
+          title: book.title,
+          author: `By ${book.user?.name || 'Unknown Author'}`,
+          rating: book.ratings?.length ? 
+            (book.ratings.reduce((acc, curr) => acc + curr.rating, 0) / book.ratings.length).toFixed(1) : 
+            0,
+          reviews: book.ratings?.length || 0,
+          badge: book.status === 'available' ? 'New' : 
+                 book.status === 'rented' ? 'Bestseller' : 
+                 book.status === 'sold' ? 'Sale' : 'New',
+          category: book.category?.name || 'Uncategorized',
+        }));
+        setBooks(latestBooks);
+      } catch (err) {
+        console.error('Error fetching books:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLatestBooks();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="new-releases">
+        <div className="new-releases-container">
+          <div className="section-header">
+            <h2 className="section-title">Loading latest books...</h2>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="new-releases">
+        <div className="new-releases-container">
+          <div className="section-header">
+            <h2 className="section-title">Error loading books</h2>
+            <p className="section-description" style={{ color: "red" }}>{error}</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="new-releases">
       <div className="new-releases-container">
         {/* Section Header */}
         <div className="section-header">
-          <div className="header-badge">
-            <span className="badge-label">Books</span>
-          </div>
           <h2 className="section-title">
-            New Release
-            <span className="title-highlight">Discover Fresh Stories</span>
+            New Releases Books
+            <span className="title-highlight" style={{ color: "green" }}>Discover Fresh Stories</span>
           </h2>
-          <p className="section-description">
+          <p className="section-description" style={{ color: "green" }}>
             Explore our latest collection of carefully curated books from talented authors around the world
           </p>
           <div className="section-divider">
@@ -139,25 +166,24 @@ const NewReleases = () => {
         </div>
 
         {/* View All Button */}
-       {/* View All Button */}
-<div className="view-all-section text-center mt-12">
-  <button className="view-all-btn relative overflow-hidden group">
-    <span className="relative z-10 flex items-center justify-center gap-2">
-      View All Books
-      <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
-           fill="none" 
-           stroke="currentColor" 
-           viewBox="0 0 24 24">
-        <path strokeLinecap="round" 
-              strokeLinejoin="round" 
-              strokeWidth={2} 
-              d="M17 8l4 4m0 0l-4 4m4-4H3" />
-      </svg>
-    </span>
-    <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-100 group-hover:opacity-90 transition-opacity duration-300 rounded-full"></span>
-    <span className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
-  </button>
-</div>
+        <div className="view-all-section text-center mt-12">
+          <button className="view-all-btn relative overflow-hidden group">
+            <span className="relative z-10 flex items-center justify-center gap-2">
+              View All Books
+              <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
+                   fill="none" 
+                   stroke="currentColor" 
+                   viewBox="0 0 24 24">
+                <path strokeLinecap="round" 
+                      strokeLinejoin="round" 
+                      strokeWidth={2} 
+                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
+              </svg>
+            </span>
+            <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-100 group-hover:opacity-90 transition-opacity duration-300 rounded-full"></span>
+            <span className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
+          </button>
+        </div>
       </div>
 
       {/* Background Decorations */}

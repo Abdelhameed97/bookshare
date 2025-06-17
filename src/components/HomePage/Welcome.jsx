@@ -85,21 +85,6 @@ const WelcomeSection = () => {
               craft of storytelling while embracing modern publishing innovations.
             </p>
 
-            {/* Stats Section */}
-            <div className="stats-section">
-              <div className="stat-item">
-                <span className="stat-number">500+</span>
-                <span className="stat-label">Published Books</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">200+</span>
-                <span className="stat-label">Authors</span>
-              </div>
-              <div className="stat-item">
-                <span className="stat-number">50+</span>
-                <span className="stat-label">Awards</span>
-              </div>
-            </div>
 
            
             <div className="action-buttons">
