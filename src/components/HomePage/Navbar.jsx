@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
 import SearchModal from '../SearchModal'
 import '../../style/Homepagestyle.css';
@@ -42,6 +42,8 @@ const Navbar = () => {
     setIsSearchOpen(!isSearchOpen)
   }
 
+  const navigate = useNavigate();
+
   return (
     <>
       <header className="bookshare-navbar">
@@ -53,7 +55,9 @@ const Navbar = () => {
                 <h1 className="company-title">
                   Book<span className="company-title-accent">Share</span>
                 </h1>
-                <p className="company-subtitle">Publishing Excellence Since 2024</p>
+                <p className="company-subtitle">
+                  Publishing Excellence Since 2024
+                </p>
               </Link>
             </div>
           </div>
@@ -66,7 +70,11 @@ const Navbar = () => {
               {/* Desktop Navigation - Left Side */}
               <div className="nav-links-desktop">
                 {navLinks.map((link) => (
-                  <Link key={link.label} to={link.to} className={`nav-link ${link.active ? "active" : ""}`}>
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    className={`nav-link ${link.active ? "active" : ""}`}
+                  >
                     {link.label}
                   </Link>
                 ))}
@@ -75,13 +83,21 @@ const Navbar = () => {
               {/* Right Side Actions - Positioned at the edge */}
               <div className="navbar-actions">
                 {/* Search Icon */}
-                <button className="icon-button" title="Search" onClick={toggleSearch}>
+                <button
+                  className="icon-button"
+                  title="Search"
+                  onClick={toggleSearch}
+                >
                   <FaSearch size={18} />
                   <span className="sr-only">Search</span>
                 </button>
 
                 {/* Shopping Cart */}
-                <button className="icon-button cart-badge" title="Shopping Cart">
+                <button
+                  className="icon-button cart-badge"
+                  title="Shopping Cart"
+                  onClick={() => navigate("/cart")}
+                >
                   <FaShoppingCart size={18} />
                   <span className="cart-count">3</span>
                   <span className="sr-only">Shopping cart</span>
@@ -98,7 +114,11 @@ const Navbar = () => {
                 </div>
 
                 {/* Mobile Menu Toggle */}
-                <button className="mobile-menu-toggle icon-button" onClick={toggleMobileMenu} title="Menu">
+                <button
+                  className="mobile-menu-toggle icon-button"
+                  onClick={toggleMobileMenu}
+                  title="Menu"
+                >
                   <FaBars size={20} />
                   <span className="sr-only">Toggle menu</span>
                 </button>
@@ -109,25 +129,43 @@ const Navbar = () => {
       </header>
 
       {/* Search Modal */}
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
       {/* Mobile Menu Overlay */}
-      <div className={`overlay ${isOpen ? "open" : ""}`} onClick={closeMobileMenu}></div>
+      <div
+        className={`overlay ${isOpen ? "open" : ""}`}
+        onClick={closeMobileMenu}
+      ></div>
 
       {/* Mobile Menu */}
       <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
         <div className="mobile-menu-content">
           {/* Close Button */}
-          <button className="icon-button mobile-close-button" onClick={closeMobileMenu} title="Close Menu">
+          <button
+            className="icon-button mobile-close-button"
+            onClick={closeMobileMenu}
+            title="Close Menu"
+          >
             <FaTimes size={20} />
           </button>
 
           {/* Mobile Auth Buttons */}
           <div className="mobile-auth-section">
-            <Link to="/register" className="btn btn-primary" onClick={closeMobileMenu}>
+            <Link
+              to="/register"
+              className="btn btn-primary"
+              onClick={closeMobileMenu}
+            >
               Create Account
             </Link>
-            <Link to="/login" className="btn btn-outline" onClick={closeMobileMenu}>
+            <Link
+              to="/login"
+              className="btn btn-outline"
+              onClick={closeMobileMenu}
+            >
               Sign In
             </Link>
           </div>
@@ -148,17 +186,25 @@ const Navbar = () => {
 
           {/* Mobile Account Links */}
           <div className="mobile-account-section">
-            <Link to="/profile" className="mobile-account-link" onClick={closeMobileMenu}>
+            <Link
+              to="/profile"
+              className="mobile-account-link"
+              onClick={closeMobileMenu}
+            >
               My Profile
             </Link>
-            <Link to="/orders" className="mobile-account-link" onClick={closeMobileMenu}>
+            <Link
+              to="/orders"
+              className="mobile-account-link"
+              onClick={closeMobileMenu}
+            >
               My Orders
             </Link>
           </div>
         </div>
       </div>
     </>
-  )
+  );
 }
 
 export default Navbar
