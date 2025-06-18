@@ -10,7 +10,6 @@ const BlogSection = () => {
     <section className="blog-section">
       <div className="container">
         <div className="section-header">
-          <span className="section-label">BLOG</span>
           <h2 className="section-title">Recent Blog</h2>
         </div>
 

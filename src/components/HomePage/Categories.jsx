@@ -1,4 +1,3 @@
-
 "use client"
 import { Book, Heart, Palette, Clock } from "lucide-react"
 import '../../style/Homepagestyle.css'; // Adjust the path as necessary
@@ -42,7 +41,7 @@ const BookCategories = () => {
         {/* Section Header */}
         <div className="section-header">
           <h2 className="section-title">Explore Our Categories</h2>
-          <p className="section-description">
+          <p className="section-description" style={{ color: "#666666" }}>
             Discover your next favorite read across our carefully curated collection of genres
           </p>
           <div className="section-divider"></div>
@@ -75,7 +74,7 @@ const BookCategories = () => {
 
                   {/* Hover Arrow */}
                   <div className="explore-link">
-                    <span className="explore-text">
+                    <span className="explore-text" style={{ color: "#666666" }}>
                       Explore Collection
                       <svg className="explore-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
