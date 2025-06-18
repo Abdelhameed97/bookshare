@@ -81,9 +81,8 @@ const NewReleases = () => {
         <div className="section-header">
           <h2 className="section-title">
             New Releases Books
-            <span className="title-highlight" style={{ color: "green" }}>Discover Fresh Stories</span>
           </h2>
-          <p className="section-description" style={{ color: "green" }}>
+          <p className="section-description" style={{ color: "#666666" }}>
             Explore our latest collection of carefully curated books from talented authors around the world
           </p>
           <div className="section-divider">
@@ -168,7 +167,7 @@ const NewReleases = () => {
         {/* View All Button */}
         <div className="view-all-section text-center mt-12">
           <button className="view-all-btn relative overflow-hidden group">
-            <span className="relative z-10 flex items-center justify-center gap-2">
+            <span className="relative z-10 flex items-center justify-center gap-2" style={{ color: "#666666" }}>
               View All Books
               <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
                    fill="none" 
