@@ -8,12 +8,14 @@ import 'bootstrap/dist/js/bootstrap.bundle.min';
 import CartPage from "./pages/CartPage";
 import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
+import About from "./components/About.jsx/Aboutus";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
         <Route path="/cart" element={<CartPage />} />
         <Route path="/order" element={<OrdersPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
