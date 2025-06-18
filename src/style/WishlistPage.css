@@ -1,0 +1,129 @@
+/* WishlistPage.css */
+
+.wishlist-container {
+    max-width: 1200px;
+}
+
+.wishlist-card {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    overflow: hidden;
+}
+
+.wishlist-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.wishlist-card-img-container {
+    position: relative;
+    padding-top: 140%;
+    overflow: hidden;
+}
+
+.wishlist-card-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.5s ease;
+}
+
+.wishlist-card:hover .wishlist-card-img {
+    transform: scale(1.05);
+}
+
+.wishlist-item-title {
+    font-size: 1rem;
+    font-weight: 600;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 3em;
+}
+
+.wishlist-heart-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 2;
+    transition: all 0.3s ease;
+}
+
+.wishlist-heart-btn:hover {
+    background: white;
+    transform: scale(1.1);
+}
+
+.out-of-stock-badge {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    background: rgba(220, 53, 69, 0.9);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    z-index: 2;
+}
+
+.rating-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.7);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    z-index: 2;
+}
+
+.empty-wishlist {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 40px 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 992px) {
+    .wishlist-container {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .d-flex.justify-content-between.align-items-center.mb-4 {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .d-flex.justify-content-between.align-items-center.mb-4>div {
+        margin-top: 15px;
+        width: 100%;
+    }
+
+    .dropdown {
+        width: 100%;
+        margin-bottom: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .wishlist-card-img-container {
+        padding-top: 120%;
+    }
+}
