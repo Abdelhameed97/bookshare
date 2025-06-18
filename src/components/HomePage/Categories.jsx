@@ -1,5 +1,6 @@
 "use client"
 import { Book, Heart, Palette, Clock } from "lucide-react"
+import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css'; // Adjust the path as necessary
 
 
@@ -40,7 +41,7 @@ const BookCategories = () => {
       <div className="book-categories-container">
         {/* Section Header */}
         <div className="section-header">
-          <h2 className="section-title">Explore Our Categories</h2>
+          <HomePageTitle>Explore Our Categories</HomePageTitle>
           <p className="section-description" style={{ color: "#666666" }}>
             Discover your next favorite read across our carefully curated collection of genres
           </p>
