@@ -3309,53 +3309,24 @@
 .testimonial-slide {
   min-width: 100%;
   flex-shrink: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 20px;
 }
 
 .testimonial-content {
   background: white;
   border-radius: 24px;
-  padding: 48px;
+  padding: 24px 14px;
   text-align: center;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
   border: 1px solid rgba(226, 232, 240, 0.8);
   position: relative;
   overflow: hidden;
-}
-
-.testimonial-content::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
-}
-
-.quote-mark {
-  font-size: 4rem;
-  color: #3b82f6;
-  font-weight: 700;
-  line-height: 1;
-  margin-bottom: 24px;
-  opacity: 0.3;
-}
-
-.testimonial-text {
-  font-size: 1.25rem;
-  color: #374151;
-  line-height: 1.8;
-  margin-bottom: 40px;
-  font-weight: 400;
-  font-style: italic;
-}
-
-/* Enhanced Client Info */
-.client-info {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 20px;
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
 }
 
 .client-image-container {
@@ -3570,4 +3541,72 @@
   .homepage-title {
     font-size: 2.25rem;
   }
+}
+
+/* HomePage shared view all button */
+.homepage-viewall-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 32px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  color: #fff;
+  font-size: 1.1rem;
+  font-weight: 700;
+  border: none;
+  border-radius: 32px;
+  box-shadow: 0 4px 16px rgba(59, 130, 246, 0.10);
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s, box-shadow 0.3s;
+  margin: 0 auto;
+}
+.homepage-viewall-btn:hover {
+  background: linear-gradient(90deg, #8b5cf6, #3b82f6);
+  transform: translateY(-2px) scale(1.04);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.18);
+}
+.homepage-viewall-btn .button-icon {
+  width: 22px;
+  height: 22px;
+  margin-left: 8px;
+  transition: transform 0.2s;
+}
+.homepage-viewall-btn:hover .button-icon {
+  transform: translateX(4px) scale(1.1);
+}
+
+.testimonial-content::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+}
+
+.quote-mark {
+  font-size: 3.5rem;
+  color: #3b82f6;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 20px;
+  opacity: 0.3;
+}
+
+.testimonial-text {
+  font-size: 1.125rem;
+  color: #374151;
+  line-height: 1.7;
+  margin-bottom: 32px;
+  font-weight: 400;
+  font-style: italic;
+}
+
+/* Enhanced Client Info */
+.client-info {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
 }

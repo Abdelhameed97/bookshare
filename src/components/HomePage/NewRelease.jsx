@@ -3,6 +3,7 @@ import { Heart, Eye, ShoppingCart, Star } from "lucide-react"
 import { useState, useEffect } from "react"
 import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css';
+import HomePageButton from '../shared/HomePageButton';
 
 const NewReleases = () => {
   const [books, setBooks] = useState([]);
@@ -167,7 +168,7 @@ const NewReleases = () => {
 
         {/* View All Button */}
         <div className="view-all-section">
-          <button className="view-all-btn">
+          <HomePageButton>
             <span>View All Books</span>
             <svg className="button-icon" 
                  fill="none" 
@@ -178,7 +179,7 @@ const NewReleases = () => {
                     strokeWidth={2} 
                     d="M17 8l4 4m0 0l-4 4m4-4H3" />
             </svg>
-          </button>
+          </HomePageButton>
         </div>
       </div>
 

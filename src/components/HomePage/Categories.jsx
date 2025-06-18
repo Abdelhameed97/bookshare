@@ -2,6 +2,7 @@
 import { Book, Heart, Palette, Clock } from "lucide-react"
 import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css'; // Adjust the path as necessary
+import HomePageButton from '../shared/HomePageButton';
 
 
 const BookCategories = () => {
@@ -94,12 +95,18 @@ const BookCategories = () => {
 
         {/* Call to Action */}
         <div className="cta-section">
-          <button className="cta-button">
+          <HomePageButton>
             View All Categories
-            <svg className="cta-arrow" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+            <svg className="button-icon" 
+                 fill="none" 
+                 stroke="currentColor" 
+                 viewBox="0 0 24 24">
+              <path strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M13 7l5 5m0 0l-5 5m5-5H6" />
             </svg>
-          </button>
+          </HomePageButton>
         </div>
       </div>
     </section>
