@@ -13,12 +13,7 @@ const About = () => {
     <>
     <Navbar />
     <div className="about-hero-banner-full">
-    {/* <div className="about-hero-img">
-      <img
-        src="https://www.shutterstock.com/image-photo/phone-icon-email-address-live-260nw-2338078029.jpg"
-        alt="Books"
-      />
-    </div> */}
+  
     <div className="about-hero-content">
       
       <h1 className="about-hero-title">About Us</h1>
