@@ -101,6 +101,10 @@ const Navbar = () => {
                 alignItems: 'center',
                 gap: '1.2rem',
                 flexWrap: 'nowrap',
+                whiteSpace: 'nowrap',
+                width: 'auto',
+                minWidth: 0,
+                maxWidth: '100%',
               }}>
                 {navLinks.map((link) => {
                   const isActive = location.pathname === link.to;
