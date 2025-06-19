@@ -70,7 +70,7 @@ const WelcomeSection = () => {
           
             <h1 className="welcome-title">
               Publishing Company
-              <span className="title-highlight">Created By Authors</span>
+              <span className="title-highlight">Created By Bookshare Team</span>
             </h1>
             <h2 className="welcome-subtitle">Where Stories Come to Life Through Expert Publishing</h2>
           </div>

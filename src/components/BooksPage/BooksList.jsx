@@ -15,6 +15,7 @@ import {
 import HomePageTitle from "../shared/HomePageTitle";
 import HomePageButton from "../shared/HomePageButton";
 import "../../style/BooksList.css";
+import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
@@ -29,6 +30,9 @@ const BooksList = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [viewMode, setViewMode] = useState("grid");
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 9;
+  const navigate = useNavigate();
   const { cartItems, fetchCartItems } = useCart();
   const { wishlistItems, fetchWishlist, addToWishlist, removeItem } =
     useWishlist();
@@ -71,8 +75,8 @@ const BooksList = () => {
               ? book.images[0]
               : `http://localhost:8000/storage/${book.images[0]}`
             : "/placeholder.svg?height=300&width=200",
-          price: `$${book.price}`,
-          originalPrice: book.rental_price ? `$${book.rental_price}` : null,
+          price: `${book.price} $`,
+          originalPrice: book.rental_price ? `${book.rental_price} $` : null,
           title: book.title,
           author: book.user?.name || "Unknown Author",
           rating: book.ratings?.length
@@ -124,6 +128,27 @@ const BooksList = () => {
 
     setFilteredBooks(filtered);
   }, [books, searchTerm, statusFilter]);
+
+  // Reset page to 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, statusFilter]);
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+  const paginatedBooks = filteredBooks.slice(
+    (currentPage - 1) * booksPerPage,
+    currentPage * booksPerPage
+  );
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -185,6 +210,10 @@ const BooksList = () => {
     }
   };
 
+  const handleQuickView = (bookId) => {
+    navigate(`/books/${bookId}`);
+  };
+
   const handleAddToCart = async (bookId) => {
     try {
       const result = await Swal.fire({
@@ -212,7 +241,7 @@ const BooksList = () => {
 
       const response = await api.addToCart(book.id, {
         type,
-        quantity: 1, 
+        quantity: 1,
       });
       console.log("Cart API response:", response.data);
 
@@ -239,6 +268,12 @@ const BooksList = () => {
     }
   };
 
+  const retryFetch = () => {
+    setError(null);
+    setLoading(true);
+    window.location.reload();
+  };
+
   if (loading) {
     return (
       <div className="books-page">
@@ -262,9 +297,7 @@ const BooksList = () => {
           <div className="error-section">
             <HomePageTitle>Error loading books</HomePageTitle>
             <p className="error-message">{error}</p>
-            <HomePageButton onClick={() => window.location.reload()}>
-              Try Again
-            </HomePageButton>
+            <HomePageButton onClick={retryFetch}>Try Again</HomePageButton>
           </div>
         </div>
       </div>
@@ -343,7 +376,7 @@ const BooksList = () => {
       </div>
 
       <div className={`books-display ${viewMode}`}>
-        {filteredBooks.length === 0 ? (
+        {paginatedBooks.length === 0 ? (
           <div className="no-results">
             <p>
               {searchTerm || statusFilter !== "all"
@@ -357,11 +390,11 @@ const BooksList = () => {
             )}
           </div>
         ) : (
-          filteredBooks.map((book) => (
+          paginatedBooks.map((book) => (
             <div key={book.id} className={`book-item ${viewMode}`}>
               <div className="book-image-section">
                 <img
-                  src={book.image}
+                  src={book.image || "/placeholder.svg"}
                   alt={book.title}
                   className="book-image"
                   onError={(e) => {
@@ -387,7 +420,11 @@ const BooksList = () => {
                         fill={isInWishlist(book.id) ? "currentColor" : "none"}
                       />
                     </button>
-                    <button className="action-btn view" title="Quick view">
+                    <button
+                      className="action-btn view"
+                      title="Quick view"
+                      onClick={() => handleQuickView(book.id)}
+                    >
                       <Eye size={16} />
                     </button>
                     <button
@@ -414,6 +451,8 @@ const BooksList = () => {
                     </button>
                   </div>
                 </div>
+
+                <div className="category-tag">{book.category}</div>
                 <div
                   className="status-badge"
                   style={{ backgroundColor: getStatusColor(book.status) }}
@@ -450,34 +489,32 @@ const BooksList = () => {
                     </span>
                   </div>
 
-                  <div className="book-category">{book.category}</div>
-                </div>
+                  <div className="book-footer">
+                    <div className="book-price">
+                      {book.originalPrice && (
+                        <span className="original-price">
+                          {book.originalPrice}
+                        </span>
+                      )}
+                      <span className="current-price">{book.price}</span>
+                    </div>
 
-                <div className="book-footer">
-                  <div className="book-price">
-                    {book.originalPrice && (
-                      <span className="original-price">
-                        {book.originalPrice}
-                      </span>
+                    {isInCart(book.id) ? (
+                      <button className="add-to-cart-btn disabled" disabled>
+                        <Check size={16} />
+                        <span>In Cart</span>
+                      </button>
+                    ) : (
+                      <button
+                        className="add-to-cart-btn"
+                        onClick={() => handleAddToCart(book.id)}
+                        disabled={book.status !== "available"}
+                      >
+                        <ShoppingCart size={16} />
+                        <span>Add to Cart</span>
+                      </button>
                     )}
-                    <span className="current-price">{book.price}</span>
                   </div>
-
-                  {isInCart(book.id) ? (
-                    <button className="add-to-cart-btn disabled" disabled>
-                      <Check size={16} />
-                      <span>In Cart</span>
-                    </button>
-                  ) : (
-                    <button
-                      className="add-to-cart-btn"
-                      onClick={() => handleAddToCart(book.id)}
-                      disabled={book.status !== "available"}
-                    >
-                      <ShoppingCart size={16} />
-                      <span>Add to Cart</span>
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -485,11 +522,94 @@ const BooksList = () => {
         )}
       </div>
 
-      {filteredBooks.length > 0 && (
-        <div className="load-more-section">
-          <HomePageButton>
-            <span>Load More Books</span>
-          </HomePageButton>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            margin: "2rem 0",
+          }}
+        >
+          <ul
+            style={{
+              display: "flex",
+              gap: "0.5rem",
+              listStyle: "none",
+              padding: 0,
+              margin: 0,
+            }}
+          >
+            <li>
+              <button
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#6b7a8f",
+                  fontSize: 20,
+                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
+                  outline: "none",
+                  transition: "background 0.2s",
+                }}
+                aria-label="Previous page"
+              >
+                &lt;
+              </button>
+            </li>
+            {getPageNumbers().map((page) => (
+              <li key={page}>
+                <button
+                  onClick={() => setCurrentPage(page)}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    borderRadius: "50%",
+                    border: "1px solid #d1d5db",
+                    background: currentPage === page ? "#90a4b8" : "white",
+                    color: currentPage === page ? "white" : "#6b7a8f",
+                    fontWeight: currentPage === page ? 700 : 500,
+                    fontSize: 18,
+                    cursor: "pointer",
+                    outline: "none",
+                    transition: "background 0.2s",
+                  }}
+                  aria-current={currentPage === page ? "page" : undefined}
+                >
+                  {page}
+                </button>
+              </li>
+            ))}
+            <li>
+              <button
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage === totalPages}
+                style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: "50%",
+                  border: "1px solid #d1d5db",
+                  background: "white",
+                  color: "#6b7a8f",
+                  fontSize: 20,
+                  cursor:
+                    currentPage === totalPages ? "not-allowed" : "pointer",
+                  outline: "none",
+                  transition: "background 0.2s",
+                }}
+                aria-label="Next page"
+              >
+                &gt;
+              </button>
+            </li>
+          </ul>
         </div>
       )}
     </div>
