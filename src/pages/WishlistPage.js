@@ -33,10 +33,6 @@ const WishlistPage = () => {
     const [alertMessage, setAlertMessage] = useState('');
     const navigate = useNavigate();
 
-    localStorage.setItem('token', '10|JFuZksilhDSmuTp50tsqywgpINaNf0w11R6QhV8t2d73560f');
-    const token = localStorage.getItem('token');
-    console.log(token); 
-
     const {
         wishlistItems,
         wishlistCount,
@@ -73,9 +69,19 @@ const WishlistPage = () => {
     };
 
     const handleMoveAllToCart = async () => {
-        const { success, error, count } = await moveAllToCart();
-        setAlertMessage(success ? `${count} items moved to cart` : error);
-        setShowAlert(true);
+        try {
+            const result = await moveAllToCart();
+            if (result?.success) {
+                setAlertMessage(`${result.count || wishlistCount} items moved to cart`);
+                setShowAlert(true);
+            } else {
+                setAlertMessage(result?.error || 'Failed to move items to cart');
+                setShowAlert(true);
+            }
+        } catch (err) {
+            setAlertMessage('An error occurred while moving items to cart');
+            setShowAlert(true);
+        }
     };
 
     if (loading) {
@@ -111,7 +117,7 @@ const WishlistPage = () => {
             <Container className="wishlist-container py-5">
                 {showAlert && (
                     <Alert
-                        variant="success"
+                        variant={alertMessage.includes('error') ? 'danger' : 'success'}
                         onClose={() => setShowAlert(false)}
                         dismissible
                         className="mt-3"
@@ -167,7 +173,7 @@ const WishlistPage = () => {
                             variant="primary"
                             className="mb-4"
                             onClick={handleMoveAllToCart}
-                            disabled={!wishlistItems.some(item => item.book.status === 'available')}
+                            disabled={!wishlistItems.some(item => item.book?.status === 'available')}
                         >
                             <ShoppingCart size={18} className="me-1" />
                             Move All Available to Cart

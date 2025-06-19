@@ -51,6 +51,21 @@ export const useWishlist = () => {
         }
     };
 
+    const moveAllToCart = async () => {
+        try {
+            const response = await api.post('/wishlist/move-all-to-cart');
+            return {
+                success: true,
+                count: response.data.moved_items_count 
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.response?.data?.message || 'Failed to move items to cart'
+            };
+        }
+    };
+
     return {
         wishlistItems,
         wishlistCount: wishlistItems.length,

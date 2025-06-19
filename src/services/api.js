@@ -42,6 +42,7 @@ const apiService = {
     addToWishlist: (bookId) => api.post('/wishlist', { book_id: bookId }),
     removeWishlistItem: (wishlistItemId) => api.delete(`/wishlist/${wishlistItemId}`),
     moveToCart: (wishlistItemId) => api.post(`/wishlist/${wishlistItemId}/move-to-cart`),
+    moveAllToCart: (wishlistItemId) => api.post(`/wishlist/${wishlistItemId}/move-all-to-cart`),
 
     // Order Endpoints
     getOrders: () => api.get('/order')
