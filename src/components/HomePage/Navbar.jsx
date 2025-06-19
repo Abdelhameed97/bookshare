@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
 import SearchModal from './SearchModal'
 import '../../style/Homepagestyle.css';
+
 import { useCart } from "../../hooks/useCart";
 
 const Navbar = () => {
@@ -22,7 +23,7 @@ const Navbar = () => {
     { to: "/top-seller", label: "TOP SELLER" },
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
-    { to: "/blog", label: "BLOG" },
+    // { to: "/blog", label: "BLOG" },
     { to: "/contact", label: "CONTACT" },
   ]
 
