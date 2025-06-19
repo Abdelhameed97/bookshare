@@ -3,7 +3,7 @@ import logo from "../../assets/bookshare-logo.png";
 import { register } from "../../api/auth";
 import useAuth from "../../hooks/useAuth";
 import { FaCheck, FaTimes } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 
 const RegisterForm = () => {
@@ -345,7 +345,7 @@ const RegisterForm = () => {
               </button>
               
               <p className="text-center mt-2 mb-0 text-muted small">
-                Already have an account? <a href="/login" className="text-primary">Sign in</a>
+                Already have an account? <Link to="/login" className="text-primary fw-bold">Sign In</Link>
               </p>
             </form>
           </div>
