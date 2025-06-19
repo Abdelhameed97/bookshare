@@ -62,9 +62,9 @@ const BooksList = () => {
             0,
           reviews: book.ratings?.length || 0,
           status: book.status,
-          badge: book.status === 'available' ? 'Available' : 
-                 book.status === 'rented' ? 'Rented' : 
-                 book.status === 'sold' ? 'Sold' : 'Available',
+          badge: book.status === 'available' ? 'New' : 
+                 book.status === 'rented' ? 'Bestseller' : 
+                 book.status === 'sold' ? 'Sale' : 'New',
           category: book.category?.name || 'Uncategorized',
           description: book.description || 'No description available',
         }))
@@ -269,94 +269,86 @@ const BooksList = () => {
             )}
           </div>
         ) : (
-          filteredBooks.map((book) => (
-            <div key={book.id} className={`book-item ${viewMode}`}>
-              {/* Book Image */}
-              <div className="book-image-section">
+          filteredBooks.map((book, index) => (
+            <div key={book.id} className="book-card" style={{ animationDelay: `${index * 0.2}s` }}>
+              {/* Book Badge */}
+              <div className={`book-badge ${book.badge.toLowerCase()}`}>{book.badge}</div>
+
+              {/* Book Image Container */}
+              <div className="book-image-container">
                 <img
-                  src={book.image}
+                  src={book.image || "/placeholder.svg"}
                   alt={book.title}
                   className="book-image"
                   onError={(e) => {
                     e.currentTarget.src = "/placeholder.svg?height=300&width=200"
                   }}
                 />
-                <div className="image-overlay">
-                  <div className="hover-actions">
-                    <button 
-                      className="action-btn favorite" 
-                      title="Add to favorites"
-                      onClick={() => handleAddToWishlist(book.id)}
-                    >
-                      <Heart size={16} />
-                    </button>
-                    <button 
-                      className="action-btn view" 
-                      title="Quick view"
-                      onClick={() => handleQuickView(book.id)}
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button 
-                      className="action-btn cart" 
-                      title="Add to cart"
-                      onClick={() => handleAddToCart(book.id)}
-                    >
-                      <ShoppingCart size={16} />
-                    </button>
-                  </div>
+                <div className="image-overlay"></div>
+
+                {/* Hover Actions */}
+                <div className="hover-actions">
+                  <button 
+                    className="action-button favorite" 
+                    aria-label="Add to favorites"
+                    onClick={() => handleAddToWishlist(book.id)}
+                  >
+                    <Heart size={18} />
+                  </button>
+                  <button 
+                    className="action-button view" 
+                    aria-label="Quick view"
+                    onClick={() => handleQuickView(book.id)}
+                  >
+                    <Eye size={18} />
+                  </button>
+                  <button 
+                    className="action-button cart" 
+                    aria-label="Add to cart"
+                    onClick={() => handleAddToCart(book.id)}
+                  >
+                    <ShoppingCart size={18} />
+                  </button>
                 </div>
-                <div className="status-badge" style={{ backgroundColor: getStatusColor(book.status) }}>
-                  {book.badge}
-                </div>
+
+                {/* Category Tag */}
+                <div className="category-tag">{book.category}</div>
               </div>
 
               {/* Book Content */}
               <div className="book-content">
-                <div className="book-header">
-                  <h3 className="book-title">{book.title}</h3>
-                  <p className="book-author">By {book.author}</p>
-                </div>
-
-                {viewMode === 'list' && (
-                  <p className="book-description">{book.description}</p>
-                )}
-
-                <div className="book-meta">
-                  <div className="book-rating">
-                    <div className="stars">
-                      {[...Array(5)].map((_, i) => (
-                        <Star 
-                          key={i} 
-                          size={14} 
-                          className={i < Math.floor(book.rating) ? "star filled" : "star"} 
-                        />
-                      ))}
-                    </div>
-                    <span className="rating-text">
-                      {book.rating} ({book.reviews} reviews)
-                    </span>
+                {/* Rating */}
+                <div className="book-rating">
+                  <div className="stars">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} size={14} className={i < Math.floor(book.rating) ? "star filled" : "star"} />
+                    ))}
                   </div>
-
-                  <div className="book-category">{book.category}</div>
+                  <span className="rating-text">
+                    {book.rating} ({book.reviews} reviews)
+                  </span>
                 </div>
 
-                <div className="book-footer">
-                  <div className="book-price">
-                    {book.originalPrice && (
-                      <span className="original-price">{book.originalPrice}</span>
-                    )}
-                    <span className="current-price">{book.price}</span>
-                  </div>
+                {/* Title */}
+                <h3 className="book-title">{book.title}</h3>
 
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={() => handleAddToCart(book.id)}
-                  >
-                    <ShoppingCart size={16} />
-                    <span>Add to Cart</span>
-                  </button>
+                {/* Author */}
+                <p className="book-author">{book.author}</p>
+
+                {/* Price */}
+                <div className="book-price">
+                  {book.originalPrice && <span className="original-price">{book.originalPrice}</span>}
+                  <span className="current-price">{book.price}</span>
                 </div>
+
+                {/* Add to Cart Button */}
+                <button 
+                  className="add-to-cart-btn"
+                  onClick={() => handleAddToCart(book.id)}
+                >
+                  <ShoppingCart size={16} />
+                  <span>Add to Cart</span>
+                </button>
               </div>
             </div>
           ))

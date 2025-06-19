@@ -4,8 +4,10 @@ import { useState, useEffect } from "react"
 import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css';
 import HomePageButton from '../shared/HomePageButton';
+import { useNavigate } from "react-router-dom";
 
 const NewReleases = () => {
+  const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -169,7 +171,7 @@ const NewReleases = () => {
         {/* View All Button */}
         <div className="view-all-section">
           <HomePageButton>
-            <span>View All Books</span>
+            <span onClick={() => navigate('/books')}>View All Books</span>
             <svg className="button-icon" 
                  fill="none" 
                  stroke="currentColor" 
