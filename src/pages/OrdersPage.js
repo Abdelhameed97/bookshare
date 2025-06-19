@@ -1,69 +1,46 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Tab, Nav, Badge } from 'react-bootstrap';
-import { Clock, CheckCircle, Truck, XCircle, RefreshCw } from 'lucide-react';
+import {
+    Container,
+    Row,
+    Col,
+    Card,
+    Tab,
+    Nav,
+    Badge,
+    Spinner,
+    Alert,
+    Button
+} from 'react-bootstrap';
+import {
+    Clock,
+    CheckCircle,
+    Truck,
+    XCircle,
+    RefreshCw,
+    ChevronLeft,
+    FileText,
+    ShoppingCart
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
+import { useOrders } from '../hooks/useOrders';
 import '../style/OrdersPage.css';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
 
 const OrdersPage = () => {
     const [activeTab, setActiveTab] = useState('all');
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const navigate = useNavigate();
 
-    const orders = [
-        {
-            id: '#ORD-2023-001',
-            date: '15 Oct 2023',
-            status: 'Delivered',
-            items: 3,
-            total: 245.97,
-            delivery: 'Standard',
-            tracking: 'TRK-934857',
-            itemsDetails: [
-                { name: 'Atomic Habits', price: 89.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'The Psychology of Money', price: 75.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71g2ednj0JL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'Book Cover', price: 79.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        },
-        {
-            id: '#ORD-2023-002',
-            date: '10 Oct 2023',
-            status: 'Shipped',
-            items: 2,
-            total: 155.98,
-            delivery: 'Express',
-            tracking: 'TRK-784512',
-            itemsDetails: [
-                { name: 'Deep Work', price: 75.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'Digital Minimalism', price: 79.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71g2ednj0JL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        },
-        {
-            id: '#ORD-2023-003',
-            date: '5 Oct 2023',
-            status: 'Processing',
-            items: 1,
-            total: 89.99,
-            delivery: 'Standard',
-            tracking: null,
-            itemsDetails: [
-                { name: 'The Alchemist', price: 89.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        },
-        {
-            id: '#ORD-2023-004',
-            date: '1 Oct 2023',
-            status: 'Cancelled',
-            items: 2,
-            total: 165.98,
-            delivery: 'Standard',
-            tracking: null,
-            itemsDetails: [
-                { name: 'Thinking Fast and Slow', price: 85.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'Bookmark Set', price: 79.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71g2ednj0JL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        }
-    ];
+    const {
+        orders,
+        loading,
+        error,
+        cancelOrder
+    } = useOrders();
 
     const filteredOrders = activeTab === 'all'
         ? orders
@@ -89,15 +66,70 @@ const OrdersPage = () => {
         }
     };
 
+    const handleCancelOrder = async (orderId) => {
+        if (window.confirm('Are you sure you want to cancel this order?')) {
+            const { success, error } = await cancelOrder(orderId);
+            setAlertMessage(success ? 'Order cancelled successfully' : error);
+            setShowAlert(true);
+        }
+    };
+
+    if (loading) {
+        return (
+            <div className="text-center py-5">
+                <Spinner animation="border" variant="primary" />
+                <p className="mt-2">Loading your orders...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-5">
+                <Alert variant="danger">
+                    {error}
+                </Alert>
+                <CustomButton
+                    variant="primary"
+                    onClick={() => window.location.reload()}
+                    className="mt-3"
+                >
+                    Try Again
+                </CustomButton>
+            </div>
+        );
+    }
+
     return (
         <>
             <Navbar />
 
             <Container className="orders-container py-5">
-                <Title>My Orders</Title>
+                {showAlert && (
+                    <Alert
+                        variant="success"
+                        onClose={() => setShowAlert(false)}
+                        dismissible
+                        className="mt-3"
+                    >
+                        {alertMessage}
+                    </Alert>
+                )}
+
+                <div className="d-flex align-items-center mb-4">
+                    <CustomButton
+                        variant="outline-primary"
+                        className="me-3"
+                        onClick={() => navigate(-1)}
+                    >
+                        <ChevronLeft size={20} className="me-1" />
+                        Back
+                    </CustomButton>
+                    <Title>My Orders</Title>
+                </div>
 
                 <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
-                    <Card className="mb-4 rounded-card">
+                    <Card className="mb-4">
                         <Card.Body className="p-0">
                             <Nav variant="tabs" className="orders-tabs">
                                 <Nav.Item>
@@ -105,7 +137,7 @@ const OrdersPage = () => {
                                 </Nav.Item>
                                 <Nav.Item>
                                     <Nav.Link eventKey="processing">
-                                        <Clock size={16} className="me-1" />
+                                        <RefreshCw size={16} className="me-1" />
                                         Processing
                                     </Nav.Link>
                                 </Nav.Item>
@@ -141,8 +173,10 @@ const OrdersPage = () => {
                                                                 <div className="d-flex align-items-center">
                                                                     {getStatusIcon(order.status)}
                                                                     <div>
-                                                                        <h6 className="mb-0 order-id">{order.id}</h6>
-                                                                        <small className="text-muted">{order.date}</small>
+                                                                        <h6 className="mb-0 order-id">Order #{order.id}</h6>
+                                                                        <small className="text-muted">
+                                                                            {new Date(order.created_at).toLocaleDateString()}
+                                                                        </small>
                                                                     </div>
                                                                 </div>
                                                             </Col>
@@ -153,7 +187,7 @@ const OrdersPage = () => {
                                                             </Col>
                                                             <Col md={2}>
                                                                 <div className="text-center">
-                                                                    <span className="d-block">{order.items}</span>
+                                                                    <span className="d-block">{order.items_count}</span>
                                                                     <small className="text-muted">Items</small>
                                                                 </div>
                                                             </Col>
@@ -164,27 +198,42 @@ const OrdersPage = () => {
                                                                 </div>
                                                             </Col>
                                                             <Col md={3} className="text-end">
-                                                                <CustomButton
+                                                                <Button
                                                                     variant="outline-primary"
                                                                     size="sm"
                                                                     className="me-2"
+                                                                    onClick={() => navigate(`/orders/${order.id}`)}
                                                                 >
-                                                                    View Details
-                                                                </CustomButton>
-                                                                {order.status === 'Shipped' && (
-                                                                    <CustomButton
+                                                                    <FileText size={16} className="me-1" />
+                                                                    Details
+                                                                </Button>
+                                                                {order.status === 'shipped' && (
+                                                                    <Button
                                                                         variant="primary"
                                                                         size="sm"
+                                                                        className="me-2"
                                                                     >
-                                                                        Track Order
-                                                                    </CustomButton>
+                                                                        <Truck size={16} className="me-1" />
+                                                                        Track
+                                                                    </Button>
+                                                                )}
+                                                                {(order.status === 'processing' || order.status === 'shipped') && (
+                                                                    <Button
+                                                                        variant="outline-danger"
+                                                                        size="sm"
+                                                                        onClick={() => handleCancelOrder(order.id)}
+                                                                    >
+                                                                        Cancel
+                                                                    </Button>
                                                                 )}
                                                             </Col>
                                                         </Row>
 
-                                                        {order.status === 'Shipped' && (
+                                                        {order.status === 'shipped' && order.tracking_number && (
                                                             <div className="tracking-info mt-3">
-                                                                <small className="text-muted">Tracking #: {order.tracking}</small>
+                                                                <small className="text-muted">
+                                                                    Tracking #: {order.tracking_number}
+                                                                </small>
                                                             </div>
                                                         )}
                                                     </Card.Body>
@@ -193,15 +242,18 @@ const OrdersPage = () => {
                                         </div>
                                     ) : (
                                         <div className="text-center py-5">
-                                            <img
-                                                src="https://cdn-icons-png.flaticon.com/512/4076/4076478.png"
-                                                alt="No orders"
-                                                style={{ width: '120px', opacity: 0.7 }}
-                                            />
-                                            <h5 className="mt-3">No orders found</h5>
-                                            <p className="text-muted">You don't have any {activeTab === 'all' ? '' : activeTab} orders yet</p>
-                                            <CustomButton variant="primary" className="mt-3">
-                                                Start Shopping
+                                            <ShoppingCart size={48} className="text-muted mb-3" />
+                                            <h4>No orders found</h4>
+                                            <p className="text-muted mb-4">
+                                                {activeTab === 'all'
+                                                    ? "You haven't placed any orders yet"
+                                                    : `You don't have any ${activeTab} orders`}
+                                            </p>
+                                            <CustomButton
+                                                variant="primary"
+                                                onClick={() => navigate('/books')}
+                                            >
+                                                Browse Books
                                             </CustomButton>
                                         </div>
                                     )}

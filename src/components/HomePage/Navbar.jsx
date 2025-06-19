@@ -5,6 +5,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom"
 import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
 import SearchModal from './SearchModal'
 import '../../style/Homepagestyle.css';
+import { useCart } from "../../hooks/useCart";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -45,6 +46,8 @@ const Navbar = () => {
   }
 
   const navigate = useNavigate();
+
+  const { cartCount, loading } = useCart();
 
   return (
     <>
@@ -128,7 +131,9 @@ const Navbar = () => {
                   onClick={() => navigate("/cart")}
                 >
                   <FaShoppingCart size={18} />
-                  <span className="cart-count">3</span>
+                  {cartCount > 0 && (
+                    <span className="cart-count">{cartCount}</span>
+                  )}
                   <span className="sr-only">Shopping cart</span>
                 </button>
 

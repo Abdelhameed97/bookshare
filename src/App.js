@@ -1,5 +1,3 @@
-// src/App.js
-
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
@@ -11,9 +9,9 @@ import WishlistPage from "./pages/WishlistPage";
 import RegisterPage from "./pages/form/RegisterPage";
 import LoginPage from "./pages/form/LoginPage";
 import About from "./components/About.jsx/Aboutus";
+import OrderDetailsPage from "./pages/OrderDetailsPage";
 import BooksPage from "./pages/BooksPage";
 import BookDetails from "./pages/BookDetails";
-
 
 function App() {
   return (
@@ -23,7 +21,9 @@ function App() {
         <Route path='/about' element={<About />} />
         <Route path='/cart' element={<CartPage />} />
         <Route path='/order' element={<OrdersPage />} />
+        <Route path="/orders/:id" element={<OrderDetailsPage />} />
         <Route path='/wishlist' element={<WishlistPage />} />
+        <Route path="/books" element={<BooksPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
@@ -31,6 +31,7 @@ function App() {
         {/* Add more routes as needed */}
         <Route path="/books" element={<BooksPage />} />
         <Route path="/books/:id" element={<BookDetails />} />
+
       </Routes>
     </Router>
   );
