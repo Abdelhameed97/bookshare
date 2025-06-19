@@ -4,6 +4,7 @@ import useAuth from "../../hooks/useAuth";
 import logo from "../../assets/bookshare-logo.png";
 import { FaCheck, FaTimes } from "react-icons/fa";
 import {useNavigate} from "react-router-dom";
+import {Link} from "react-router-dom";
 
 const LoginForm = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -176,7 +177,7 @@ const LoginForm = () => {
               </button>
               
               <p className="text-center mt-3 mb-0 text-muted small">
-                Don't have an account? <a href="/register" className="text-primary">Register</a>
+                Don't have an account? <Link to="/register" className="text-primary fw-bold">Create Account</Link>
               </p>
             </form>
           </div>
