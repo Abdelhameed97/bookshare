@@ -1,30 +1,25 @@
 "use client";
 
-import { useState, useEffect } from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import SearchModal from './SearchModal'
-import '../../style/Homepagestyle.css';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import {
   FaSearch,
   FaShoppingCart,
   FaBars,
   FaTimes,
   FaHeart,
-  FaUser,
 } from "react-icons/fa";
+import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 
 const Navbar = () => {
-  const [user, setUser] = useState(null);
-
-  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const navLinks = [
-    { to: "/", label: "HOME" },
+    { to: "/", label: "HOME", active: true },
     { to: "/about", label: "ABOUT" },
     { to: "/coming-soon", label: "COMING SOON" },
     { to: "/top-seller", label: "TOP SELLER" },
@@ -48,26 +43,6 @@ const Navbar = () => {
 
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // Try to get user from localStorage
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch {
-        setUser(null);
-      }
-    } else {
-      setUser(null);
-    }
-  }, []);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    setUser(null);
-    navigate("/");
-    // Optionally: window.location.reload();
-  };
   const { cartCount, loading: cartLoading } = useCart();
   const { wishlistCount, loading: wishlistLoading } = useWishlist();
 
@@ -95,43 +70,16 @@ const Navbar = () => {
           <div className="navbar-content-wrapper">
             <div className="navbar-content">
               {/* Desktop Navigation - Left Side */}
-              <div className="nav-links-desktop" style={{
-                display: 'flex',
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: '1.2rem',
-                flexWrap: 'nowrap',
-              }}>
-                {navLinks.map((link) => {
-                  const isActive = location.pathname === link.to;
-                  return (
-                    <Link
-                      key={link.label}
-                      to={link.to}
-                      className={`nav-link${isActive ? " active" : ""}`}
-                      style={{
-                        background: isActive ? '#90a4b8' : 'transparent',
-                        color: isActive ? 'white' : '#222',
-                        borderRadius: '2rem',
-                        padding: '0.5rem 1.2rem',
-                        fontWeight: isActive ? 700 : 500,
-                        transition: 'background 0.2s, color 0.2s',
-                      }}
-                      onMouseOver={e => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = '#e3e9f1';
-                        }
-                      }}
-                      onMouseOut={e => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = 'transparent';
-                        }
-                      }}
-                    >
-                      {link.label}
-                    </Link>
-                  );
-                })}
+              <div className="nav-links-desktop">
+                {navLinks.map((link) => (
+                  <Link
+                    key={link.label}
+                    to={link.to}
+                    className={`nav-link ${link.active ? "active" : ""}`}
+                  >
+                    {link.label}
+                  </Link>
+                ))}
               </div>
 
               {/* Right Side Actions - Positioned at the edge */}
@@ -173,30 +121,13 @@ const Navbar = () => {
                 </button>
 
                 {/* Auth Buttons - Desktop */}
-                <div className="auth-buttons-desktop" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                  {!user ? (
-                    <>
-                      <Link to="/login" className="btn btn-outline">
-                        Sign In
-                      </Link>
-                      <Link to="/register" className="btn btn-primary">
-                        Register
-                      </Link>
-                    </>
-                  ) : (
-                    <>
-                      <span style={{ fontWeight: 600, color: '#10B981', fontSize: '1.1rem' }}>
-                        Welcome, {user.name || 'User'}
-                      </span>
-                      <button
-                        className="btn"
-                        style={{ background: '#EF4444', color: 'white', fontWeight: 600, borderRadius: '2rem', padding: '0.4rem 1.2rem', border: 'none' }}
-                        onClick={handleLogout}
-                      >
-                        Logout
-                      </button>
-                    </>
-                  )}
+                <div className="auth-buttons-desktop">
+                  <Link to="/login" className="btn btn-outline">
+                    Sign In
+                  </Link>
+                  <Link to="/register" className="btn btn-primary">
+                    Register
+                  </Link>
                 </div>
 
                 {/* Mobile Menu Toggle */}

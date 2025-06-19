@@ -4,14 +4,12 @@ import { useState, useEffect } from "react";
 import HomePageTitle from "../shared/HomePageTitle";
 import "../../style/Homepagestyle.css";
 import HomePageButton from "../shared/HomePageButton";
-import { useNavigate } from "react-router-dom";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 import api from "../../services/api";
 import Swal from "sweetalert2";
 
 const NewReleases = () => {
-  const navigate = useNavigate();
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -27,7 +25,7 @@ const NewReleases = () => {
           throw new Error("Failed to fetch books");
         }
         const data = await response.json();
-        console.log("Fetched books data:", data);
+        console.log("Fetched books data:", data); 
 
         const latestBooks = data.data.slice(0, 3).map((book) => ({
           id: book.id,
@@ -36,8 +34,8 @@ const NewReleases = () => {
               ? book.images[0]
               : `http://localhost:8000/storage/${book.images[0]}`
             : "/placeholder.svg?height=300&width=200",
-          price: `${book.price} $`,
-          originalPrice: book.rental_price ? `${book.rental_price} $` : null,
+          price: `$${book.price}`,
+          originalPrice: book.rental_price ? `$${book.rental_price}` : null,
           title: book.title,
           author: `By ${book.user?.name || "Unknown Author"}`,
           rating: book.ratings?.length
@@ -95,18 +93,17 @@ const NewReleases = () => {
       console.log("Book object:", book);
 
       let type;
-      if (book.originalPrice) {
-        type = "rent"; 
+      if (book.status === "available" && !book.originalPrice) {
+        type = "buy";
+      } else if (book.status === "available" && book.originalPrice) {
+        type = "rent";
       } else {
-        type = "buy"; 
+        throw new Error("This book is not available for purchase or rental");
       }
-
+      
       console.log("Selected type:", type);
 
-      const response = await api.addToCart(book.id, {
-        type,
-        user_id: JSON.parse(localStorage.getItem("user"))?.id,
-      });
+const response = await api.addToCart(book.id, { type });
       console.log("API Response:", response.data);
 
       await fetchCartItems();
@@ -131,12 +128,14 @@ const NewReleases = () => {
 
   const handleAddToWishlist = async (bookId) => {
     try {
+
       if (isInWishlist(bookId)) {
         const itemToRemove = wishlistItems.find(
           (item) => item.book_id === bookId
         );
+
         const result = await removeItem(itemToRemove.id);
-        console.log("Remove result:", result);
+        console.log("Remove result:", result); 
 
         await Swal.fire({
           icon: "success",
@@ -146,7 +145,7 @@ const NewReleases = () => {
         });
       } else {
         const result = await addToWishlist(bookId);
-        console.log("Add to wishlist result:", result);
+        console.log("Add to wishlist result:", result); 
 
         await Swal.fire({
           icon: "success",
@@ -157,10 +156,10 @@ const NewReleases = () => {
       }
 
       const updatedWishlist = await fetchWishlist();
-      console.log("Updated wishlist:", updatedWishlist);
+      console.log("Updated wishlist:", updatedWishlist); 
     } catch (err) {
-      console.error("Wishlist error:", err);
-      console.error("Error details:", err.response?.data);
+      console.error("Wishlist error:", err); 
+      console.error("Error details:", err.response?.data); 
 
       await Swal.fire({
         icon: "error",
@@ -310,7 +309,7 @@ const NewReleases = () => {
         </div>
 
         <div className="view-all-section">
-          <HomePageButton onClick={() => navigate("/books")}>
+          <HomePageButton>
             <span>View All Books</span>
             <svg
               className="button-icon"
