@@ -10,17 +10,20 @@ import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
 import RegisterPage from "./pages/form/RegisterPage";
 import LoginPage from "./pages/form/LoginPage";
+import About from "./components/About.jsx/Aboutus";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path='/' element={<Home />} />
+        <Route path='/about' element={<About />} />
         <Route path='/cart' element={<CartPage />} />
         <Route path='/order' element={<OrdersPage />} />
         <Route path='/wishlist' element={<WishlistPage />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/login' element={<LoginPage />} />
+        <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
       </Routes>
     </Router>
   );
