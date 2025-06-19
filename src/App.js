@@ -12,6 +12,7 @@ import RegisterPage from "./pages/form/RegisterPage";
 import LoginPage from "./pages/form/LoginPage";
 import About from "./components/About.jsx/Aboutus";
 import BooksPage from "./pages/BooksPage";
+import BookDetails from "./pages/BookDetails";
 
 
 function App() {
@@ -29,6 +30,7 @@ function App() {
        
         {/* Add more routes as needed */}
         <Route path="/books" element={<BooksPage />} />
+        <Route path="/books/:id" element={<BookDetails />} />
       </Routes>
     </Router>
   );
