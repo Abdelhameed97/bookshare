@@ -1,6 +1,7 @@
 import React from 'react';
 import BookDetails from '../components/BooksPage/BookDetails';
 import Navbar from "../components/HomePage/Navbar.jsx";
+import Footer from "../components/HomePage/Footer.jsx";
 
 
 const BooksPage = () => {
@@ -8,6 +9,7 @@ const BooksPage = () => {
     <div>
         <Navbar />
       <BookDetails />
+      <Footer />
     </div>
   );
 };
