@@ -1,7 +1,9 @@
 "use client"
 import { Heart, Eye, ShoppingCart, Star } from "lucide-react"
 import { useState, useEffect } from "react"
+import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css';
+import HomePageButton from '../shared/HomePageButton';
 
 const NewReleases = () => {
   const [books, setBooks] = useState([]);
@@ -54,7 +56,7 @@ const NewReleases = () => {
       <section className="new-releases">
         <div className="new-releases-container">
           <div className="section-header">
-            <h2 className="section-title">Loading latest books...</h2>
+            <HomePageTitle>Loading latest books...</HomePageTitle>
           </div>
         </div>
       </section>
@@ -66,8 +68,8 @@ const NewReleases = () => {
       <section className="new-releases">
         <div className="new-releases-container">
           <div className="section-header">
-            <h2 className="section-title">Error loading books</h2>
-            <p className="section-description" style={{ color: "red" }}>{error}</p>
+            <HomePageTitle>Error loading books</HomePageTitle>
+            <p className="section-description">{error}</p>
           </div>
         </div>
       </section>
@@ -79,11 +81,10 @@ const NewReleases = () => {
       <div className="new-releases-container">
         {/* Section Header */}
         <div className="section-header">
-          <h2 className="section-title">
+          <HomePageTitle>
             New Releases Books
-            <span className="title-highlight" style={{ color: "green" }}>Discover Fresh Stories</span>
-          </h2>
-          <p className="section-description" style={{ color: "green" }}>
+          </HomePageTitle>
+          <p className="section-description" style={{ color: "#666666" }}>
             Explore our latest collection of carefully curated books from talented authors around the world
           </p>
           <div className="section-divider">
@@ -166,23 +167,19 @@ const NewReleases = () => {
         </div>
 
         {/* View All Button */}
-        <div className="view-all-section text-center mt-12">
-          <button className="view-all-btn relative overflow-hidden group">
-            <span className="relative z-10 flex items-center justify-center gap-2">
-              View All Books
-              <svg className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" 
-                   fill="none" 
-                   stroke="currentColor" 
-                   viewBox="0 0 24 24">
-                <path strokeLinecap="round" 
-                      strokeLinejoin="round" 
-                      strokeWidth={2} 
-                      d="M17 8l4 4m0 0l-4 4m4-4H3" />
-              </svg>
-            </span>
-            <span className="absolute inset-0 bg-gradient-to-r from-indigo-500 to-purple-600 opacity-100 group-hover:opacity-90 transition-opacity duration-300 rounded-full"></span>
-            <span className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
-          </button>
+        <div className="view-all-section">
+          <HomePageButton>
+            <span>View All Books</span>
+            <svg className="button-icon" 
+                 fill="none" 
+                 stroke="currentColor" 
+                 viewBox="0 0 24 24">
+              <path strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    strokeWidth={2} 
+                    d="M17 8l4 4m0 0l-4 4m4-4H3" />
+            </svg>
+          </HomePageButton>
         </div>
       </div>
 

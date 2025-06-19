@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
-import SearchModal from '../SearchModal'
+import SearchModal from './SearchModal'
 import '../../style/Homepagestyle.css';
 import { useCart } from "../../hooks/useCart";
 

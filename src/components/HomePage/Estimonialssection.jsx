@@ -1,7 +1,6 @@
-
-
 "use client"
 import { useState, useEffect } from "react"
+import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css'; 
 import clientImage from '../../images/img-client2.jpg';
 
@@ -57,7 +56,10 @@ const Testimonials = () => {
       <div className="testimonials-container">
         {/* Section Header */}
         <div className="section-header">
-          <h2 className="section-title">BookShare Team</h2>
+          <HomePageTitle>BookShare Team</HomePageTitle>
+          <p className="section-description">
+            Meet our dedicated team of professionals who make BookShare possible
+          </p>
         </div>
 
         {/* Testimonials Slider */}
@@ -69,14 +71,17 @@ const Testimonials = () => {
                   <div className="quote-mark">"</div>
                   <p className="testimonial-text">{testimonial.text}</p>
                   <div className="client-info">
-                    <img
-                      src={testimonial.clientImage || "/placeholder.svg"}
-                      alt={testimonial.clientName}
-                      className="client-image"
-                      onError={(e) => {
-                        e.currentTarget.src = "/placeholder.svg?height=80&width=80"
-                      }}
-                    />
+                    <div className="client-image-container">
+                      <img
+                        src={testimonial.clientImage || "/placeholder.svg"}
+                        alt={testimonial.clientName}
+                        className="client-image"
+                        onError={(e) => {
+                          e.currentTarget.src = "/placeholder.svg?height=80&width=80"
+                        }}
+                      />
+                      <div className="image-ring"></div>
+                    </div>
                     <div className="client-details">
                       <h4 className="client-name">{testimonial.clientName}</h4>
                       <span className="client-position">{testimonial.clientPosition}</span>
@@ -100,6 +105,11 @@ const Testimonials = () => {
           ))}
         </div>
       </div>
+
+      {/* Background Decorations */}
+      <div className="bg-decoration decoration-1"></div>
+      <div className="bg-decoration decoration-2"></div>
+      <div className="bg-decoration decoration-3"></div>
     </section>
   )
 }
