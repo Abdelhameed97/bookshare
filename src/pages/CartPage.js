@@ -1,3 +1,4 @@
+import Swal from 'sweetalert2';
 import React, { useState } from 'react';
 import {
     Container,
@@ -49,10 +50,6 @@ const CartPage = () => {
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const navigate = useNavigate();
 
-    localStorage.setItem('token', '10|JFuZksilhDSmuTp50tsqywgpINaNf0w11R6QhV8t2d73560f');
-    const token = localStorage.getItem('token');
-    console.log(token); 
-
     const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.book?.price || 0) * (item.quantity || 1)), 0);
     const shippingFee = subtotal > 200 ? 0 : 25;
     const total = subtotal + shippingFee - discount;
@@ -65,21 +62,35 @@ const CartPage = () => {
             const response = await api.applyCoupon(couponCode);
             setDiscount(response.data.discount);
             setAppliedCoupon(response.data.coupon);
-            showAlertMessage('Coupon applied successfully!', 'success');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Coupon Applied!',
+                text: 'Your discount has been applied successfully',
+                timer: 2000
+            });
         } catch (err) {
             setDiscount(0);
             setAppliedCoupon(null);
-            showAlertMessage(err.response?.data?.message || 'Invalid coupon code', 'danger');
+            await Swal.fire({
+                icon: 'error',
+                title: 'Invalid Coupon',
+                text: err.response?.data?.message || 'This coupon code is not valid',
+            });
         } finally {
             setIsApplyingCoupon(false);
         }
     };
 
-    const removeCoupon = () => {
+    const removeCoupon = async () => {
         setDiscount(0);
         setCouponCode('');
         setAppliedCoupon(null);
-        showAlertMessage('Coupon removed', 'info');
+        await Swal.fire({
+            icon: 'info',
+            title: 'Coupon Removed',
+            text: 'The coupon has been removed from your order',
+            timer: 1500
+        });
     };
 
     const handleQuantityChange = async (itemId, newQuantity) => {
@@ -91,24 +102,96 @@ const CartPage = () => {
                 item.id === itemId ? { ...item, quantity: parseInt(newQuantity) } : item
             );
             setCartItems(updatedItems);
-            showAlertMessage('Quantity updated successfully', 'success');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Quantity Updated',
+                timer: 1500
+            });
         } catch (err) {
-            showAlertMessage(err.response?.data?.message || 'Failed to update quantity', 'danger');
+            await Swal.fire({
+                icon: 'error',
+                title: 'Update Failed',
+                text: err.response?.data?.message || 'Failed to update quantity',
+            });
         }
     };
 
     const handleRemoveItem = async (itemId) => {
+        const result = await Swal.fire({
+            title: 'Remove Item?',
+            text: 'This will remove the item from your cart',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             await api.removeCartItem(itemId);
             const updatedItems = cartItems.filter(item => item.id !== itemId);
             setCartItems(updatedItems);
-            showAlertMessage('Item removed from cart', 'success');
+            await Swal.fire({
+                icon: 'success',
+                title: 'Item Removed',
+                timer: 1500
+            });
         } catch (err) {
-            showAlertMessage(err.response?.data?.message || 'Failed to remove item', 'danger');
+            await Swal.fire({
+                icon: 'error',
+                title: 'Removal Failed',
+                text: err.response?.data?.message || 'Failed to remove item',
+            });
+        }
+    };
+
+    const handleClearCart = async () => {
+        const result = await Swal.fire({
+            title: 'Clear Entire Cart?',
+            text: 'This will remove all items from your cart',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, clear it!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
+            setCartItems([]);
+            await Swal.fire({
+                icon: 'success',
+                title: 'Cart Cleared!',
+                text: 'All items have been removed from your cart',
+                timer: 2000
+            });
+        } catch (err) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Clear Failed',
+                text: err.response?.data?.message || 'Failed to clear cart',
+            });
         }
     };
 
     const handleProceedToCheckout = async () => {
+        if (cartItems.length === 0) return;
+
+        const result = await Swal.fire({
+            title: 'Proceed to Checkout?',
+            text: 'You will be redirected to complete your purchase',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: 'Continue to Payment'
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
             const orderData = {
                 items: cartItems.map(item => ({
@@ -126,7 +209,11 @@ const CartPage = () => {
             const response = await api.createOrder(orderData);
             navigate(`/order-confirmation/${response.data.id}`);
         } catch (err) {
-            showAlertMessage(err.response?.data?.message || 'Checkout failed', 'danger');
+            await Swal.fire({
+                icon: 'error',
+                title: 'Checkout Failed',
+                text: err.response?.data?.message || 'Unable to process your order',
+            });
         }
     };
 
@@ -293,15 +380,7 @@ const CartPage = () => {
                                             </CustomButton>
                                             <CustomButton
                                                 variant="danger"
-                                                onClick={() => {
-                                                    if (window.confirm('Are you sure you want to clear your cart?')) {
-                                                        Promise.all(cartItems.map(item => api.removeCartItem(item.id)))
-                                                            .then(() => {
-                                                                setCartItems([]);
-                                                                showAlertMessage('Cart cleared successfully', 'success');
-                                                            });
-                                                    }
-                                                }}
+                                                onClick={handleClearCart}
                                             >
                                                 Clear Cart
                                             </CustomButton>

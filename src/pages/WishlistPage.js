@@ -25,12 +25,11 @@ import { useWishlist } from '../hooks/useWishlist';
 import '../style/WishlistPage.css';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
+import Swal from 'sweetalert2';
 
 const WishlistPage = () => {
     const [sortBy, setSortBy] = useState('recent');
     const [filterBy, setFilterBy] = useState('all');
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
     const navigate = useNavigate();
 
     const {
@@ -38,6 +37,7 @@ const WishlistPage = () => {
         wishlistCount,
         loading,
         error,
+        fetchWishlist,
         removeItem,
         moveToCart,
         moveAllToCart
@@ -57,30 +57,107 @@ const WishlistPage = () => {
     });
 
     const handleRemoveItem = async (itemId) => {
+        const result = await Swal.fire({
+            title: 'Remove from wishlist?',
+            text: 'Are you sure you want to remove this item?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+        });
+
+        if (!result.isConfirmed) return;
+
         const { success, error } = await removeItem(itemId);
-        setAlertMessage(success ? 'Item removed from wishlist' : error);
-        setShowAlert(true);
+        if (success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Removed!',
+                text: 'Item removed from wishlist',
+                timer: 1500
+            });
+            fetchWishlist();
+        } else {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error || 'Failed to remove item',
+            });
+        }
     };
 
     const handleMoveToCart = async (itemId) => {
+        const result = await Swal.fire({
+            title: 'Move to cart?',
+            text: 'This item will be added to your shopping cart',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+        });
+
+        if (!result.isConfirmed) return;
+
         const { success, error } = await moveToCart(itemId);
-        setAlertMessage(success ? 'Item moved to cart' : error);
-        setShowAlert(true);
+        if (success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Moved!',
+                text: 'Item added to your cart',
+                timer: 1500
+            });
+            fetchWishlist();
+        } else {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error || 'Failed to move item to cart',
+            });
+        }
     };
 
     const handleMoveAllToCart = async () => {
+        const availableItems = wishlistItems.filter(item => item.book?.status === 'available');
+        if (availableItems.length === 0) {
+            await Swal.fire({
+                icon: 'info',
+                title: 'No items available',
+                text: 'There are no available items to move to cart',
+            });
+            return;
+        }
+
+        const result = await Swal.fire({
+            title: `Move ${availableItems.length} items to cart?`,
+            text: 'All available items will be added to your shopping cart',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonColor: '#28a745',
+            cancelButtonColor: '#6c757d',
+            confirmButtonText: `Move All (${availableItems.length})`
+        });
+
+        if (!result.isConfirmed) return;
+
         try {
-            const result = await moveAllToCart();
-            if (result?.success) {
-                setAlertMessage(`${result.count || wishlistCount} items moved to cart`);
-                setShowAlert(true);
+            const response = await moveAllToCart();
+            if (response?.success) {
+                await Swal.fire({
+                    icon: 'success',
+                    title: 'Items Moved!',
+                    text: `${response.count || availableItems.length} items added to your cart`,
+                    timer: 2000
+                });
+                fetchWishlist();
             } else {
-                setAlertMessage(result?.error || 'Failed to move items to cart');
-                setShowAlert(true);
+                throw new Error(response?.error);
             }
         } catch (err) {
-            setAlertMessage('An error occurred while moving items to cart');
-            setShowAlert(true);
+            await Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: err.message || 'Failed to move items to cart',
+            });
         }
     };
 
@@ -115,17 +192,6 @@ const WishlistPage = () => {
             <Navbar />
 
             <Container className="wishlist-container py-5">
-                {showAlert && (
-                    <Alert
-                        variant={alertMessage.includes('error') ? 'danger' : 'success'}
-                        onClose={() => setShowAlert(false)}
-                        dismissible
-                        className="mt-3"
-                    >
-                        {alertMessage}
-                    </Alert>
-                )}
-
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <div className="d-flex align-items-center">
                         <CustomButton

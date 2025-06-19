@@ -19,7 +19,6 @@ api.interceptors.request.use(config => {
     return config;
 });
 
-// Assign object to variable before export
 const apiService = {
     // Cart Endpoints
     getCart: () => api.get('/cart'),
@@ -42,7 +41,7 @@ const apiService = {
     addToWishlist: (bookId) => api.post('/wishlist', { book_id: bookId }),
     removeWishlistItem: (wishlistItemId) => api.delete(`/wishlist/${wishlistItemId}`),
     moveToCart: (wishlistItemId) => api.post(`/wishlist/${wishlistItemId}/move-to-cart`),
-    moveAllToCart: (wishlistItemId) => api.post(`/wishlist/${wishlistItemId}/move-all-to-cart`),
+    moveAllToCart: () => api.post('/wishlist/move-all-to-cart'),
 
     // Order Endpoints
     getOrders: () => api.get('/order')
