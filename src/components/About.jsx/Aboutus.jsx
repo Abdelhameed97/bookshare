@@ -1,7 +1,5 @@
 import React from 'react';
-import HomePageTitle from '../shared/HomePageTitle';
 import Testimonials from '../HomePage/Estimonialssection';
-import HomePageButton from '../shared/HomePageButton';
 import '../../style/Homepagestyle.css';
 import '../../style/about.css';
 import Footer from '../HomePage/Footer';
