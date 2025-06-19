@@ -4,6 +4,7 @@ import { Heart, Eye, ShoppingCart, Star, Search, Filter, Grid, List, Loader2 } f
 import HomePageTitle from '../shared/HomePageTitle'
 import HomePageButton from '../shared/HomePageButton'
 import '../../style/BooksList.css'
+import { useNavigate } from 'react-router-dom'
 
 const BooksList = () => {
   const [books, setBooks] = useState([])
@@ -14,6 +15,9 @@ const BooksList = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [viewMode, setViewMode] = useState("grid") // grid or list
+  const [currentPage, setCurrentPage] = useState(1)
+  const booksPerPage = 9
+  const navigate = useNavigate()
 
   // Debounced search
   const debouncedSearch = useCallback(
@@ -53,8 +57,8 @@ const BooksList = () => {
                 ? book.images[0]
                 : `http://localhost:8000/storage/${book.images[0]}`)
             : "/placeholder.svg?height=300&width=200",
-          price: `$${book.price}`,
-          originalPrice: book.rental_price ? `$${book.rental_price}` : null,
+          price: `${book.price} $`,
+          originalPrice: book.rental_price ? `${book.rental_price} $` : null,
           title: book.title,
           author: book.user?.name || 'Unknown Author',
           rating: book.ratings?.length ? 
@@ -101,6 +105,24 @@ const BooksList = () => {
     setFilteredBooks(filtered)
   }, [books, searchTerm, statusFilter])
 
+  // Reset page to 1 when filters/search change
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, statusFilter])
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage)
+  const paginatedBooks = filteredBooks.slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage)
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) {
+      pages.push(i);
+    }
+    return pages;
+  };
+
   const getStatusColor = (status) => {
     switch (status) {
       case 'available': return '#10B981'
@@ -133,9 +155,7 @@ const BooksList = () => {
   }
 
   const handleQuickView = (bookId) => {
-    // TODO: Implement quick view functionality
-    console.log('Quick view book:', bookId)
-    // You can add modal or navigation here
+    navigate(`/books/${bookId}`);
   }
 
   const retryFetch = () => {
@@ -254,7 +274,7 @@ const BooksList = () => {
 
       {/* Books Grid/List */}
       <div className={`books-display ${viewMode}`}>
-        {filteredBooks.length === 0 ? (
+        {paginatedBooks.length === 0 ? (
           <div className="no-results">
             <p>
               {searchTerm || statusFilter !== 'all' 
@@ -269,7 +289,7 @@ const BooksList = () => {
             )}
           </div>
         ) : (
-          filteredBooks.map((book, index) => (
+          paginatedBooks.map((book, index) => (
             <div key={book.id} className="book-card" style={{ animationDelay: `${index * 0.2}s` }}>
               {/* Book Badge */}
               <div className={`book-badge ${book.badge.toLowerCase()}`}>{book.badge}</div>
@@ -355,12 +375,46 @@ const BooksList = () => {
         )}
       </div>
 
-      {/* Load More Button */}
-      {filteredBooks.length > 0 && (
-        <div className="load-more-section">
-          <HomePageButton>
-            <span>Load More Books</span>
-          </HomePageButton>
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '2rem 0' }}>
+          <ul style={{ display: 'flex', gap: '0.5rem', listStyle: 'none', padding: 0, margin: 0 }}>
+            <li>
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                style={{
+                  width: 40, height: 40, borderRadius: '50%', border: '1px solid #d1d5db', background: 'white', color: '#6b7a8f', fontSize: 20, cursor: currentPage === 1 ? 'not-allowed' : 'pointer', outline: 'none', transition: 'background 0.2s',
+                }}
+                aria-label="Previous page"
+              >&lt;</button>
+            </li>
+            {getPageNumbers().map(page => (
+              <li key={page}>
+                <button
+                  onClick={() => setCurrentPage(page)}
+                  style={{
+                    width: 40, height: 40, borderRadius: '50%', border: '1px solid #d1d5db',
+                    background: currentPage === page ? '#90a4b8' : 'white',
+                    color: currentPage === page ? 'white' : '#6b7a8f',
+                    fontWeight: currentPage === page ? 700 : 500,
+                    fontSize: 18, cursor: 'pointer', outline: 'none', transition: 'background 0.2s',
+                  }}
+                  aria-current={currentPage === page ? 'page' : undefined}
+                >{page}</button>
+              </li>
+            ))}
+            <li>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                style={{
+                  width: 40, height: 40, borderRadius: '50%', border: '1px solid #d1d5db', background: 'white', color: '#6b7a8f', fontSize: 20, cursor: currentPage === totalPages ? 'not-allowed' : 'pointer', outline: 'none', transition: 'background 0.2s',
+                }}
+                aria-label="Next page"
+              >&gt;</button>
+            </li>
+          </ul>
         </div>
       )}
     </div>

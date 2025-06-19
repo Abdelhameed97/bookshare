@@ -10,6 +10,7 @@ import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
 import About from "./components/About.jsx/Aboutus";
 import BooksPage from "./pages/BooksPage";
+import BookDetails from "./pages/BookDetails";
 
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
         <Route path="/wishlist" element={<WishlistPage />} />
         {/* Add more routes as needed */}
         <Route path="/books" element={<BooksPage />} />
+        <Route path="/books/:id" element={<BookDetails />} />
       </Routes>
     </Router>
   );

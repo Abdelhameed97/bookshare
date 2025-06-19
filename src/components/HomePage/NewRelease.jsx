@@ -28,8 +28,8 @@ const NewReleases = () => {
                 ? book.images[0]
                 : `http://localhost:8000/storage/${book.images[0]}`)
             : "/placeholder.svg?height=300&width=200",
-          price: `$${book.price}`,
-          originalPrice: book.rental_price ? `$${book.rental_price}` : null,
+          price: `${book.price} $`,
+          originalPrice: book.rental_price ? `${book.rental_price} $` : null,
           title: book.title,
           author: `By ${book.user?.name || 'Unknown Author'}`,
           rating: book.ratings?.length ? 
