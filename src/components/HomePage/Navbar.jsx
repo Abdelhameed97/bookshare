@@ -2,14 +2,14 @@
 
 import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
-import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
+import { FaSearch, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa"
 import SearchModal from './SearchModal'
 import '../../style/Homepagestyle.css';
 import { useCart } from "../../hooks/useCart";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  // const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
 
   const navLinks = [
@@ -27,17 +27,17 @@ const Navbar = () => {
     setIsOpen(!isOpen)
   }
 
-  const toggleDropdown = () => {
-    setIsDropdownOpen(!isDropdownOpen)
-  }
+  // const toggleDropdown = () => {
+  //   setIsDropdownOpen(!isDropdownOpen)
+  // }
 
   const closeMobileMenu = () => {
     setIsOpen(false)
   }
 
-  const closeDropdown = () => {
-    setIsDropdownOpen(false)
-  }
+  // const closeDropdown = () => {
+  //   setIsDropdownOpen(false)
+  // }
 
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen)
