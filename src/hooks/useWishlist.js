@@ -10,7 +10,6 @@ export const useWishlist = () => {
         setLoading(true);
         try {
             const response = await api.getWishlist();
-
             const items = response.data?.data || [];
 
             if (!Array.isArray(items)) {
@@ -37,7 +36,10 @@ export const useWishlist = () => {
             setWishlistItems(prev => prev.filter(item => item.id !== itemId));
             return { success: true };
         } catch (err) {
-            return { success: false, error: err.response?.data?.message || 'Failed to remove item' };
+            return {
+                success: false,
+                error: err.response?.data?.message || 'Failed to remove item'
+            };
         }
     };
 
@@ -47,16 +49,19 @@ export const useWishlist = () => {
             setWishlistItems(prev => prev.filter(item => item.id !== itemId));
             return { success: true };
         } catch (err) {
-            return { success: false, error: err.response?.data?.message || 'Failed to move to cart' };
+            return {
+                success: false,
+                error: err.response?.data?.message || 'Failed to move to cart'
+            };
         }
     };
 
     const moveAllToCart = async () => {
         try {
-            const response = await api.post('/wishlist/move-all-to-cart');
+            const response = await api.moveAllToCart();
             return {
                 success: true,
-                count: response.data.moved_items_count 
+                count: response.data.moved_items_count
             };
         } catch (error) {
             return {
@@ -73,6 +78,7 @@ export const useWishlist = () => {
         error,
         fetchWishlist,
         removeItem,
-        moveToCart
+        moveToCart,
+        moveAllToCart 
     };
 };
