@@ -9,6 +9,8 @@ import CartPage from "./pages/CartPage";
 import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
 import About from "./components/About.jsx/Aboutus";
+import BooksPage from "./pages/BooksPage";
+
 
 function App() {
   return (
@@ -19,6 +21,8 @@ function App() {
         <Route path="/cart" element={<CartPage />} />
         <Route path="/order" element={<OrdersPage />} />
         <Route path="/wishlist" element={<WishlistPage />} />
+        {/* Add more routes as needed */}
+        <Route path="/books" element={<BooksPage />} />
       </Routes>
     </Router>
   );
