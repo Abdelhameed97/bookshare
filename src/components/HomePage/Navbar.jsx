@@ -1,16 +1,22 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Link, useNavigate } from "react-router-dom"
-import { FaSearch, FaShoppingCart, FaBars, FaTimes } from "react-icons/fa"
-import SearchModal from './SearchModal'
-import '../../style/Homepagestyle.css';
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  FaSearch,
+  FaShoppingCart,
+  FaBars,
+  FaTimes,
+  FaHeart,
+} from "react-icons/fa";
+import SearchModal from "./SearchModal";
+import "../../style/Homepagestyle.css";
 import { useCart } from "../../hooks/useCart";
+import { useWishlist } from "../../hooks/useWishlist";
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false)
-  // const [isDropdownOpen, setIsDropdownOpen] = useState(false)
-  const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const navLinks = [
     { to: "/", label: "HOME", active: true },
@@ -21,31 +27,24 @@ const Navbar = () => {
     { to: "/author", label: "AUTHOR" },
     { to: "/blog", label: "BLOG" },
     { to: "/contact", label: "CONTACT" },
-  ]
+  ];
 
   const toggleMobileMenu = () => {
-    setIsOpen(!isOpen)
-  }
-
-  // const toggleDropdown = () => {
-  //   setIsDropdownOpen(!isDropdownOpen)
-  // }
+    setIsOpen(!isOpen);
+  };
 
   const closeMobileMenu = () => {
-    setIsOpen(false)
-  }
-
-  // const closeDropdown = () => {
-  //   setIsDropdownOpen(false)
-  // }
+    setIsOpen(false);
+  };
 
   const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen)
-  }
+    setIsSearchOpen(!isSearchOpen);
+  };
 
   const navigate = useNavigate();
 
-  const { cartCount, loading } = useCart();
+  const { cartCount, loading: cartLoading } = useCart();
+  const { wishlistCount, loading: wishlistLoading } = useWishlist();
 
   return (
     <>
@@ -93,6 +92,19 @@ const Navbar = () => {
                 >
                   <FaSearch size={18} />
                   <span className="sr-only">Search</span>
+                </button>
+
+                {/* Wishlist Icon */}
+                <button
+                  className="icon-button wishlist-badge"
+                  title="Wishlist"
+                  onClick={() => navigate("/wishlist")}
+                >
+                  <FaHeart size={18} />
+                  {wishlistCount > 0 && (
+                    <span className="wishlist-count">{wishlistCount}</span>
+                  )}
+                  <span className="sr-only">Wishlist</span>
                 </button>
 
                 {/* Shopping Cart */}
@@ -205,11 +217,18 @@ const Navbar = () => {
             >
               My Orders
             </Link>
+            <Link
+              to="/wishlist"
+              className="mobile-account-link"
+              onClick={closeMobileMenu}
+            >
+              My Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+            </Link>
           </div>
         </div>
       </div>
     </>
   );
-}
+};
 
-export default Navbar
+export default Navbar;

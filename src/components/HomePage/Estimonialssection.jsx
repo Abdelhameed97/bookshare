@@ -3,6 +3,7 @@ import { useState, useEffect } from "react"
 import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css'; 
 import clientImage from '../../images/img-client2.jpg';
+import MarwaImage from '../../images/Marwa.Nasser.jpg';
 
 const Testimonials = () => {
   const [currentIndex, setCurrentIndex] = useState(0)
@@ -13,14 +14,14 @@ const Testimonials = () => {
       text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
       clientName: "Rehab Kamal",
       clientPosition: "Marketing Manager",
-      clientImage: clientImage, 
+      clientImage: clientImage,
     },
     {
       id: 2,
-      text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
+      text: "Craft full-stack solutions with a front-end soul and a back-end brain — clean, smart, and made to last.",
       clientName: "Marwa Nasser",
-      clientPosition: "Editorial Director",
-      clientImage: clientImage, 
+      clientPosition: "Full Stack Developer",
+      clientImage: MarwaImage,
     },
     {
       id: 3,
@@ -34,9 +35,9 @@ const Testimonials = () => {
       text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
       clientName: "Harbi Abdelallah",
       clientPosition: "Content Strategist",
-      clientImage: clientImage, 
+      clientImage: clientImage,
     },
-  ]
+  ];
 
   // Auto-play functionality
   useEffect(() => {

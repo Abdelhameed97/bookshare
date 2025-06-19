@@ -3610,3 +3610,25 @@
   justify-content: center;
   gap: 16px;
 }
+
+/* Wishlist Badge Styles */
+.icon-button.wishlist-badge {
+  position: relative;
+  margin-right: 10px;
+}
+
+.wishlist-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background-color: #dc3545;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+}
