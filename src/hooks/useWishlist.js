@@ -9,9 +9,9 @@ export const useWishlist = () => {
     const fetchWishlist = async () => {
         setLoading(true);
         try {
-            console.log("Fetching wishlist..."); 
+            console.log("Fetching wishlist...");
             const response = await api.getWishlist();
-            console.log("Wishlist API response:", response); 
+            console.log("Wishlist API response:", response);
 
             const items = response.data?.data || [];
 
@@ -21,12 +21,12 @@ export const useWishlist = () => {
 
             setWishlistItems(items);
             setError(null);
-            return items; 
+            return items;
         } catch (err) {
-            console.error("Error fetching wishlist:", err); 
+            console.error("Error fetching wishlist:", err);
             setError(err.response?.data?.message || err.message);
             setWishlistItems([]);
-            throw err; 
+            throw err;
         } finally {
             setLoading(false);
         }
@@ -38,21 +38,21 @@ export const useWishlist = () => {
 
     const addToWishlist = async (bookId) => {
         try {
-            console.log("Adding to wishlist, book ID:", bookId); 
+            console.log("Adding to wishlist, book ID:", bookId);
             const response = await api.addToWishlist(bookId);
-            console.log("Add to wishlist response:", response); 
+            console.log("Add to wishlist response:", response);
 
             if (!response.data || !response.data.success) {
-                throw new Error('Failed to add to wishlist');
+                throw new Error(response.data?.message || 'Failed to add to wishlist');
             }
 
             await fetchWishlist();
             return { success: true };
         } catch (err) {
-            console.error("Add to wishlist error:", err); 
+            console.error("Add to wishlist error:", err);
             return {
                 success: false,
-                error: err.response?.data?.message || 'Failed to add to wishlist'
+                error: err.response?.data?.message || err.message || 'Failed to add to wishlist'
             };
         }
     };
@@ -61,7 +61,7 @@ export const useWishlist = () => {
         try {
             console.log("Removing wishlist item ID:", itemId);
             const response = await api.removeWishlistItem(itemId);
-            console.log("Remove item response:", response); 
+            console.log("Remove item response:", response);
 
             setWishlistItems(prev => prev.filter(item => item.id !== itemId));
             return { success: true };
@@ -73,6 +73,7 @@ export const useWishlist = () => {
             };
         }
     };
+
     const moveToCart = async (itemId) => {
         try {
             await api.moveToCart(itemId);

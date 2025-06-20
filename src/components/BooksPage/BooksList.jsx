@@ -37,7 +37,7 @@ const BooksList = () => {
   const { wishlistItems, fetchWishlist, addToWishlist, removeItem } =
     useWishlist();
 
-  // Debounced search
+  // Debounced search function
   const debouncedSearch = useCallback(
     (() => {
       let timeoutId;
@@ -53,20 +53,18 @@ const BooksList = () => {
     []
   );
 
+  // Fetch books data
   useEffect(() => {
     const fetchBooks = async () => {
       try {
         setLoading(true);
         setError(null);
         const response = await fetch("http://localhost:8000/api/books");
-        if (!response.ok) {
-          throw new Error("Failed to fetch books");
-        }
-        const data = await response.json();
+        if (!response.ok) throw new Error("Failed to fetch books");
 
-        if (data.status === "error") {
+        const data = await response.json();
+        if (data.status === "error")
           throw new Error(data.message || "Failed to fetch books");
-        }
 
         const processedBooks = data.data.map((book) => ({
           id: book.id,
@@ -89,15 +87,16 @@ const BooksList = () => {
           status: book.status,
           badge:
             book.status === "available"
-              ? "Available"
+              ? "New"
               : book.status === "rented"
-              ? "Rented"
+              ? "Bestseller"
               : book.status === "sold"
-              ? "Sold"
-              : "Available",
+              ? "Sale"
+              : "New",
           category: book.category?.name || "Uncategorized",
           description: book.description || "No description available",
         }));
+
         setBooks(processedBooks);
         setFilteredBooks(processedBooks);
       } catch (err) {
@@ -111,9 +110,9 @@ const BooksList = () => {
     fetchBooks();
   }, []);
 
+  // Filter books based on search and status
   useEffect(() => {
     let filtered = books;
-
     if (searchTerm) {
       filtered = filtered.filter(
         (book) =>
@@ -121,70 +120,34 @@ const BooksList = () => {
           book.author.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-
     if (statusFilter !== "all") {
       filtered = filtered.filter((book) => book.status === statusFilter);
     }
-
     setFilteredBooks(filtered);
   }, [books, searchTerm, statusFilter]);
 
-  // Reset page to 1 when filters/search change
+  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [searchTerm, statusFilter]);
 
-  // Pagination logic
-  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
-  const paginatedBooks = filteredBooks.slice(
-    (currentPage - 1) * booksPerPage,
-    currentPage * booksPerPage
-  );
+  // Check if book is in cart
+  const isInCart = (bookId) =>
+    cartItems.some((item) => item.book_id === bookId);
 
-  // Generate page numbers for pagination
-  const getPageNumbers = () => {
-    const pages = [];
-    for (let i = 1; i <= totalPages; i++) {
-      pages.push(i);
-    }
-    return pages;
-  };
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "available":
-        return "#10B981";
-      case "rented":
-        return "#F59E0B";
-      case "sold":
-        return "#EF4444";
-      default:
-        return "#6B7280";
-    }
-  };
-
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    debouncedSearch(value);
-  };
-
-  const clearFilters = () => {
-    setSearchTerm("");
-    setStatusFilter("all");
-  };
-
-  const isInCart = (bookId) => {
-    return cartItems.some((item) => item.book_id === bookId);
-  };
-
-  const isInWishlist = (bookId) => {
-    return wishlistItems.some((item) => item.book_id === bookId);
-  };
+  // Check if book is in wishlist
+  const isInWishlist = (bookId) =>
+    wishlistItems.some((item) => item.book_id === bookId);
 
   const handleAddToWishlist = async (bookId) => {
     try {
       if (isInWishlist(bookId)) {
-        await removeItem(bookId);
+        const itemToRemove = wishlistItems.find(
+          (item) => item.book_id === bookId
+        );
+        const result = await removeItem(itemToRemove.id);
+        console.log("Remove result:", result);
+
         await Swal.fire({
           icon: "success",
           title: "Removed!",
@@ -192,7 +155,9 @@ const BooksList = () => {
           timer: 1500,
         });
       } else {
-        await addToWishlist(bookId);
+        const result = await addToWishlist(bookId);
+        console.log("Add to wishlist result:", result);
+
         await Swal.fire({
           icon: "success",
           title: "Added!",
@@ -200,8 +165,13 @@ const BooksList = () => {
           timer: 1500,
         });
       }
-      await fetchWishlist();
+
+      const updatedWishlist = await fetchWishlist();
+      console.log("Updated wishlist:", updatedWishlist);
     } catch (err) {
+      console.error("Wishlist error:", err);
+      console.error("Error details:", err.response?.data);
+
       await Swal.fire({
         icon: "error",
         title: "Error",
@@ -210,10 +180,7 @@ const BooksList = () => {
     }
   };
 
-  const handleQuickView = (bookId) => {
-    navigate(`/books/${bookId}`);
-  };
-
+  // Handle add to cart
   const handleAddToCart = async (bookId) => {
     try {
       const result = await Swal.fire({
@@ -228,23 +195,9 @@ const BooksList = () => {
       if (!result.isConfirmed) return;
 
       const book = books.find((b) => b.id === bookId);
-      console.log("Book details:", {
-        id: book.id,
-        status: book.status,
-        price: book.price,
-        originalPrice: book.originalPrice,
-      });
+      const type = book.originalPrice ? "rent" : "buy";
 
-      let type = book.originalPrice ? "rent" : "buy";
-
-      console.log("Determined type:", type);
-
-      const response = await api.addToCart(book.id, {
-        type,
-        quantity: 1,
-      });
-      console.log("Cart API response:", response.data);
-
+      await api.addToCart(book.id, { type, quantity: 1 });
       await fetchCartItems();
 
       await Swal.fire({
@@ -254,12 +207,6 @@ const BooksList = () => {
         timer: 1500,
       });
     } catch (err) {
-      console.error("Complete error details:", {
-        message: err.message,
-        response: err.response?.data,
-        config: err.config,
-      });
-
       await Swal.fire({
         icon: "error",
         title: "Failed to Add",
@@ -268,11 +215,52 @@ const BooksList = () => {
     }
   };
 
+  // Handle quick view
+  const handleQuickView = (bookId) => navigate(`/books/${bookId}`);
+
+  // Clear all filters
+  const clearFilters = () => {
+    setSearchTerm("");
+    setStatusFilter("all");
+  };
+
+  // Retry fetching books
   const retryFetch = () => {
     setError(null);
     setLoading(true);
     window.location.reload();
   };
+
+  // Pagination logic
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+  const paginatedBooks = filteredBooks.slice(
+    (currentPage - 1) * booksPerPage,
+    currentPage * booksPerPage
+  );
+
+  // Generate page numbers
+  const getPageNumbers = () => {
+    const pages = [];
+    for (let i = 1; i <= totalPages; i++) pages.push(i);
+    return pages;
+  };
+
+  // Get status color for badges
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "available":
+        return "#10B981";
+      case "rented":
+        return "#F59E0B";
+      case "sold":
+        return "#EF4444";
+      default:
+        return "#6B7280";
+    }
+  };
+
+  // Handle search input change
+  const handleSearchChange = (e) => debouncedSearch(e.target.value);
 
   if (loading) {
     return (
@@ -306,6 +294,7 @@ const BooksList = () => {
 
   return (
     <div className="books-list-container">
+      {/* Page Header */}
       <div className="page-header">
         <HomePageTitle>All Books</HomePageTitle>
         <p className="page-description">
@@ -313,6 +302,7 @@ const BooksList = () => {
         </p>
       </div>
 
+      {/* Filters Section */}
       <div className="filters-section">
         <div className="search-filter">
           <div className="search-input-wrapper">
@@ -361,6 +351,7 @@ const BooksList = () => {
         </div>
       </div>
 
+      {/* Results Info */}
       <div className="results-info">
         <span className="results-count">
           {filteredBooks.length} book{filteredBooks.length !== 1 ? "s" : ""}{" "}
@@ -375,6 +366,7 @@ const BooksList = () => {
         )}
       </div>
 
+      {/* Books Display */}
       <div className={`books-display ${viewMode}`}>
         {paginatedBooks.length === 0 ? (
           <div className="no-results">
@@ -390,141 +382,149 @@ const BooksList = () => {
             )}
           </div>
         ) : (
-          paginatedBooks.map((book) => (
-            <div key={book.id} className={`book-item ${viewMode}`}>
-              <div className="book-image-section">
-                <div className="image-container">
-                  <img
-                    src={book.image || "/placeholder.svg"}
-                    alt={book.title}
-                    className="book-image"
-                    onError={(e) => {
-                      e.currentTarget.src =
-                        "/placeholder.svg?height=300&width=200";
-                    }}
-                  />
-                </div>
-                <div className="image-overlay">
-                  <div className="hover-actions">
-                    <button
-                      className={`action-btn favorite ${
-                        isInWishlist(book.id) ? "active" : ""
-                      }`}
-                      title={
-                        isInWishlist(book.id)
-                          ? "Remove from wishlist"
-                          : "Add to wishlist"
-                      }
-                      onClick={() => handleAddToWishlist(book.id)}
-                    >
-                      <Heart
-                        size={16}
-                        fill={isInWishlist(book.id) ? "currentColor" : "none"}
-                      />
-                    </button>
-                    <button
-                      className="action-btn view"
-                      title="Quick view"
-                      onClick={() => handleQuickView(book.id)}
-                    >
-                      <Eye size={16} />
-                    </button>
-                    <button
-                      className={`action-btn cart ${
-                        isInCart(book.id) ? "disabled" : ""
-                      }`}
-                      title={
-                        isInCart(book.id) ? "Already in cart" : "Add to cart"
-                      }
-                      onClick={
-                        !isInCart(book.id)
-                          ? () => handleAddToCart(book.id)
-                          : undefined
-                      }
-                      disabled={
-                        isInCart(book.id) || book.status !== "available"
-                      }
-                    >
-                      {isInCart(book.id) ? (
-                        <Check size={16} />
-                      ) : (
-                        <ShoppingCart size={16} />
-                      )}
-                    </button>
-                  </div>
-                </div>
-
-                <div className="category-tag">{book.category}</div>
-                <div
-                  className="status-badge"
-                  style={{ backgroundColor: getStatusColor(book.status) }}
-                >
-                  {book.badge}
-                </div>
+          paginatedBooks.map((book, index) => (
+            <div
+              key={book.id}
+              className="book-card"
+              style={{
+                animationDelay: `${index * 0.1}s`,
+                opacity: 0,
+                animation: "fadeIn 0.5s forwards",
+              }}
+            >
+              {/* Book Badge */}
+              <div
+                className="book-badge"
+                style={{ backgroundColor: getStatusColor(book.status) }}
+              >
+                {book.badge}
               </div>
 
-              <div className="book-content">
-                <div className="book-header">
-                  <h3 className="book-title">{book.title}</h3>
-                  <p className="book-author">By {book.author}</p>
-                </div>
+              {/* Book Image */}
+              <div className="book-image-container">
+                <img
+                  src={book.image}
+                  alt={book.title}
+                  className="book-image"
+                  width="350"
+                  height="320"
+                  loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.src =
+                      "/placeholder.svg?height=300&width=200";
+                  }}
+                />
+                <div className="image-overlay"></div>
 
-                {viewMode === "list" && (
-                  <p className="book-description">{book.description}</p>
-                )}
-
-                <div className="book-meta">
-                  <div className="book-rating">
-                    <div className="stars">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={14}
-                          className={
-                            i < Math.floor(book.rating) ? "star filled" : "star"
-                          }
-                        />
-                      ))}
-                    </div>
-                    <span className="rating-text">
-                      {book.rating} ({book.reviews} reviews)
-                    </span>
-                  </div>
-
-                  <div className="book-footer">
-                    <div className="book-price">
-                      {book.originalPrice && (
-                        <span className="original-price">
-                          {book.originalPrice}
-                        </span>
-                      )}
-                      <span className="current-price">{book.price}</span>
-                    </div>
-
+                {/* Hover Actions */}
+                <div className="hover-actions">
+                  <button
+                    className={`action-button favorite ${
+                      isInWishlist(book.id) ? "active" : ""
+                    }`}
+                    onClick={() => handleAddToWishlist(book.id)}
+                    aria-label={
+                      isInWishlist(book.id)
+                        ? "Remove from wishlist"
+                        : "Add to wishlist"
+                    }
+                  >
+                    <Heart
+                      size={18}
+                      fill={isInWishlist(book.id) ? "currentColor" : "none"}
+                    />
+                  </button>
+                  <button
+                    className="action-button view"
+                    onClick={() => handleQuickView(book.id)}
+                    aria-label="Quick view"
+                  >
+                    <Eye size={18} />
+                  </button>
+                  <button
+                    className={`action-button cart ${
+                      isInCart(book.id) ? "disabled" : ""
+                    }`}
+                    onClick={
+                      !isInCart(book.id)
+                        ? () => handleAddToCart(book.id)
+                        : undefined
+                    }
+                    disabled={isInCart(book.id) || book.status !== "available"}
+                    aria-label={
+                      isInCart(book.id) ? "Already in cart" : "Add to cart"
+                    }
+                  >
                     {isInCart(book.id) ? (
-                      <button className="add-to-cart-btn disabled" disabled>
-                        <Check size={16} />
-                        <span>In Cart</span>
-                      </button>
+                      <Check size={18} />
                     ) : (
-                      <button
-                        className="add-to-cart-btn"
-                        onClick={() => handleAddToCart(book.id)}
-                        disabled={book.status !== "available"}
-                      >
-                        <ShoppingCart size={16} />
-                        <span>Add to Cart</span>
-                      </button>
+                      <ShoppingCart size={18} />
                     )}
-                  </div>
+                  </button>
                 </div>
+
+                {/* Category Tag */}
+                <div className="category-tag">{book.category}</div>
+              </div>
+
+              {/* Book Content */}
+              <div className="book-content">
+                {/* Rating */}
+                <div className="book-rating">
+                  <div className="stars">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        size={14}
+                        className={
+                          i < Math.floor(book.rating) ? "star filled" : "star"
+                        }
+                      />
+                    ))}
+                  </div>
+                  <span className="rating-text">
+                    {book.rating} ({book.reviews} reviews)
+                  </span>
+                </div>
+
+                {/* Title and Author */}
+                <h3 className="book-title">{book.title}</h3>
+                <p className="book-author">{book.author}</p>
+
+                {/* Price */}
+                <div className="book-price">
+                  {book.originalPrice && (
+                    <span className="original-price">{book.originalPrice}</span>
+                  )}
+                  <span className="current-price">{book.price}</span>
+                </div>
+
+                {/* Add to Cart Button */}
+                <button
+                  className={`add-to-cart-btn ${
+                    isInCart(book.id) ? "disabled" : ""
+                  }`}
+                  onClick={
+                    !isInCart(book.id)
+                      ? () => handleAddToCart(book.id)
+                      : undefined
+                  }
+                  disabled={isInCart(book.id) || book.status !== "available"}
+                >
+                  {isInCart(book.id) ? (
+                    <Check size={16} />
+                  ) : (
+                    <ShoppingCart size={16} />
+                  )}
+                  <span>{isInCart(book.id) ? "In Cart" : "Add to Cart"}</span>
+                </button>
               </div>
             </div>
           ))
         )}
       </div>
 
-      {/* Pagination Controls */}
+      {/* Pagination */}
       {totalPages > 1 && (
         <div className="pagination-container">
           <ul className="pagination-list">
