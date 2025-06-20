@@ -1,32 +1,34 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
-export const useWishlist = () => {
+export const useWishlist = (userId) => {
     const [wishlistItems, setWishlistItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const navigate = useNavigate();
 
     const fetchWishlist = async () => {
         setLoading(true);
         try {
-            console.log("Fetching wishlist..."); 
-            const response = await api.getWishlist();
-            console.log("Wishlist API response:", response); 
-
-            const items = response.data?.data || [];
-
-            if (!Array.isArray(items)) {
-                throw new Error('Expected array in response data');
+            if (!userId) {
+                setWishlistItems([]);
+                setError(null);
+                return;
             }
 
+            const response = await api.getWishlist();
+            const items = response.data?.data || [];
             setWishlistItems(items);
             setError(null);
-            return items; 
+            return items;
         } catch (err) {
-            console.error("Error fetching wishlist:", err); 
+            if (err.response?.status === 401) {
+                navigate('/login');
+            }
             setError(err.response?.data?.message || err.message);
             setWishlistItems([]);
-            throw err; 
+            throw err;
         } finally {
             setLoading(false);
         }
@@ -34,14 +36,16 @@ export const useWishlist = () => {
 
     useEffect(() => {
         fetchWishlist();
-    }, []);
+    }, [userId]);
 
     const addToWishlist = async (bookId) => {
         try {
-            console.log("Adding to wishlist, book ID:", bookId); 
-            const response = await api.addToWishlist(bookId);
-            console.log("Add to wishlist response:", response); 
+            if (!userId) {
+                navigate('/login', { state: { from: '/books' } });
+                return { success: false, error: 'Please login first' };
+            }
 
+            const response = await api.addToWishlist(bookId);
             if (!response.data || !response.data.success) {
                 throw new Error('Failed to add to wishlist');
             }
@@ -49,7 +53,6 @@ export const useWishlist = () => {
             await fetchWishlist();
             return { success: true };
         } catch (err) {
-            console.error("Add to wishlist error:", err); 
             return {
                 success: false,
                 error: err.response?.data?.message || 'Failed to add to wishlist'
@@ -59,22 +62,24 @@ export const useWishlist = () => {
 
     const removeItem = async (itemId) => {
         try {
-            console.log("Removing wishlist item ID:", itemId);
-            const response = await api.removeWishlistItem(itemId);
-            console.log("Remove item response:", response); 
-
+            await api.removeWishlistItem(itemId);
             setWishlistItems(prev => prev.filter(item => item.id !== itemId));
             return { success: true };
         } catch (err) {
-            console.error("Remove item error:", err);
             return {
                 success: false,
                 error: err.response?.data?.message || 'Failed to remove item'
             };
         }
     };
+
     const moveToCart = async (itemId) => {
         try {
+            if (!userId) {
+                navigate('/login', { state: { from: '/wishlist' } });
+                return { success: false, error: 'Please login first' };
+            }
+
             await api.moveToCart(itemId);
             setWishlistItems(prev => prev.filter(item => item.id !== itemId));
             return { success: true };
@@ -88,6 +93,11 @@ export const useWishlist = () => {
 
     const moveAllToCart = async () => {
         try {
+            if (!userId) {
+                navigate('/login', { state: { from: '/wishlist' } });
+                return { success: false, error: 'Please login first' };
+            }
+
             const response = await api.moveAllToCart();
             return {
                 success: true,

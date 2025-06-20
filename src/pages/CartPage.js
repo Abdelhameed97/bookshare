@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
     Container,
     Row,
@@ -32,6 +32,7 @@ import Footer from "../components/HomePage/Footer.jsx";
 import { useCart } from '../hooks/useCart';
 
 const CartPage = () => {
+    const user = JSON.parse(localStorage.getItem('user'));
     const {
         cartItems,
         cartCount,
@@ -39,7 +40,7 @@ const CartPage = () => {
         error,
         fetchCartItems,
         setCartItems
-    } = useCart();
+    } = useCart(user?.id);
 
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
@@ -56,6 +57,10 @@ const CartPage = () => {
 
     const applyCoupon = async () => {
         if (!couponCode.trim()) return;
+        if (!user) {
+            navigate('/login', { state: { from: '/cart' } });
+            return;
+        }
 
         setIsApplyingCoupon(true);
         try {
@@ -95,6 +100,10 @@ const CartPage = () => {
 
     const handleQuantityChange = async (itemId, newQuantity) => {
         if (newQuantity < 1) return;
+        if (!user) {
+            navigate('/login', { state: { from: '/cart' } });
+            return;
+        }
 
         try {
             await api.updateCartItem(itemId, { quantity: newQuantity });
@@ -127,6 +136,10 @@ const CartPage = () => {
         });
 
         if (!result.isConfirmed) return;
+        if (!user) {
+            navigate('/login', { state: { from: '/cart' } });
+            return;
+        }
 
         try {
             await api.removeCartItem(itemId);
@@ -158,6 +171,10 @@ const CartPage = () => {
         });
 
         if (!result.isConfirmed) return;
+        if (!user) {
+            navigate('/login', { state: { from: '/cart' } });
+            return;
+        }
 
         try {
             await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
@@ -179,6 +196,10 @@ const CartPage = () => {
 
     const handleProceedToCheckout = async () => {
         if (cartItems.length === 0) return;
+        if (!user) {
+            navigate('/login', { state: { from: '/cart' } });
+            return;
+        }
 
         const result = await Swal.fire({
             title: 'Proceed to Checkout?',
@@ -249,7 +270,7 @@ const CartPage = () => {
 
     return (
         <>
-            <Navbar cartCount={cartCount} />
+            <Navbar />
 
             <Container className="cart-container py-5">
                 {showAlert && (

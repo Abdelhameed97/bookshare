@@ -35,12 +35,15 @@ const OrdersPage = () => {
     const [alertMessage, setAlertMessage] = useState('');
     const navigate = useNavigate();
 
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user?.id;
+
     const {
         orders,
         loading,
         error,
         cancelOrder
-    } = useOrders();
+    } = useOrders(userId);
 
     const filteredOrders = activeTab === 'all'
         ? orders
@@ -73,6 +76,23 @@ const OrdersPage = () => {
             setShowAlert(true);
         }
     };
+
+    if (!userId) {
+        return (
+            <div className="text-center py-5">
+                <Alert variant="warning">
+                    Please login to view your orders
+                </Alert>
+                <Button
+                    variant="primary"
+                    onClick={() => navigate('/login', { state: { from: '/orders' } })}
+                    className="mt-3"
+                >
+                    Login
+                </Button>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

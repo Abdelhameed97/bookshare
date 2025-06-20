@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
-
 import {
   FaSearch,
   FaShoppingCart,
@@ -12,16 +11,17 @@ import {
   FaTimes,
   FaHeart,
 } from "react-icons/fa";
-import "../../style/Homepagestyle.css";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
-
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const navigate = useNavigate();
+  const { cartCount, loading: cartLoading } = useCart(user?.id);
+  const { wishlistCount, loading: wishlistLoading } = useWishlist(user?.id);
 
   const navLinks = [
     { to: "/", label: "HOME" },
@@ -30,30 +30,19 @@ const Navbar = () => {
     { to: "/top-seller", label: "TOP SELLER" },
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
-    // { to: "/blog", label: "BLOG" },
     { to: "/contact", label: "CONTACT" },
   ];
 
-  const toggleMobileMenu = () => {
-    setIsOpen(!isOpen);
-  };
-
-  const closeMobileMenu = () => {
-    setIsOpen(false);
-  };
-
-  const toggleSearch = () => {
-    setIsSearchOpen(!isSearchOpen);
-  };
-
-  const navigate = useNavigate();
+  const toggleMobileMenu = () => setIsOpen(!isOpen);
+  const closeMobileMenu = () => setIsOpen(false);
+  const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
 
   useEffect(() => {
-    // Try to get user from localStorage
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
       } catch {
         setUser(null);
       }
@@ -64,17 +53,22 @@ const Navbar = () => {
 
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setUser(null);
     navigate("/");
-    // Optionally: window.location.reload();
   };
-  const { cartCount, loading: cartLoading } = useCart();
-  const { wishlistCount, loading: wishlistLoading } = useWishlist();
+
+  const handleProtectedAction = (path) => {
+    if (!user) {
+      navigate("/login", { state: { from: path } });
+      return;
+    }
+    navigate(path);
+  };
 
   return (
     <>
       <header className="bookshare-navbar">
-        {/* Company Title */}
         <div className="navbar-header">
           <div className="navbar-content-wrapper">
             <div className="navbar-header-container">
@@ -90,25 +84,10 @@ const Navbar = () => {
           </div>
         </div>
 
-        {/* Navigation */}
         <nav className="navbar-nav">
           <div className="navbar-content-wrapper">
             <div className="navbar-content">
-              {/* Desktop Navigation - Left Side */}
-              <div
-                className="nav-links-desktop"
-                style={{
-                  display: "flex",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: "1.2rem",
-                  flexWrap: "nowrap",
-                  whiteSpace: "nowrap",
-                  width: "auto",
-                  minWidth: 0,
-                  maxWidth: "100%",
-                }}
-              >
+              <div className="nav-links-desktop">
                 {navLinks.map((link) => {
                   const isActive = location.pathname === link.to;
                   return (
@@ -141,9 +120,7 @@ const Navbar = () => {
                 })}
               </div>
 
-              {/* Right Side Actions - Positioned at the edge */}
               <div className="navbar-actions">
-                {/* Search Icon */}
                 <button
                   className="icon-button"
                   title="Search"
@@ -153,11 +130,10 @@ const Navbar = () => {
                   <span className="sr-only">Search</span>
                 </button>
 
-                {/* Wishlist Icon */}
                 <button
                   className="icon-button wishlist-badge"
                   title="Wishlist"
-                  onClick={() => navigate("/wishlist")}
+                  onClick={() => handleProtectedAction("/wishlist")}
                 >
                   <FaHeart size={18} />
                   {wishlistCount > 0 && (
@@ -166,11 +142,10 @@ const Navbar = () => {
                   <span className="sr-only">Wishlist</span>
                 </button>
 
-                {/* Shopping Cart */}
                 <button
                   className="icon-button cart-badge"
                   title="Shopping Cart"
-                  onClick={() => navigate("/cart")}
+                  onClick={() => handleProtectedAction("/cart")}
                 >
                   <FaShoppingCart size={18} />
                   {cartCount > 0 && (
@@ -179,11 +154,7 @@ const Navbar = () => {
                   <span className="sr-only">Shopping cart</span>
                 </button>
 
-                {/* Auth Buttons - Desktop */}
-                <div
-                  className="auth-buttons-desktop"
-                  style={{ display: "flex", alignItems: "center", gap: "1rem" }}
-                >
+                <div className="auth-buttons-desktop">
                   {!user ? (
                     <>
                       <Link to="/login" className="btn btn-outline">
@@ -222,7 +193,6 @@ const Navbar = () => {
                   )}
                 </div>
 
-                {/* Mobile Menu Toggle */}
                 <button
                   className="mobile-menu-toggle icon-button"
                   onClick={toggleMobileMenu}
@@ -237,22 +207,18 @@ const Navbar = () => {
         </nav>
       </header>
 
-      {/* Search Modal */}
       <SearchModal
         isOpen={isSearchOpen}
         onClose={() => setIsSearchOpen(false)}
       />
 
-      {/* Mobile Menu Overlay */}
       <div
         className={`overlay ${isOpen ? "open" : ""}`}
         onClick={closeMobileMenu}
       ></div>
 
-      {/* Mobile Menu */}
       <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
         <div className="mobile-menu-content">
-          {/* Close Button */}
           <button
             className="icon-button mobile-close-button"
             onClick={closeMobileMenu}
@@ -261,62 +227,82 @@ const Navbar = () => {
             <FaTimes size={20} />
           </button>
 
-          {/* Mobile Auth Buttons */}
           <div className="mobile-auth-section">
-            <Link
-              to="/register"
-              className="btn btn-primary"
-              onClick={closeMobileMenu}
-            >
-              Create Account
-            </Link>
-            <Link
-              to="/login"
-              className="btn btn-outline"
-              onClick={closeMobileMenu}
-            >
-              Sign In
-            </Link>
+            {!user ? (
+              <>
+                <Link
+                  to="/register"
+                  className="btn btn-primary"
+                  onClick={closeMobileMenu}
+                >
+                  Create Account
+                </Link>
+                <Link
+                  to="/login"
+                  className="btn btn-outline"
+                  onClick={closeMobileMenu}
+                >
+                  Sign In
+                </Link>
+              </>
+            ) : (
+              <>
+                <span className="mobile-welcome-text">
+                  Welcome, {user.name || "User"}
+                </span>
+                <button
+                  className="btn btn-danger"
+                  onClick={() => {
+                    closeMobileMenu();
+                    handleLogout();
+                  }}
+                >
+                  Logout
+                </button>
+              </>
+            )}
           </div>
 
-          {/* Mobile Navigation Links */}
           <div className="mobile-nav-links">
             {navLinks.map((link) => (
               <Link
                 key={link.label}
                 to={link.to}
                 onClick={closeMobileMenu}
-                className={`mobile-nav-link ${link.active ? "active" : ""}`}
+                className={`mobile-nav-link ${
+                  location.pathname === link.to ? "active" : ""
+                }`}
               >
                 {link.label}
               </Link>
             ))}
           </div>
 
-          {/* Mobile Account Links */}
-          <div className="mobile-account-section">
-            <Link
-              to="/profile"
-              className="mobile-account-link"
-              onClick={closeMobileMenu}
-            >
-              My Profile
-            </Link>
-            <Link
-              to="/orders"
-              className="mobile-account-link"
-              onClick={closeMobileMenu}
-            >
-              My Orders
-            </Link>
-            <Link
-              to="/wishlist"
-              className="mobile-account-link"
-              onClick={closeMobileMenu}
-            >
-              My Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
-            </Link>
-          </div>
+          {user && (
+            <div className="mobile-account-section">
+              <Link
+                to="/profile"
+                className="mobile-account-link"
+                onClick={closeMobileMenu}
+              >
+                My Profile
+              </Link>
+              <Link
+                to="/orders"
+                className="mobile-account-link"
+                onClick={closeMobileMenu}
+              >
+                My Orders
+              </Link>
+              <Link
+                to="/wishlist"
+                className="mobile-account-link"
+                onClick={closeMobileMenu}
+              >
+                My Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </>
