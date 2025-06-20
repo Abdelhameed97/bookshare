@@ -25,8 +25,6 @@ import AdminLayout from './layouts/AdminLayout';
 function App() {
   return (
     <Router>
-      <Navbar />
-
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />
