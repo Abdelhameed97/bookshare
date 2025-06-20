@@ -302,18 +302,18 @@ const Navbar = () => {
                 My Profile
               </Link>
               <Link
-                to="/orders"
-                className="mobile-account-link"
-                onClick={closeMobileMenu}
-              >
-                My Orders {ordersCount > 0 && `(${ordersCount})`}
-              </Link>
-              <Link
                 to="/wishlist"
                 className="mobile-account-link"
                 onClick={closeMobileMenu}
               >
                 My Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
+              </Link>
+              <Link
+                to="/orders"
+                className="mobile-account-link"
+                onClick={closeMobileMenu}
+              >
+                My Orders {ordersCount > 0 && `(${ordersCount})`}
               </Link>
               <Link
                 to="/cart"
