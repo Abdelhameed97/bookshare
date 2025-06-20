@@ -15,7 +15,7 @@ import {
 import HomePageTitle from "../shared/HomePageTitle";
 import HomePageButton from "../shared/HomePageButton";
 import "../../style/BooksList.css";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
@@ -33,9 +33,15 @@ const BooksList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const booksPerPage = 9;
   const navigate = useNavigate();
-  const { cartItems, fetchCartItems } = useCart();
+  const location = useLocation();
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const userId = currentUser?.id;
+  const { cartItems, fetchCartItems } = useCart(userId);
   const { wishlistItems, fetchWishlist, addToWishlist, removeItem } =
-    useWishlist();
+    useWishlist(userId);  
+  const [addedToCartIds, setAddedToCartIds] = useState([]);
+  const [justAddedBookId, setJustAddedBookId] = useState(null);
+
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -134,9 +140,10 @@ const BooksList = () => {
 
   // Check if book is in cart
   const isInCart = (bookId) =>
-    cartItems.some((item) => item.book_id === bookId);
+    cartItems.some((item) => item.book_id === bookId) ||
+    addedToCartIds.includes(bookId);
 
-  // Check if book is in wishlist
+    // Check if book is in wishlist
   const isInWishlist = (bookId) =>
     wishlistItems.some((item) => item.book_id === bookId);
 
@@ -145,15 +152,17 @@ const BooksList = () => {
       const currentUser = JSON.parse(localStorage.getItem("user"));
       const book = books.find((b) => b.id === bookId);
 
-      console.log("book:", book);
-      console.log("currentUser:", currentUser);
-
       if (!book || !currentUser) {
-        throw new Error("Missing book or user info");
+        await Swal.fire({
+          icon: "error",
+          title: "Error",
+          text: "Please login to use wishlist",
+        });
+        navigate("/login", { state: { from: location.pathname } });
+        return;
       }
 
       const isOwnBook = book.user_id === currentUser.id;
-
       if (isOwnBook) {
         await Swal.fire({
           icon: "info",
@@ -168,8 +177,7 @@ const BooksList = () => {
         const itemToRemove = wishlistItems.find(
           (item) => item.book_id === bookId
         );
-        const result = await removeItem(itemToRemove.id);
-
+        await removeItem(itemToRemove.id);
         await Swal.fire({
           icon: "success",
           title: "Removed!",
@@ -177,8 +185,7 @@ const BooksList = () => {
           timer: 1500,
         });
       } else {
-        const result = await addToWishlist(bookId);
-
+        await addToWishlist(bookId);
         await Swal.fire({
           icon: "success",
           title: "Added!",
@@ -189,27 +196,31 @@ const BooksList = () => {
 
       await fetchWishlist();
     } catch (err) {
-      console.error("Wishlist error:", err);
-
-      let errorMessage = "Failed to update wishlist";
-      if (err.message.includes("already in your wishlist")) {
-        errorMessage = "This book is already in your wishlist";
-      } else if (err.message.includes("your own book")) {
-        errorMessage = "You cannot add your own book to your wishlist";
-      } else {
-        errorMessage = err.response?.data?.message || errorMessage;
+      if (err.message !== "Please login first") {
+        await Swal.fire({
+          icon: "error",
+          title: "Error",
+          text:
+            err.response?.data?.message ||
+            err.message ||
+            "Failed to update wishlist",
+        });
       }
-
-      await Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: errorMessage,
-      });
     }
   };
 
   // Handle add to cart
   const handleAddToCart = async (bookId) => {
+    if (isInCart(bookId)) {
+      Swal.fire({
+        icon: "info",
+        title: "Already in Cart",
+        text: "This book is already in your cart",
+        timer: 1500,
+      });
+      return;
+    }
+
     try {
       const result = await Swal.fire({
         title: "Add to Cart?",
@@ -225,8 +236,9 @@ const BooksList = () => {
       const book = books.find((b) => b.id === bookId);
       const type = book.originalPrice ? "rent" : "buy";
 
-      await api.addToCart(book.id, { type, quantity: 1 });
+      await api.addToCart(book.id, { type });
       await fetchCartItems();
+      setAddedToCartIds((prev) => [...prev, bookId]);
 
       await Swal.fire({
         icon: "success",
@@ -235,10 +247,16 @@ const BooksList = () => {
         timer: 1500,
       });
     } catch (err) {
+      const message = err.response?.data?.message || err.message;
+
+      if (message.includes("already in the cart")) {
+        setAddedToCartIds((prev) => [...prev, bookId]);
+      }
+
       await Swal.fire({
         icon: "error",
         title: "Failed to Add",
-        text: err.response?.data?.message || "Could not add book to cart",
+        text: message,
       });
     }
   };

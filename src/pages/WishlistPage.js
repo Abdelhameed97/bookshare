@@ -32,6 +32,10 @@ const WishlistPage = () => {
     const [filterBy, setFilterBy] = useState('all');
     const navigate = useNavigate();
 
+    // Get user from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user?.id;
+
     const {
         wishlistItems,
         wishlistCount,
@@ -41,7 +45,7 @@ const WishlistPage = () => {
         removeItem,
         moveToCart,
         moveAllToCart
-    } = useWishlist();
+    } = useWishlist(userId);
 
     const filteredItems = wishlistItems.filter(item => {
         if (!item.book) return false;
@@ -160,6 +164,24 @@ const WishlistPage = () => {
             });
         }
     };
+
+    // Show login prompt if user is not logged in
+    if (!userId) {
+        return (
+            <div className="text-center py-5">
+                <Alert variant="warning">
+                    Please login to view your wishlist
+                </Alert>
+                <CustomButton
+                    variant="primary"
+                    onClick={() => navigate('/login', { state: { from: '/wishlist' } })}
+                    className="mt-3"
+                >
+                    Login
+                </CustomButton>
+            </div>
+        );
+    }
 
     if (loading) {
         return (

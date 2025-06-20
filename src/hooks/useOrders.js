@@ -13,7 +13,7 @@ export const useOrders = (userId) => {
         try {
             if (!userId) {
                 setOrders([]);
-                setError(null);
+                setError('Please login to view your orders');
                 return;
             }
 
@@ -34,7 +34,9 @@ export const useOrders = (userId) => {
             setError(null);
         } catch (err) {
             if (err.response?.status === 401) {
-                navigate('/login');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login', { state: { from: window.location.pathname } });
             }
             setError(err.response?.data?.message || err.message);
             setOrders([]);

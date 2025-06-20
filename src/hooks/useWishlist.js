@@ -13,7 +13,7 @@ export const useWishlist = (userId) => {
         try {
             if (!userId) {
                 setWishlistItems([]);
-                setError(null);
+                setError('Please login to view your wishlist');
                 return;
             }
 
@@ -24,7 +24,9 @@ export const useWishlist = (userId) => {
             return items;
         } catch (err) {
             if (err.response?.status === 401) {
-                navigate('/login');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login', { state: { from: window.location.pathname } });
             }
             setError(err.response?.data?.message || err.message);
             setWishlistItems([]);
@@ -43,6 +45,17 @@ export const useWishlist = (userId) => {
             if (!userId) {
                 navigate('/login', { state: { from: '/books' } });
                 return { success: false, error: 'Please login first' };
+            }
+
+            const bookResponse = await api.getBookDetails(bookId);
+            const book = bookResponse.data;
+
+            if (!book) {
+                throw new Error('Book not found');
+            }
+
+            if (book.user_id === userId) {
+                throw new Error('You cannot add your own book to your wishlist');
             }
 
             const response = await api.addToWishlist(bookId);

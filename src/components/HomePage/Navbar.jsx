@@ -10,9 +10,11 @@ import {
   FaBars,
   FaTimes,
   FaHeart,
+  FaBoxOpen,
 } from "react-icons/fa";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
+import { useOrders } from "../../hooks/useOrders";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -20,8 +22,11 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
-  const { cartCount, loading: cartLoading } = useCart(user?.id);
-  const { wishlistCount, loading: wishlistLoading } = useWishlist(user?.id);
+
+  const { cartCount } = useCart(user?.id);
+  const { wishlistCount } = useWishlist(user?.id);
+  const { orders } = useOrders(user?.id);
+  const ordersCount = orders.length;
 
   const navLinks = [
     { to: "/", label: "HOME" },
@@ -127,7 +132,6 @@ const Navbar = () => {
                   onClick={toggleSearch}
                 >
                   <FaSearch size={18} />
-                  <span className="sr-only">Search</span>
                 </button>
 
                 <button
@@ -139,7 +143,17 @@ const Navbar = () => {
                   {wishlistCount > 0 && (
                     <span className="wishlist-count">{wishlistCount}</span>
                   )}
-                  <span className="sr-only">Wishlist</span>
+                </button>
+
+                <button
+                  className="icon-button order-badge"
+                  title="Orders"
+                  onClick={() => handleProtectedAction("/order")}
+                >
+                  <FaBoxOpen size={18} />
+                  {ordersCount > 0 && (
+                    <span className="order-count">{ordersCount}</span>
+                  )}
                 </button>
 
                 <button
@@ -151,7 +165,6 @@ const Navbar = () => {
                   {cartCount > 0 && (
                     <span className="cart-count">{cartCount}</span>
                   )}
-                  <span className="sr-only">Shopping cart</span>
                 </button>
 
                 <div className="auth-buttons-desktop">
@@ -199,7 +212,6 @@ const Navbar = () => {
                   title="Menu"
                 >
                   <FaBars size={20} />
-                  <span className="sr-only">Toggle menu</span>
                 </button>
               </div>
             </div>
@@ -292,7 +304,7 @@ const Navbar = () => {
                 className="mobile-account-link"
                 onClick={closeMobileMenu}
               >
-                My Orders
+                My Orders {ordersCount > 0 && `(${ordersCount})`}
               </Link>
               <Link
                 to="/wishlist"

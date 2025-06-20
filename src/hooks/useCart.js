@@ -13,16 +13,18 @@ export const useCart = (userId) => {
         try {
             if (!userId) {
                 setCartItems([]);
-                setError(null);
+                setError('Please login to view your cart');
                 return;
             }
 
             const response = await api.getCart();
-            setCartItems(response.data);
+            setCartItems(response.data || []);
             setError(null);
         } catch (err) {
             if (err.response?.status === 401) {
-                navigate('/login');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login', { state: { from: window.location.pathname } });
             }
             setError(err.response?.data?.message || 'Failed to load cart');
             setCartItems([]);
