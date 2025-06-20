@@ -572,45 +572,27 @@ const BooksList = () => {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="pagination-container">
-          <ul className="pagination-list">
-            <li>
-              <button
-                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                className="pagination-button"
-                aria-label="Previous page"
-              >
+        <nav>
+          <ul className="pagination">
+            <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+              <a href="#!" className="page-link" onClick={() => setCurrentPage(currentPage - 1)}>
                 &lt;
-              </button>
+              </a>
             </li>
-            {getPageNumbers().map((page) => (
-              <li key={page}>
-                <button
-                  onClick={() => setCurrentPage(page)}
-                  className={`pagination-button ${
-                    currentPage === page ? "active" : ""
-                  }`}
-                  aria-current={currentPage === page ? "page" : undefined}
-                >
-                  {page}
-                </button>
+            {getPageNumbers().map((number) => (
+              <li key={number} className={`page-item ${currentPage === number ? 'active' : ''}`}>
+                <a href="#!" className="page-link" onClick={() => setCurrentPage(number)}>
+                  {number}
+                </a>
               </li>
             ))}
-            <li>
-              <button
-                onClick={() =>
-                  setCurrentPage((p) => Math.min(totalPages, p + 1))
-                }
-                disabled={currentPage === totalPages}
-                className="pagination-button"
-                aria-label="Next page"
-              >
+            <li className={`page-item ${currentPage === totalPages ? 'disabled' : ''}`}>
+              <a href="#!" className="page-link" onClick={() => setCurrentPage(currentPage + 1)}>
                 &gt;
-              </button>
+              </a>
             </li>
           </ul>
-        </div>
+        </nav>
       )}
     </div>
   );

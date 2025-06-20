@@ -18,6 +18,8 @@ import { useOrders } from "../../hooks/useOrders";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
+
+  const navLocation = useLocation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -94,7 +96,7 @@ const Navbar = () => {
             <div className="navbar-content">
               <div className="nav-links-desktop">
                 {navLinks.map((link) => {
-                  const isActive = location.pathname === link.to;
+                  const isActive = navLocation.pathname === link.to;
                   return (
                     <Link
                       key={link.label}

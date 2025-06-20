@@ -729,3 +729,62 @@
      border-color: #e2e8f0;
    }
  }
+
+ /* ======================================= */
+ /* ==     MODERN PAGINATION STYLES    == */
+ /* ======================================= */
+
+ .pagination {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   list-style: none;
+   padding: 0;
+   margin-top: 3rem;
+   gap: 0.75rem; /* Space between buttons */
+ }
+
+ .page-item .page-link {
+   display: flex;
+   justify-content: center;
+   align-items: center;
+   width: 44px; /* Circle size */
+   height: 44px; /* Circle size */
+   border-radius: 50%; /* Make it a circle */
+   border: 2px solid #e2e8f0; /* Light gray border */
+   background-color: #ffffff;
+   color: #64748b; /* Grayish text color */
+   font-weight: 600;
+   font-size: 1rem;
+   cursor: pointer;
+   transition: all 0.3s ease;
+   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+   text-decoration: none; /* Remove underline from links */
+ }
+
+ /* Hover effect */
+ .page-item:not(.disabled):not(.active) .page-link:hover {
+   border-color: #8b5cf6; /* Purple border on hover */
+   background-color: #f5f3ff; /* Very light purple background */
+   color: #8b5cf6;
+   transform: translateY(-3px);
+   box-shadow: 0 8px 20px rgba(139, 92, 246, 0.15);
+ }
+
+ /* Active page style */
+ .page-item.active .page-link {
+   background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+   border-color: transparent;
+   color: white;
+   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+   transform: translateY(-2px);
+ }
+
+ /* Disabled button style */
+ .page-item.disabled .page-link {
+   background-color: #f1f5f9;
+   border-color: #e2e8f0;
+   color: #94a3b8;
+   cursor: not-allowed;
+   box-shadow: none;
+ }
