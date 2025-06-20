@@ -42,7 +42,6 @@ export const useWishlist = () => {
             };
         }
     };
-
     const removeItem = async (itemId) => {
         try {
             await api.removeWishlistItem(itemId);
