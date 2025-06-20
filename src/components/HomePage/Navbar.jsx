@@ -1,16 +1,18 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes } from "react-icons/fa"
 import SearchModal from './SearchModal'
 import '../../style/Homepagestyle.css';
+
 import { useCart } from "../../hooks/useCart";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false)
   // const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
+  const [user, setUser] = useState(null);
 
   const location = useLocation();
 
@@ -21,7 +23,7 @@ const Navbar = () => {
     { to: "/top-seller", label: "TOP SELLER" },
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
-    { to: "/blog", label: "BLOG" },
+    // { to: "/blog", label: "BLOG" },
     { to: "/contact", label: "CONTACT" },
   ]
 
@@ -48,6 +50,27 @@ const Navbar = () => {
   const navigate = useNavigate();
 
   const { cartCount, loading } = useCart();
+
+  useEffect(() => {
+    // Try to get user from localStorage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/");
+    // Optionally: window.location.reload();
+  };
 
   return (
     <>
@@ -79,6 +102,10 @@ const Navbar = () => {
                 alignItems: 'center',
                 gap: '1.2rem',
                 flexWrap: 'nowrap',
+                whiteSpace: 'nowrap',
+                width: 'auto',
+                minWidth: 0,
+                maxWidth: '100%',
               }}>
                 {navLinks.map((link) => {
                   const isActive = location.pathname === link.to;
@@ -138,13 +165,30 @@ const Navbar = () => {
                 </button>
 
                 {/* Auth Buttons - Desktop */}
-                <div className="auth-buttons-desktop">
-                  <Link to="/login" className="btn btn-outline">
-                    Sign In
-                  </Link>
-                  <Link to="/register" className="btn btn-primary">
-                    Register
-                  </Link>
+                <div className="auth-buttons-desktop" style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                  {!user ? (
+                    <>
+                      <Link to="/login" className="btn btn-outline">
+                        Sign In
+                      </Link>
+                      <Link to="/register" className="btn btn-primary">
+                        Register
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <span style={{ fontWeight: 600, color: '#10B981', fontSize: '1.1rem' }}>
+                        Welcome, {user.name || 'User'}
+                      </span>
+                      <button
+                        className="btn"
+                        style={{ background: '#EF4444', color: 'white', fontWeight: 600, borderRadius: '2rem', padding: '0.4rem 1.2rem', border: 'none' }}
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Mobile Menu Toggle */}
