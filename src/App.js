@@ -14,6 +14,7 @@ import BooksPage from "./pages/BooksPage";
 import BookDetails from "./pages/BookDetails";
 import ContactPage from "./pages/ContactPage";
 
+
 function App() {
   return (
     <Router>
@@ -30,6 +31,7 @@ function App() {
         <Route path='/login' element={<LoginPage />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
+
       </Routes>
     </Router>
   );

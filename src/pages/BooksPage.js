@@ -3,6 +3,7 @@ import BooksList from '../components/BooksPage/BooksList';
 import Navbar from "../components/HomePage/Navbar.jsx";
 import Footer from "../components/HomePage/Footer.jsx";
 
+
 const BooksPage = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -10,7 +11,7 @@ const BooksPage = () => {
 
   return (
     <div>
-        <Navbar />
+      <Navbar />
       <BooksList />
       <Footer />
     </div>
