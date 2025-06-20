@@ -10,7 +10,7 @@ const BooksPage = () => {
 
   return (
     <div>
-        <Navbar />
+      <Navbar />
       <BooksList />
       <Footer />
     </div>

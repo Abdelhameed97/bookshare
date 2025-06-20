@@ -10,62 +10,69 @@ const api = axios.create({
     },
 });
 
-// Add auth token to requests
 api.interceptors.request.use(config => {
     const token = localStorage.getItem('token');
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
     }
+    console.log("Request config:", config);
     return config;
 });
+
+api.interceptors.response.use(
+    response => {
+        console.log("API Response:", response);
+        return response;
+    },
+    error => {
+        console.error("API Error:", error);
+        console.error("Error details:", error.response?.data);
+        return Promise.reject(error);
+    }
+);
 
 const apiService = {
     // Cart Endpoints
     getCart: () => api.get('/cart'),
-    addToCart: (bookId, quantity = 1) => api.post('/cart', { book_id: bookId, quantity }),
+
+    addToCart: (bookId, data) => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.id) throw new Error('User not logged in');
+
+        const payload = {
+            book_id: bookId,
+            type: data.type, 
+            quantity: 1,     
+            user_id: user.id
+        };
+
+        console.log("Sending to cart:", payload);
+        return api.post('/cart', payload);
+    },
+
     updateCartItem: (cartItemId, quantity) => api.post(`/cart/${cartItemId}`, { quantity }),
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
 
     // Wishlist Endpoints
-    getWishlist: () => api.get('/wishlist')
-        .then(response => {
-            if (!response.data || !Array.isArray(response.data.data)) {
-                throw new Error('Invalid wishlist data format');
-            }
-            return response;
-        })
-        .catch(error => {
-            console.error('Wishlist API Error:', error);
-            throw error;
-        }),
-    addToWishlist: (bookId) => api.post('/wishlist', { book_id: bookId }),
+    getWishlist: () => api.get('/wishlist'),
+
+    addToWishlist: (bookId) => {
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user || !user.id) throw new Error('User not logged in');
+
+        return api.post('/wishlist', {
+            book_id: bookId,
+            user_id: user.id
+        });
+    },
+
     removeWishlistItem: (wishlistItemId) => api.delete(`/wishlist/${wishlistItemId}`),
     moveToCart: (wishlistItemId) => api.post(`/wishlist/${wishlistItemId}/move-to-cart`),
     moveAllToCart: () => api.post('/wishlist/move-all-to-cart'),
 
     // Order Endpoints
-    getOrders: () => api.get('/order')
-        .then(response => {
-            if (!response.data || !Array.isArray(response.data.data)) {
-                throw new Error('Invalid orders data format');
-            }
-            return response;
-        })
-        .catch(error => {
-            console.error('Orders API Error:', error);
-            throw error;
-        }),
-    getOrderDetails: (orderId) => api.get(`/order/${orderId}`)
-        .then(response => {
-            if (!response.data) {
-                throw new Error('Invalid order data format');
-            }
-            return response;
-        })
-        .catch(error => {
-            console.error('Order Details API Error:', error);
-            throw error;
-        }),
+    getOrders: () => api.get('/order'),
+    getOrderDetails: (orderId) => api.get(`/order/${orderId}`),
     createOrder: (orderData) => api.post('/order', orderData),
     cancelOrder: (orderId) => api.delete(`/order/${orderId}`),
 
