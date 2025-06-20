@@ -41,8 +41,8 @@ const apiService = {
 
         const payload = {
             book_id: bookId,
-            type: data.type, 
-            quantity: 1,     
+            type: data.type,
+            quantity: 1,
             user_id: user.id
         };
 

@@ -1,5 +1,5 @@
 "use client";
-import { Heart, Eye, ShoppingCart, Star } from "lucide-react";
+import { Heart, Eye, ShoppingCart, Star, Check } from "lucide-react";
 import { useState, useEffect } from "react";
 import HomePageTitle from "../shared/HomePageTitle";
 import "../../style/Homepagestyle.css";
@@ -8,25 +8,31 @@ import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 import api from "../../services/api";
 import Swal from "sweetalert2";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const NewReleases = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { cartItems, fetchCartItems } = useCart();
+  const [addedToCartIds, setAddedToCartIds] = useState([]);
+
+  const currentUser = JSON.parse(localStorage.getItem("user"));
+  const userId = currentUser?.id;
+
+  const { cartItems, fetchCartItems } = useCart(userId);
   const { wishlistItems, fetchWishlist, addToWishlist, removeItem } =
-    useWishlist();
+    useWishlist(userId);
+
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     const fetchLatestBooks = async () => {
       try {
         const response = await fetch("http://localhost:8000/api/books");
-        if (!response.ok) {
-          throw new Error("Failed to fetch books");
-        }
-        const data = await response.json();
-        console.log("Fetched books data:", data); 
+        if (!response.ok) throw new Error("Failed to fetch books");
 
+        const data = await response.json();
         const latestBooks = data.data.slice(0, 3).map((book) => ({
           id: book.id,
           user_id: book.user_id,
@@ -57,9 +63,9 @@ const NewReleases = () => {
           category: book.category?.name || "Uncategorized",
           status: book.status,
         }));
+
         setBooks(latestBooks);
       } catch (err) {
-        console.error("Error fetching books:", err);
         setError(err.message);
       } finally {
         setLoading(false);
@@ -69,15 +75,24 @@ const NewReleases = () => {
     fetchLatestBooks();
   }, []);
 
-  const isInCart = (bookId) => {
-    return cartItems.some((item) => item.book_id === bookId);
-  };
+  const isInCart = (bookId) =>
+    cartItems.some((item) => item.book_id === bookId) ||
+    addedToCartIds.includes(bookId);
 
-  const isInWishlist = (bookId) => {
-    return wishlistItems.some((item) => item.book_id === bookId);
-  };
+  const isInWishlist = (bookId) =>
+    wishlistItems.some((item) => item.book_id === bookId);
 
   const handleAddToCart = async (bookId) => {
+    if (isInCart(bookId)) {
+      Swal.fire({
+        icon: "info",
+        title: "Already in Cart",
+        text: "This book is already in your cart",
+        timer: 1500,
+      });
+      return;
+    }
+
     try {
       const result = await Swal.fire({
         title: "Add to Cart?",
@@ -91,23 +106,11 @@ const NewReleases = () => {
       if (!result.isConfirmed) return;
 
       const book = books.find((b) => b.id === bookId);
-      console.log("Book object:", book);
+      const type = book.originalPrice ? "rent" : "buy";
 
-      let type;
-      if (book.status === "available" && !book.originalPrice) {
-        type = "buy";
-      } else if (book.status === "available" && book.originalPrice) {
-        type = "rent";
-      } else {
-        throw new Error("This book is not available for purchase or rental");
-      }
-      
-      console.log("Selected type:", type);
-
-const response = await api.addToCart(book.id, { type });
-      console.log("API Response:", response.data);
-
+      await api.addToCart(book.id, { type });
       await fetchCartItems();
+      setAddedToCartIds((prev) => [...prev, bookId]);
 
       await Swal.fire({
         icon: "success",
@@ -116,31 +119,33 @@ const response = await api.addToCart(book.id, { type });
         timer: 1500,
       });
     } catch (err) {
-      console.error("Full error object:", err);
-      console.error("Error response data:", err.response?.data);
+      const message = err.response?.data?.message || err.message;
+
+      if (message.includes("already in the cart")) {
+        setAddedToCartIds((prev) => [...prev, bookId]);
+      }
 
       await Swal.fire({
         icon: "error",
         title: "Failed to Add",
-        text: err.response?.data?.message || "Could not add book to cart",
+        text: message,
       });
     }
   };
 
   const handleAddToWishlist = async (bookId) => {
     try {
-      const currentUser = JSON.parse(localStorage.getItem("user"));
       const book = books.find((b) => b.id === bookId);
-
-      console.log("book:", book);
-      console.log("currentUser:", currentUser);
-
-      if (!book || !currentUser) {
-        throw new Error("Missing book or user info");
+      if (!book || !userId) {
+        await Swal.fire({
+          icon: "error",
+          title: "Login Required",
+          text: "Please login to use the wishlist feature",
+        });
+        return navigate("/login", { state: { from: location.pathname } });
       }
 
-      const isOwnBook = book.user_id === currentUser.id;
-
+      const isOwnBook = book.user_id === userId;
       if (isOwnBook) {
         await Swal.fire({
           icon: "info",
@@ -155,9 +160,7 @@ const response = await api.addToCart(book.id, { type });
         const itemToRemove = wishlistItems.find(
           (item) => item.book_id === bookId
         );
-
-        const result = await removeItem(itemToRemove.id);
-
+        await removeItem(itemToRemove.id);
         await Swal.fire({
           icon: "success",
           title: "Removed!",
@@ -165,8 +168,7 @@ const response = await api.addToCart(book.id, { type });
           timer: 1500,
         });
       } else {
-        const result = await addToWishlist(bookId);
-
+        await addToWishlist(bookId);
         await Swal.fire({
           icon: "success",
           title: "Added!",
@@ -177,21 +179,13 @@ const response = await api.addToCart(book.id, { type });
 
       await fetchWishlist();
     } catch (err) {
-      console.error("Wishlist error:", err);
-
-      let errorMessage = "Failed to update wishlist";
-      if (err.message.includes("already in your wishlist")) {
-        errorMessage = "This book is already in your wishlist";
-      } else if (err.message.includes("your own book")) {
-        errorMessage = "You cannot add your own book to your wishlist";
-      } else {
-        errorMessage = err.response?.data?.message || errorMessage;
-      }
-
       await Swal.fire({
         icon: "error",
         title: "Error",
-        text: errorMessage,
+        text:
+          err.response?.data?.message ||
+          err.message ||
+          "Failed to update wishlist",
       });
     }
   };
@@ -287,7 +281,11 @@ const response = await api.addToCart(book.id, { type });
                     onClick={() => handleAddToCart(book.id)}
                     disabled={isInCart(book.id) || book.status !== "available"}
                   >
-                    <ShoppingCart size={18} />
+                    {isInCart(book.id) ? (
+                      <Check size={18} />
+                    ) : (
+                      <ShoppingCart size={18} />
+                    )}
                   </button>
                 </div>
 
@@ -327,7 +325,11 @@ const response = await api.addToCart(book.id, { type });
                   onClick={() => handleAddToCart(book.id)}
                   disabled={isInCart(book.id) || book.status !== "available"}
                 >
-                  <ShoppingCart size={16} />
+                  {isInCart(book.id) ? (
+                    <Check size={16} />
+                  ) : (
+                    <ShoppingCart size={16} />
+                  )}
                   <span>{isInCart(book.id) ? "In Cart" : "Add to Cart"}</span>
                 </button>
               </div>
