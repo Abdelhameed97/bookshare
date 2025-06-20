@@ -29,6 +29,7 @@ const NewReleases = () => {
 
         const latestBooks = data.data.slice(0, 3).map((book) => ({
           id: book.id,
+          user_id: book.user_id,
           image: book.images?.[0]
             ? book.images[0].startsWith("http")
               ? book.images[0]
@@ -128,6 +129,27 @@ const response = await api.addToCart(book.id, { type });
 
   const handleAddToWishlist = async (bookId) => {
     try {
+      const currentUser = JSON.parse(localStorage.getItem("user"));
+      const book = books.find((b) => b.id === bookId);
+
+      console.log("book:", book);
+      console.log("currentUser:", currentUser);
+
+      if (!book || !currentUser) {
+        throw new Error("Missing book or user info");
+      }
+
+      const isOwnBook = book.user_id === currentUser.id;
+
+      if (isOwnBook) {
+        await Swal.fire({
+          icon: "info",
+          title: "Invalid Action",
+          text: "You cannot add your own book to your wishlist.",
+          timer: 2000,
+        });
+        return;
+      }
 
       if (isInWishlist(bookId)) {
         const itemToRemove = wishlistItems.find(
@@ -135,7 +157,6 @@ const response = await api.addToCart(book.id, { type });
         );
 
         const result = await removeItem(itemToRemove.id);
-        console.log("Remove result:", result); 
 
         await Swal.fire({
           icon: "success",
@@ -145,7 +166,6 @@ const response = await api.addToCart(book.id, { type });
         });
       } else {
         const result = await addToWishlist(bookId);
-        console.log("Add to wishlist result:", result); 
 
         await Swal.fire({
           icon: "success",
@@ -155,16 +175,23 @@ const response = await api.addToCart(book.id, { type });
         });
       }
 
-      const updatedWishlist = await fetchWishlist();
-      console.log("Updated wishlist:", updatedWishlist); 
+      await fetchWishlist();
     } catch (err) {
-      console.error("Wishlist error:", err); 
-      console.error("Error details:", err.response?.data); 
+      console.error("Wishlist error:", err);
+
+      let errorMessage = "Failed to update wishlist";
+      if (err.message.includes("already in your wishlist")) {
+        errorMessage = "This book is already in your wishlist";
+      } else if (err.message.includes("your own book")) {
+        errorMessage = "You cannot add your own book to your wishlist";
+      } else {
+        errorMessage = err.response?.data?.message || errorMessage;
+      }
 
       await Swal.fire({
         icon: "error",
         title: "Error",
-        text: err.response?.data?.message || "Failed to update wishlist",
+        text: errorMessage,
       });
     }
   };

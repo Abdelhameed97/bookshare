@@ -1,16 +1,17 @@
 "use client";
 
-import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect } from "react"
+import { Link, useNavigate, useLocation } from "react-router-dom"
+import SearchModal from './SearchModal'
+import '../../style/Homepagestyle.css';
+
 import {
   FaSearch,
   FaShoppingCart,
-  FaUser,
   FaBars,
   FaTimes,
   FaHeart,
 } from "react-icons/fa";
-import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
