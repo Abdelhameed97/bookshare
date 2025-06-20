@@ -1,494 +1,342 @@
-import React, { useEffect, useState } from "react"
-import { useParams, Link } from "react-router-dom"
-import axios from "axios"
-import "./BookDetails.css" // Assuming you have a CSS file for styling
-import {
-    FaHeart,
-    FaReply,
-    FaEllipsisH,
-    FaEdit,
-    FaTrash,
-    FaTimes,
-} from "react-icons/fa"
+import React, { useEffect, useState } from "react";
+import { useParams, Link } from "react-router-dom";
+import axios from "axios";
 
 const BookDetails = () => {
-    const { id } = useParams()
-    const [book, setBook] = useState(null)
-    const [authorBooks, setAuthorBooks] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [commentInput, setCommentInput] = useState("")
-    const [parentId, setParentId] = useState(null)
-    const [user, setUser] = useState(null)
-    const [replyingTo, setReplyingTo] = useState(null)
-    const [editingComment, setEditingComment] = useState(null)
-    const [showOptions, setShowOptions] = useState(null)
+    const { id } = useParams();
+    const [book, setBook] = useState(null);
+    const [authorBooks, setAuthorBooks] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [commentInput, setCommentInput] = useState("");
+    const [parentId, setParentId] = useState(null);
+    const [user, setUser] = useState(null);
+    const [replyingTo, setReplyingTo] = useState(null);
+    const [editingComment, setEditingComment] = useState(null);
+    const [showOptions, setShowOptions] = useState(null);
 
-    const token = localStorage.getItem("token")
+    // Helper to get status badge color
+    const getStatusBadgeStyle = (status) => {
+        switch (status) {
+            case "available":
+                return { background: "#10B981", color: "white" };
+            case "rented":
+                return { background: "#F59E0B", color: "white" };
+            case "sold":
+                return { background: "#EF4444", color: "white" };
+            default:
+                return { background: "#6B7280", color: "white" };
+        }
+    };
 
     useEffect(() => {
-        fetchBook()
-        fetchUser()
-    }, [id])
-
-    const fetchUser = async () => {
-        if (token) {
-            try {
-                const res = await axios.get("http://localhost:8000/api/user", {
-                    headers: { Authorization: `Bearer ${token}` },
-                })
-                setUser(res.data)
-            } catch (err) {
-                console.error("Error fetching user")
-            }
-        }
-    }
-
-    const fetchBook = async () => {
-        setLoading(true)
-        try {
-            const response = await axios.get(
-                `http://localhost:8000/api/books/${id}`
-            )
-            const bookData = response.data.data
-            setBook(bookData)
-
-            const userId = bookData.user?.id
-            if (userId) {
-                const res = await axios.get(
-                    `http://localhost:8000/api/books?user_id=${userId}`
-                )
-                const filtered = res.data.data.filter(b => b.id !== bookData.id)
-                setAuthorBooks(filtered)
-            }
-        } catch (err) {
-            console.error("Error loading book details")
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleAddComment = async () => {
-        if (!commentInput.trim()) return
-        try {
-            await axios.post(
-                "http://localhost:8000/api/comment",
-                {
-                    user_id: user.id,
-                    book_id: book.id,
-                    comment: commentInput,
-                    parent_id: parentId,
-                },
-                {
-                    headers: { Authorization: `Bearer ${token}` },
+        setLoading(true);
+        axios
+            .get(`http://localhost:8000/api/books/${id}`)
+            .then((response) => {
+                setBook(response.data.data);
+                setLoading(false);
+                // Fetch author's books after book is loaded
+                const userId = response.data.data.user?.id;
+                if (userId) {
+                    axios
+                        .get(`http://localhost:8000/api/books?user_id=${userId}`)
+                        .then((res) => {
+                            // Exclude the current book
+                            const filtered = res.data.data.filter(
+                                (b) => b.id !== response.data.data.id
+                            );
+                            setAuthorBooks(filtered);
+                        })
+                        .catch(() => setAuthorBooks([]));
                 }
-            )
-            setCommentInput("")
-            setParentId(null)
-            setReplyingTo(null)
-            setEditingComment(null)
-            fetchBook()
-        } catch (err) {
-            console.error("Error adding comment")
-        }
-    }
+            })
+            .catch((err) => {
+                setError("Failed to load book details.");
+                setLoading(false);
+            });
+    }, [id]);
 
-    const handleDelete = async commentId => {
-        try {
-            await axios.delete(
-                `http://localhost:8000/api/comment/${commentId}`,
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            )
-            fetchBook()
-            setShowOptions(null)
-        } catch (err) {
-            console.error("Delete error")
-        }
-    }
-
-    const handleEdit = async (commentId, newContent) => {
-        try {
-            await axios.put(
-                `http://localhost:8000/api/comment/${commentId}`,
-                { comment: newContent },
-                {
-                    headers: { Authorization: `Bearer ${token}` },
-                }
-            )
-            fetchBook()
-            setEditingComment(null)
-        } catch (err) {
-            console.error("Edit error")
-        }
-    }
-
-    const formatDate = dateString => {
-        const date = new Date(dateString)
-        return date.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "short",
-            day: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-        })
-    }
-
-    const renderComments = (comments, parent = null, depth = 0) => {
-        return comments
-            .filter(c => c.parent_id === parent)
-            .map(comment => (
-                <div
-                    key={comment.id}
-                    className={`comment-container ${
-                        depth > 0 ? "reply-comment" : ""
-                    }`}
-                    style={{
-                        marginLeft: depth > 0 ? `${depth * 30}px` : "0",
-                        borderLeft: depth > 0 ? "2px solid #e5e7eb" : "none",
-                    }}
-                >
-                    <div className="comment-header">
-                        <div className="comment-author">
-                            <img
-                                src={
-                                    comment.user?.avatar ||
-                                    "/default-avatar.png"
-                                }
-                                alt={comment.user?.name}
-                                className="comment-avatar"
-                            />
-                            <div>
-                                <strong>{comment.user?.name}</strong>
-                                <div className="comment-date">
-                                    {formatDate(comment.created_at)}
-                                </div>
-                            </div>
-                        </div>
-
-                        {user &&
-                            (user.id === comment.user_id ||
-                                user.role === "admin") && (
-                                <div className="comment-options">
-                                    <button
-                                        className="options-btn"
-                                        onClick={() =>
-                                            setShowOptions(
-                                                showOptions === comment.id
-                                                    ? null
-                                                    : comment.id
-                                            )
-                                        }
-                                    >
-                                        <FaEllipsisH />
-                                    </button>
-
-                                    {showOptions === comment.id && (
-                                        <div className="options-menu">
-                                            <button
-                                                onClick={() => {
-                                                    setEditingComment(
-                                                        comment.id
-                                                    )
-                                                    setCommentInput(
-                                                        comment.comment
-                                                    )
-                                                    setShowOptions(null)
-                                                }}
-                                            >
-                                                <FaEdit /> Edit
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    handleDelete(comment.id)
-                                                }
-                                            >
-                                                <FaTrash /> Delete
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    setShowOptions(null)
-                                                }
-                                            >
-                                                <FaTimes /> Cancel
-                                            </button>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                    </div>
-
-                    <div className="comment-content">
-                        {editingComment === comment.id ? (
-                            <div className="edit-comment">
-                                <textarea
-                                    className="form-control mb-2"
-                                    value={commentInput}
-                                    onChange={e =>
-                                        setCommentInput(e.target.value)
-                                    }
-                                    rows="3"
-                                />
-                                <div className="edit-actions">
-                                    <button
-                                        className="btn btn-sm btn-primary"
-                                        onClick={() =>
-                                            handleEdit(comment.id, commentInput)
-                                        }
-                                    >
-                                        Save
-                                    </button>
-                                    <button
-                                        className="btn btn-sm btn-outline-secondary"
-                                        onClick={() => setEditingComment(null)}
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        ) : (
-                            <p>{comment.comment}</p>
-                        )}
-                    </div>
-
-                    <div className="comment-actions">
-                        <button className="like-btn">
-                            <FaHeart /> Like
-                        </button>
-                        <button
-                            className="reply-btn"
-                            onClick={() => {
-                                setParentId(comment.id)
-                                setReplyingTo(comment.user?.name)
-                                setEditingComment(null)
-                            }}
-                        >
-                            <FaReply /> Reply
-                        </button>
-                    </div>
-
-                    {/* Render replies */}
-                    {renderComments(comments, comment.id, depth + 1)}
-
-                    {/* Reply input when active */}
-                    {parentId === comment.id && (
-                        <div className="reply-input-container">
-                            <div className="reply-prompt">
-                                Replying to <strong>{replyingTo}</strong>
-                                <button
-                                    className="cancel-reply"
-                                    onClick={() => {
-                                        setParentId(null)
-                                        setReplyingTo(null)
-                                    }}
-                                >
-                                    <FaTimes />
-                                </button>
-                            </div>
-                            <textarea
-                                className="form-control mb-2"
-                                placeholder="Write your reply..."
-                                rows="2"
-                                value={commentInput}
-                                onChange={e => setCommentInput(e.target.value)}
-                            />
-                            <button
-                                className="btn btn-primary btn-sm"
-                                onClick={handleAddComment}
-                            >
-                                Reply
-                            </button>
-                        </div>
-                    )}
-                </div>
-            ))
-    }
-
-    if (loading)
-        return (
-            <div className="loading-container">
-                <div className="spinner"></div>
-                <p>Loading book details...</p>
-            </div>
-        )
-
+    if (loading) return <div className="text-center mt-5">Loading...</div>;
+    if (error) return <div className="alert alert-danger mt-5">{error}</div>;
     if (!book)
-        return (
-            <div className="alert-container">
-                <div className="alert alert-danger">Book not found</div>
-            </div>
-        )
+        return <div className="alert alert-warning mt-5">Book not found.</div>;
 
-    const imagePath = Array.isArray(book.images) ? book.images[0] : book.images
+    // Handle image path (array or string)
+    let imagePath = "";
+    if (Array.isArray(book.images)) {
+        imagePath = book.images[0];
+    } else if (typeof book.images === "string") {
+        imagePath = book.images;
+    }
     const imageUrl = imagePath
         ? imagePath.startsWith("http")
             ? imagePath
             : `http://localhost:8000/storage/${imagePath}`
-        : "/placeholder.svg"
-
-    const getStatusBadgeStyle = status => {
-        switch (status) {
-            case "available":
-                return { backgroundColor: "#10B981", color: "#fff" }
-            case "rented":
-                return { backgroundColor: "#F59E0B", color: "#fff" }
-            case "sold":
-                return { backgroundColor: "#EF4444", color: "#fff" }
-            default:
-                return { backgroundColor: "#6B7280", color: "#fff" }
-        }
-    }
+        : "/placeholder.svg?height=300&width=200";
 
     return (
-        <div className="book-details-container">
-            <div className="book-header">
-                <div className="book-cover">
-                    <img
-                        src={imageUrl}
-                        alt={book.title}
-                        className="book-image"
-                    />
+        <div
+            style={{
+                minHeight: "100vh",
+                background: "linear-gradient(135deg, #f8fafc 0%, #e0e7ef 100%)",
+                padding: "40px 0",
+            }}
+        >
+            <div
+                className="container animate__animated animate__fadeIn"
+                style={{
+                    maxWidth: 900,
+                    background: "#fff",
+                    borderRadius: "2rem",
+                    boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
+                    padding: "2.5rem 2rem",
+                    margin: "0 auto",
+                }}
+            >
+                <div className="row g-4 align-items-start">
+                    <div className="col-md-4 text-center">
+                        <div
+                            className="shadow rounded overflow-hidden book-image-wrapper"
+                            style={{
+                                transition: "transform 0.4s cubic-bezier(.4,2,.3,1)",
+                                cursor: "pointer",
+                                boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.15)",
+                                background: "#fff",
+                                padding: "1.5rem",
+                                borderRadius: "1.5rem",
+                                display: "inline-block",
+                            }}
+                            onMouseOver={(e) =>
+                                (e.currentTarget.style.transform = "scale(1.05)")
+                            }
+                            onMouseOut={(e) => (e.currentTarget.style.transform = "scale(1)")}
+                        >
+                            {imageUrl ? (
+                                <img
+                                    src={imageUrl}
+                                    alt={book.title}
+                                    className="img-fluid"
+                                    style={{
+                                        maxHeight: "350px",
+                                        objectFit: "cover",
+                                        borderRadius: "1rem",
+                                        boxShadow: "0 4px 24px 0 rgba(31, 38, 135, 0.10)",
+                                        transition: "box-shadow 0.3s",
+                                    }}
+                                />
+                            ) : (
+                                <div className="bg-secondary text-white p-5 rounded">
+                                    No Image
+                                </div>
+                            )}
+                        </div>
+                    </div>
                     <div
-                        className="book-status"
-                        style={getStatusBadgeStyle(book.status)}
+                        className="col-md-8 animate__animated animate__fadeInRight"
+                        style={{ animationDelay: "0.2s" }}
                     >
-                        {book.status.toUpperCase()}
+                        <h2
+                            className="mb-3 fw-bold"
+                            style={{ letterSpacing: "1px", fontSize: "2.5rem" }}
+                        >
+                            {book.title}
+                        </h2>
+                        <p className="mb-2" style={{ fontSize: "1.3rem" }}>
+                            <strong>Author:</strong>{" "}
+                            <span className="text-primary" style={{ fontWeight: 600 }}>
+                                {book.user?.name || "Unknown"}
+                            </span>
+                        </p>
+                        <p className="mb-2" style={{ fontSize: "1.2rem" }}>
+                            <strong>Category:</strong>{" "}
+                            <span className="badge bg-secondary" style={{ fontSize: "1rem" }}>
+                                {book.category?.name || "N/A"}
+                            </span>
+                        </p>
+                        <p className="mb-2" style={{ fontSize: "1.2rem" }}>
+                            <strong>Status:</strong>{" "}
+                            <span
+                                className="badge"
+                                style={{
+                                    fontSize: "1rem",
+                                    ...getStatusBadgeStyle(book.status),
+                                }}
+                            >
+                                {book.status}
+                            </span>
+                        </p>
+                        <p className="mb-2" style={{ fontSize: "1.2rem" }}>
+                            <strong>Price:</strong>{" "}
+                            <span
+                                className="text-success fw-bold"
+                                style={{ fontSize: "1.3rem" }}
+                            >
+                                {book.price} $
+                            </span>
+                        </p>
+                        <p className="mb-3" style={{ fontSize: "1.15rem" }}>
+                            <strong>Description:</strong>{" "}
+                            <span className="text-muted">
+                                {book.description || "No description."}
+                            </span>
+                        </p>
                     </div>
                 </div>
-
-                <div className="book-info">
-                    <h1>{book.title}</h1>
-
-                    <div className="book-meta">
-                        <div className="meta-item">
-                            <span className="meta-label">Author:</span>
-                            <span className="meta-value">
-                                {book.user?.name}
-                            </span>
-                        </div>
-
-                        <div className="meta-item">
-                            <span className="meta-label">Category:</span>
-                            <span className="meta-value">
-                                {book.category?.name}
-                            </span>
-                        </div>
-
-                        <div className="meta-item">
-                            <span className="meta-label">Price:</span>
-                            <span className="meta-value">${book.price}</span>
-                        </div>
-                    </div>
-
-                    <div className="book-description">
-                        <h3>Description</h3>
-                        <p>{book.description}</p>
-                    </div>
-                </div>
-            </div>
-
-            {/* Comments Section */}
-            <div className="comments-section">
-                <h2 className="section-title">
-                    Comments{" "}
-                    {book.comments?.length > 0 && `(${book.comments.length})`}
-                </h2>
-
-                {user && (
-                    <div className="new-comment">
-                        <img
-                            src={user.avatar || "/default-avatar.png"}
-                            alt={user.name}
-                            className="user-avatar"
-                        />
-                        <div className="comment-input-container">
-                            <textarea
-                                className="form-control"
-                                placeholder="Write a comment..."
-                                rows="3"
-                                value={commentInput}
-                                onChange={e => setCommentInput(e.target.value)}
-                            />
-                            <div className="comment-actions">
-                                <button
-                                    className="btn btn-primary"
-                                    onClick={handleAddComment}
-                                    disabled={!commentInput.trim()}
+                <hr className="my-5" />
+                <div
+                    className="comments-section animate__animated animate__fadeInUp"
+                    style={{ animationDelay: "0.4s" }}
+                >
+                    <h4 className="mb-4 fw-bold" style={{ fontSize: "2rem" }}>
+                        Comments
+                    </h4>
+                    {book.comments && book.comments.length > 0 ? (
+                        <div className="list-group">
+                            {book.comments.map((comment) => (
+                                <div
+                                    key={comment.id}
+                                    className="list-group-item mb-3 shadow-sm rounded border-0 comment-item"
+                                    style={{
+                                        transition: "transform 0.3s, box-shadow 0.3s",
+                                        background: "#f8f9fa",
+                                        borderRadius: "1rem",
+                                        border: "1px solid #e3e6ea",
+                                        fontSize: "1.15rem",
+                                    }}
+                                    onMouseOver={(e) => {
+                                        e.currentTarget.style.transform = "scale(1.02)";
+                                        e.currentTarget.style.boxShadow =
+                                            "0 8px 32px 0 rgba(31, 38, 135, 0.10)";
+                                    }}
+                                    onMouseOut={(e) => {
+                                        e.currentTarget.style.transform = "scale(1)";
+                                        e.currentTarget.style.boxShadow =
+                                            "0 2px 8px 0 rgba(31, 38, 135, 0.05)";
+                                    }}
                                 >
-                                    Post
-                                </button>
-                                {parentId && (
-                                    <button
-                                        className="btn btn-outline-secondary"
-                                        onClick={() => {
-                                            setParentId(null)
-                                            setReplyingTo(null)
-                                            setCommentInput("")
-                                        }}
-                                    >
-                                        Cancel
-                                    </button>
-                                )}
-                            </div>
+                                    <div className="d-flex align-items-center mb-2">
+                                        <span
+                                            className="fw-bold me-2 text-primary"
+                                            style={{ fontSize: "1.1rem" }}
+                                        >
+                                            {comment.user?.name || "Anonymous"}
+                                        </span>
+                                        <span className="text-muted small">
+                                            {new Date(comment.created_at).toLocaleString()}
+                                        </span>
+                                    </div>
+                                    <div className="text-dark">{comment.content}</div>
+                                </div>
+                            ))}
                         </div>
-                    </div>
-                )}
-
-                <div className="comments-list">
-                    {book.comments?.length > 0 ? (
-                        renderComments(book.comments)
                     ) : (
-                        <div className="no-comments">
-                            No comments yet. Be the first to comment!
+                        <div className="text-muted" style={{ fontSize: "1.1rem" }}>
+                            No comments yet.
+                        </div>
+                    )}
+                </div>
+                {/* Author's other books */}
+                <div
+                    className="mt-5 animate__animated animate__fadeInUp"
+                    style={{ animationDelay: "0.6s" }}
+                >
+                    <h4 className="fw-bold mb-4" style={{ fontSize: "2rem" }}>
+                        More books by this author
+                    </h4>
+                    {authorBooks.length > 0 ? (
+                        <div className="row g-4">
+                            {authorBooks.map((book) => {
+                                let imagePath = "";
+                                if (Array.isArray(book.images)) {
+                                    imagePath = book.images[0];
+                                } else if (typeof book.images === "string") {
+                                    imagePath = book.images;
+                                }
+                                const imageUrl = imagePath
+                                    ? imagePath.startsWith("http")
+                                        ? imagePath
+                                        : `http://localhost:8000/storage/${imagePath}`
+                                    : "/placeholder.svg?height=300&width=200";
+                                return (
+                                    <div
+                                        className="col-12 col-sm-6 col-md-4 col-lg-3"
+                                        key={book.id}
+                                    >
+                                        <Link
+                                            to={`/books/${book.id}`}
+                                            style={{ textDecoration: "none" }}
+                                        >
+                                            <div
+                                                className="card h-100 shadow-sm border-0"
+                                                style={{
+                                                    borderRadius: "1.2rem",
+                                                    transition: "transform 0.3s, box-shadow 0.3s",
+                                                }}
+                                                onMouseOver={(e) => {
+                                                    e.currentTarget.style.transform = "scale(1.04)";
+                                                    e.currentTarget.style.boxShadow =
+                                                        "0 8px 32px 0 rgba(31, 38, 135, 0.10)";
+                                                }}
+                                                onMouseOut={(e) => {
+                                                    e.currentTarget.style.transform = "scale(1)";
+                                                    e.currentTarget.style.boxShadow =
+                                                        "0 2px 8px 0 rgba(31, 38, 135, 0.05)";
+                                                }}
+                                            >
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={book.title}
+                                                    className="card-img-top"
+                                                    style={{
+                                                        height: "180px",
+                                                        objectFit: "cover",
+                                                        borderTopLeftRadius: "1.2rem",
+                                                        borderTopRightRadius: "1.2rem",
+                                                    }}
+                                                />
+                                                <div className="card-body">
+                                                    <h5
+                                                        className="card-title mb-2"
+                                                        style={{
+                                                            fontSize: "1.1rem",
+                                                            color: "#222",
+                                                            fontWeight: 600,
+                                                        }}
+                                                    >
+                                                        {book.title}
+                                                    </h5>
+                                                    <p
+                                                        className="card-text mb-1"
+                                                        style={{ fontSize: "1rem", color: "#666" }}
+                                                    >
+                                                        {book.category?.name || "Uncategorized"}
+                                                    </p>
+                                                    <span
+                                                        className="badge"
+                                                        style={{
+                                                            fontSize: "0.95rem",
+                                                            ...getStatusBadgeStyle(book.status),
+                                                        }}
+                                                    >
+                                                        {book.status}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    ) : (
+                        <div className="text-muted" style={{ fontSize: "1.1rem" }}>
+                            No other books by this author.
                         </div>
                     )}
                 </div>
             </div>
-
-            {/* More books by author */}
-            {authorBooks.length > 0 && (
-                <div className="author-books">
-                    <h2 className="section-title">More by {book.user?.name}</h2>
-                    <div className="books-grid">
-                        {authorBooks.map(book => {
-                            const img = Array.isArray(book.images)
-                                ? book.images[0]
-                                : book.images
-                            const url = img?.startsWith("http")
-                                ? img
-                                : `http://localhost:8000/storage/${img}`
-                            return (
-                                <Link
-                                    to={`/books/${book.id}`}
-                                    key={book.id}
-                                    className="book-card"
-                                >
-                                    <div className="book-card-image">
-                                        <img
-                                            src={url || "/placeholder.svg"}
-                                            alt={book.title}
-                                        />
-                                        <div
-                                            className="book-card-status"
-                                            style={getStatusBadgeStyle(
-                                                book.status
-                                            )}
-                                        >
-                                            {book.status.toUpperCase()}
-                                        </div>
-                                    </div>
-                                    <div className="book-card-info">
-                                        <h3>{book.title}</h3>
-                                        <p className="price">${book.price}</p>
-                                    </div>
-                                </Link>
-                            )
-                        })}
-                    </div>
-                </div>
-            )}
         </div>
-    )
-}
+    );
+};
 
-export default BookDetails
+export default BookDetails;

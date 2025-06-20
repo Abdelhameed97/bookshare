@@ -11,16 +11,13 @@ export const useWishlist = () => {
         try {
             const response = await api.getWishlist();
             const items = response.data?.data || [];
-
-            if (!Array.isArray(items)) {
-                throw new Error('Expected array in response data');
-            }
-
             setWishlistItems(items);
             setError(null);
+            return items;
         } catch (err) {
             setError(err.response?.data?.message || err.message);
             setWishlistItems([]);
+            throw err;
         } finally {
             setLoading(false);
         }
@@ -30,6 +27,21 @@ export const useWishlist = () => {
         fetchWishlist();
     }, []);
 
+    const addToWishlist = async (bookId) => {
+        try {
+            const response = await api.addToWishlist(bookId);
+            if (!response.data || !response.data.success) {
+                throw new Error(response.data?.message || 'Failed to add to wishlist');
+            }
+            await fetchWishlist();
+            return { success: true };
+        } catch (err) {
+            return {
+                success: false,
+                error: err.response?.data?.message || err.message || 'Failed to add to wishlist'
+            };
+        }
+    };
     const removeItem = async (itemId) => {
         try {
             await api.removeWishlistItem(itemId);
@@ -77,8 +89,9 @@ export const useWishlist = () => {
         loading,
         error,
         fetchWishlist,
+        addToWishlist,
         removeItem,
         moveToCart,
-        moveAllToCart 
+        moveAllToCart
     };
 };

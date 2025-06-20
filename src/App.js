@@ -22,9 +22,11 @@ import CreateCategory from './pages/admin/CreateCategory';
 import EditCategory from './pages/admin/EditCategory';
 import AdminLayout from './layouts/AdminLayout';
 
+
 function App() {
   return (
     <Router>
+      <Navbar />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />

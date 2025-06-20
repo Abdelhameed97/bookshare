@@ -1,23 +1,27 @@
+"use client";
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   FaSearch,
   FaShoppingCart,
-  FaUser,
   FaBars,
   FaTimes,
+  FaHeart,
 } from "react-icons/fa";
 import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
 import { useCart } from "../../hooks/useCart";
+import { useWishlist } from "../../hooks/useWishlist";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [user, setUser] = useState(null);
+
   const navigate = useNavigate();
   const location = useLocation();
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
 
   const navLinks = [
     { to: "/", label: "HOME" },
@@ -68,7 +72,6 @@ const Navbar = () => {
         <nav className="navbar-nav">
           <div className="navbar-content-wrapper">
             <div className="navbar-content">
-              {/* Desktop Links */}
               <div className="nav-links-desktop">
                 {navLinks.map((link) => {
                   const isActive = location.pathname === link.to;
@@ -102,14 +105,21 @@ const Navbar = () => {
                 })}
               </div>
 
-              {/* Right Actions */}
               <div className="navbar-actions">
-                <button
-                  className="icon-button"
-                  title="Search"
-                  onClick={toggleSearch}
-                >
+                <button className="icon-button" title="Search" onClick={toggleSearch}>
                   <FaSearch size={18} />
+                </button>
+
+                <button
+                  className="icon-button wishlist-badge"
+                  title="Wishlist"
+                  onClick={() => navigate("/wishlist")}
+                >
+                  <FaHeart size={18} />
+                  {wishlistCount > 0 && (
+                    <span className="wishlist-count">{wishlistCount}</span>
+                  )}
+                  <span className="sr-only">Wishlist</span>
                 </button>
 
                 <button
@@ -121,11 +131,7 @@ const Navbar = () => {
                   {cartCount > 0 && <span className="cart-count">{cartCount}</span>}
                 </button>
 
-                {/* Auth Buttons */}
-                <div
-                  className="auth-buttons-desktop"
-                  style={{ display: "flex", alignItems: "center", gap: "1rem" }}
-                >
+                <div className="auth-buttons-desktop" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
                   {!user ? (
                     <>
                       <Link to="/login" className="btn btn-outline">
@@ -144,7 +150,7 @@ const Navbar = () => {
                           fontSize: "1.1rem",
                         }}
                       >
-                        Welcome, {user.name}
+                        Welcome, {user.name || "User"}
                       </span>
                       <button
                         className="btn"
@@ -164,12 +170,7 @@ const Navbar = () => {
                   )}
                 </div>
 
-                {/* Mobile Toggle */}
-                <button
-                  className="mobile-menu-toggle icon-button"
-                  onClick={toggleMobileMenu}
-                  title="Menu"
-                >
+                <button className="mobile-menu-toggle icon-button" onClick={toggleMobileMenu} title="Menu">
                   <FaBars size={20} />
                 </button>
               </div>
@@ -178,52 +179,29 @@ const Navbar = () => {
         </nav>
       </header>
 
-      {/* Search Modal */}
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
 
-      {/* Overlay */}
-      <div
-        className={`overlay ${isOpen ? "open" : ""}`}
-        onClick={closeMobileMenu}
-      ></div>
+      <div className={`overlay ${isOpen ? "open" : ""}`} onClick={closeMobileMenu}></div>
 
-      {/* Mobile Menu */}
       <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
         <div className="mobile-menu-content">
-          <button
-            className="icon-button mobile-close-button"
-            onClick={closeMobileMenu}
-            title="Close Menu"
-          >
+          <button className="icon-button mobile-close-button" onClick={closeMobileMenu} title="Close Menu">
             <FaTimes size={20} />
           </button>
 
           <div className="mobile-auth-section">
             {!user ? (
               <>
-                <Link
-                  to="/register"
-                  className="btn btn-primary"
-                  onClick={closeMobileMenu}
-                >
+                <Link to="/register" className="btn btn-primary" onClick={closeMobileMenu}>
                   Create Account
                 </Link>
-                <Link
-                  to="/login"
-                  className="btn btn-outline"
-                  onClick={closeMobileMenu}
-                >
+                <Link to="/login" className="btn btn-outline" onClick={closeMobileMenu}>
                   Sign In
                 </Link>
               </>
             ) : (
               <>
-                <span style={{ fontWeight: 600 }}>
-                  Hello, {user.name}
-                </span>
+                <span style={{ fontWeight: 600 }}>Hello, {user.name}</span>
                 <button
                   className="btn"
                   onClick={() => {
@@ -239,31 +217,21 @@ const Navbar = () => {
 
           <div className="mobile-nav-links">
             {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.to}
-                onClick={closeMobileMenu}
-                className="mobile-nav-link"
-              >
+              <Link key={link.label} to={link.to} onClick={closeMobileMenu} className="mobile-nav-link">
                 {link.label}
               </Link>
             ))}
           </div>
 
           <div className="mobile-account-section">
-            <Link
-              to="/profile"
-              className="mobile-account-link"
-              onClick={closeMobileMenu}
-            >
+            <Link to="/profile" className="mobile-account-link" onClick={closeMobileMenu}>
               My Profile
             </Link>
-            <Link
-              to="/orders"
-              className="mobile-account-link"
-              onClick={closeMobileMenu}
-            >
+            <Link to="/orders" className="mobile-account-link" onClick={closeMobileMenu}>
               My Orders
+            </Link>
+            <Link to="/wishlist" className="mobile-account-link" onClick={closeMobileMenu}>
+              My Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
             </Link>
           </div>
         </div>

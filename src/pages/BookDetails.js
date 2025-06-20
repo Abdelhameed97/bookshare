@@ -5,13 +5,13 @@ import Footer from "../components/HomePage/Footer.jsx";
 
 
 const BooksPage = () => {
-  return (
-    <div>
-        <Navbar />
-      <BookDetails />
-      <Footer />
-    </div>
-  );
+    return (
+        <div>
+            <Navbar />
+            <BookDetails />
+            <Footer />
+        </div>
+    );
 };
 
 export default BooksPage; 

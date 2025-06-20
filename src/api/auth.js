@@ -14,6 +14,6 @@ api.interceptors.request.use(config => {
 })
 
 // 🧠 Auth endpoints
-export const login = data => api.post("/login", data)
-export const register = data => api.post("/register", data)
-export const logout = () => api.post("/logout") // No need to pass token manually
+export const login = (data) => api.post('/login', data);
+export const register = (data) => api.post('/register', data);
+export const logout = () => api.post('/logout'); // No need to pass token manually
