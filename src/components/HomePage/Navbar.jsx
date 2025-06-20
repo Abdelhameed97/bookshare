@@ -19,7 +19,7 @@ import { useWishlist } from "../../hooks/useWishlist";
 const Navbar = () => {
   const [user, setUser] = useState(null);
 
-  const location = useLocation();
+  const navLocation = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
@@ -110,7 +110,7 @@ const Navbar = () => {
                 }}
               >
                 {navLinks.map((link) => {
-                  const isActive = location.pathname === link.to;
+                  const isActive = navLocation.pathname === link.to;
                   return (
                     <Link
                       key={link.label}

@@ -1,3 +1,41 @@
+/* ============================================= */
+/* ==  FORCEFUL NAVBAR RESPONSIVE STYLES  == */
+/* ============================================= */
+
+/* --- Mobile First (Default) --- */
+/* On small screens, hide desktop links and show mobile toggle */
+.nav-links-desktop,
+.auth-buttons-desktop {
+  display: none !important;
+}
+
+.mobile-menu-toggle {
+  display: flex !important;
+}
+
+
+/* --- Tablet and Up (>= 768px) --- */
+/* Show desktop auth buttons */
+@media (min-width: 768px) {
+  .auth-buttons-desktop {
+    display: flex !important;
+  }
+}
+
+/* --- Desktop and Up (>= 1024px) --- */
+/* Show desktop links, hide mobile toggle */
+@media (min-width: 1024px) {
+  .nav-links-desktop {
+    display: flex !important;
+  }
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}
+/* ============================================= */
+/*           END OF FORCEFUL STYLES              */
+/* ============================================= */
+
 /* BookShare Navbar Styles */
 .bookshare-navbar {
   background-color: white;
@@ -3632,3 +3670,42 @@
   font-size: 10px;
   font-weight: bold;
 }
+
+/* ============================================= */
+/* ==   NEW RELEASES - RESPONSIVE STYLES    == */
+/* ============================================= */
+
+/* Default styles for the container (mobile-first) */
+.books-container {
+  display: grid;
+  grid-template-columns: 1fr; /* 1 column on mobile */
+  gap: 2rem;
+  padding: 1rem;
+}
+
+/* Tablet view */
+@media (min-width: 768px) {
+  .books-container {
+    grid-template-columns: repeat(2, 1fr); /* 2 columns on tablets */
+  }
+}
+
+/* Desktop view */
+@media (min-width: 1024px) {
+  .books-container {
+    grid-template-columns: repeat(3, 1fr); /* 3 columns on desktops */
+    gap: 2.5rem;
+    padding: 2rem 0;
+  }
+}
+
+/* Ensure individual cards don't exceed container width */
+.book-card {
+  width: 100%;
+  max-width: 400px; /* Adjust max-width if needed */
+  margin: 0 auto; /* Center the card within the grid column */
+}
+
+/* ============================================= */
+/*         END OF RESPONSIVE STYLES              */
+/* ============================================= */
