@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import SearchModal from './SearchModal'
-import '../../style/Homepagestyle.css';
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+import SearchModal from "./SearchModal";
+import "../../style/Homepagestyle.css";
 
 import {
   FaSearch,
@@ -17,16 +17,14 @@ import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 
 const Navbar = () => {
+  const [user, setUser] = useState(null);
+
+  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-
-  const { cartCount, loading: cartLoading } = useCart();
-  const { wishlistCount, loading: wishlistLoading } = useWishlist();
 
   const navLinks = [
-    { to: "/", label: "HOME", active: true },
+    { to: "/", label: "HOME" },
     { to: "/about", label: "ABOUT" },
     { to: "/coming-soon", label: "COMING SOON" },
     { to: "/top-seller", label: "TOP SELLER" },
@@ -47,6 +45,31 @@ const Navbar = () => {
   const toggleSearch = () => {
     setIsSearchOpen(!isSearchOpen);
   };
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Try to get user from localStorage
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    setUser(null);
+    navigate("/");
+    // Optionally: window.location.reload();
+  };
+  const { cartCount, loading: cartLoading } = useCart();
+  const { wishlistCount, loading: wishlistLoading } = useWishlist();
 
   return (
     <>
@@ -157,13 +180,46 @@ const Navbar = () => {
                 </button>
 
                 {/* Auth Buttons - Desktop */}
-                <div className="auth-buttons-desktop">
-                  <Link to="/login" className="btn btn-outline">
-                    Sign In
-                  </Link>
-                  <Link to="/register" className="btn btn-primary">
-                    Register
-                  </Link>
+                <div
+                  className="auth-buttons-desktop"
+                  style={{ display: "flex", alignItems: "center", gap: "1rem" }}
+                >
+                  {!user ? (
+                    <>
+                      <Link to="/login" className="btn btn-outline">
+                        Sign In
+                      </Link>
+                      <Link to="/register" className="btn btn-primary">
+                        Register
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      <span
+                        style={{
+                          fontWeight: 600,
+                          color: "#10B981",
+                          fontSize: "1.1rem",
+                        }}
+                      >
+                        Welcome, {user.name || "User"}
+                      </span>
+                      <button
+                        className="btn"
+                        style={{
+                          background: "#EF4444",
+                          color: "white",
+                          fontWeight: 600,
+                          borderRadius: "2rem",
+                          padding: "0.4rem 1.2rem",
+                          border: "none",
+                        }}
+                        onClick={handleLogout}
+                      >
+                        Logout
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Mobile Menu Toggle */}
@@ -230,9 +286,7 @@ const Navbar = () => {
                 key={link.label}
                 to={link.to}
                 onClick={closeMobileMenu}
-                className={`mobile-nav-link ${
-                  location.pathname === link.to ? "active" : ""
-                }`}
+                className={`mobile-nav-link ${link.active ? "active" : ""}`}
               >
                 {link.label}
               </Link>
