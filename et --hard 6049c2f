@@ -1,0 +1,30 @@
+* [33mf869fe0[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32morder-wishlist-cart[m[33m, [m[1;31morigin/order-wishlist-cart[m[33m)[m Updated Add to cart and add to wishlist in book list and in New Release
+*   [33m6049c2f[m merged with homepagev2
+[31m|[m[32m\[m  
+[31m|[m *   [33mff44317[m Cart and Wishlist are updated and replace BookShare Logo in Login and Register
+[31m|[m [33m|[m[34m\[m  
+[31m|[m * [34m|[m [33m0a95fa0[m Cart and Wishlist are updated and replace BookShare Logo in Login and Register
+* [34m|[m [34m|[m [33m0d98aed[m merged with homepagev2
+[34m|[m[34m/[m [34m/[m  
+[34m|[m * [33ma569132[m Cart and Wishlist are updated and fix BookShare Logo in Login and Register
+[34m|[m[34m/[m  
+*   [33m1051e1a[m Merge pull request #7 from Abdelhameed97/login-register
+[35m|[m[36m\[m  
+[35m|[m * [33m4941dcc[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into login-register
+[35m|[m[35m/[m  
+*   [33m12a4b02[m Merge pull request #6 from Abdelhameed97/login-register
+[1;31m|[m[1;32m\[m  
+[1;31m|[m * [33mabb086f[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into login-register
+[1;31m|[m[1;31m/[m  
+*   [33m2c5b746[m Merge pull request #5 from Abdelhameed97/login-register
+[1;33m|[m[1;34m\[m  
+[1;33m|[m * [33mf6397d8[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into login-register
+[1;33m|[m[1;33m/[m  
+* [33m0c06d8d[m solve conflict
+* [33m86820d4[m Merge pull request #4 from Abdelhameed97/login-register
+* [33m07b1a34[m edit conflict in App.js.
+* [33mbfeea90[m Integrated Cart, Order, and Wishlist features; added and integrated Order Details page
+* [33m3cad466[m Merge branch 'Homepagev2'
+* [33mc64735d[m Merge pull request #3 from Abdelhameed97/order-wishlist-cart
+* [33m987413b[m Merge pull request #2 from Abdelhameed97/manage-branch
+* [33m4c8a8fd[m Merge pull request #1 from Abdelhameed97/manage-branch

@@ -4,13 +4,13 @@ import { useState, useEffect } from "react"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import SearchModal from './SearchModal'
 import '../../style/Homepagestyle.css';
+
 import {
   FaSearch,
   FaShoppingCart,
   FaBars,
   FaTimes,
   FaHeart,
-  FaUser,
 } from "react-icons/fa";
 import "../../style/Homepagestyle.css";
 import { useCart } from "../../hooks/useCart";
@@ -30,7 +30,7 @@ const Navbar = () => {
     { to: "/top-seller", label: "TOP SELLER" },
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
-    { to: "/blog", label: "BLOG" },
+    // { to: "/blog", label: "BLOG" },
     { to: "/contact", label: "CONTACT" },
   ];
 
@@ -101,6 +101,10 @@ const Navbar = () => {
                 alignItems: 'center',
                 gap: '1.2rem',
                 flexWrap: 'nowrap',
+                whiteSpace: 'nowrap',
+                width: 'auto',
+                minWidth: 0,
+                maxWidth: '100%',
               }}>
                 {navLinks.map((link) => {
                   const isActive = location.pathname === link.to;

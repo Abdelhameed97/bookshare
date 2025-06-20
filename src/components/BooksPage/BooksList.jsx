@@ -393,15 +393,17 @@ const BooksList = () => {
           paginatedBooks.map((book) => (
             <div key={book.id} className={`book-item ${viewMode}`}>
               <div className="book-image-section">
-                <img
-                  src={book.image || "/placeholder.svg"}
-                  alt={book.title}
-                  className="book-image"
-                  onError={(e) => {
-                    e.currentTarget.src =
-                      "/placeholder.svg?height=300&width=200";
-                  }}
-                />
+                <div className="image-container">
+                  <img
+                    src={book.image || "/placeholder.svg"}
+                    alt={book.title}
+                    className="book-image"
+                    onError={(e) => {
+                      e.currentTarget.src =
+                        "/placeholder.svg?height=300&width=200";
+                    }}
+                  />
+                </div>
                 <div className="image-overlay">
                   <div className="hover-actions">
                     <button
@@ -524,39 +526,13 @@ const BooksList = () => {
 
       {/* Pagination Controls */}
       {totalPages > 1 && (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "center",
-            alignItems: "center",
-            margin: "2rem 0",
-          }}
-        >
-          <ul
-            style={{
-              display: "flex",
-              gap: "0.5rem",
-              listStyle: "none",
-              padding: 0,
-              margin: 0,
-            }}
-          >
+        <div className="pagination-container">
+          <ul className="pagination-list">
             <li>
               <button
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  border: "1px solid #d1d5db",
-                  background: "white",
-                  color: "#6b7a8f",
-                  fontSize: 20,
-                  cursor: currentPage === 1 ? "not-allowed" : "pointer",
-                  outline: "none",
-                  transition: "background 0.2s",
-                }}
+                className="pagination-button"
                 aria-label="Previous page"
               >
                 &lt;
@@ -566,19 +542,9 @@ const BooksList = () => {
               <li key={page}>
                 <button
                   onClick={() => setCurrentPage(page)}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    borderRadius: "50%",
-                    border: "1px solid #d1d5db",
-                    background: currentPage === page ? "#90a4b8" : "white",
-                    color: currentPage === page ? "white" : "#6b7a8f",
-                    fontWeight: currentPage === page ? 700 : 500,
-                    fontSize: 18,
-                    cursor: "pointer",
-                    outline: "none",
-                    transition: "background 0.2s",
-                  }}
+                  className={`pagination-button ${
+                    currentPage === page ? "active" : ""
+                  }`}
                   aria-current={currentPage === page ? "page" : undefined}
                 >
                   {page}
@@ -591,19 +557,7 @@ const BooksList = () => {
                   setCurrentPage((p) => Math.min(totalPages, p + 1))
                 }
                 disabled={currentPage === totalPages}
-                style={{
-                  width: 40,
-                  height: 40,
-                  borderRadius: "50%",
-                  border: "1px solid #d1d5db",
-                  background: "white",
-                  color: "#6b7a8f",
-                  fontSize: 20,
-                  cursor:
-                    currentPage === totalPages ? "not-allowed" : "pointer",
-                  outline: "none",
-                  transition: "background 0.2s",
-                }}
+                className="pagination-button"
                 aria-label="Next page"
               >
                 &gt;
