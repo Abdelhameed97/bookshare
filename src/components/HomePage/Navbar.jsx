@@ -1,16 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import {
-  FaSearch,
-  FaShoppingCart,
-  FaBars,
-  FaTimes,
-  FaHeart,
-} from "react-icons/fa";
-import SearchModal from "./SearchModal";
-import "../../style/Homepagestyle.css";
+import { useState, useEffect } from "react"
+import { Link, useNavigate, useLocation } from "react-router-dom"
+import { FaSearch, FaShoppingCart, FaUser, FaBars, FaTimes ,FaHeart} from "react-icons/fa"
+import SearchModal from './SearchModal'
+import '../../style/Homepagestyle.css';
+
+
+
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 
@@ -25,7 +22,7 @@ const Navbar = () => {
     { to: "/top-seller", label: "TOP SELLER" },
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
-    { to: "/blog", label: "BLOG" },
+    // { to: "/blog", label: "BLOG" },
     { to: "/contact", label: "CONTACT" },
   ];
 
@@ -70,6 +67,47 @@ const Navbar = () => {
           <div className="navbar-content-wrapper">
             <div className="navbar-content">
               {/* Desktop Navigation - Left Side */}
+              <div className="nav-links-desktop" style={{
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                gap: '1.2rem',
+                flexWrap: 'nowrap',
+                whiteSpace: 'nowrap',
+                width: 'auto',
+                minWidth: 0,
+                maxWidth: '100%',
+              }}>
+                {navLinks.map((link) => {
+                  const isActive = location.pathname === link.to;
+                  return (
+                    <Link
+                      key={link.label}
+                      to={link.to}
+                      className={`nav-link${isActive ? " active" : ""}`}
+                      style={{
+                        background: isActive ? '#90a4b8' : 'transparent',
+                        color: isActive ? 'white' : '#222',
+                        borderRadius: '2rem',
+                        padding: '0.5rem 1.2rem',
+                        fontWeight: isActive ? 700 : 500,
+                        transition: 'background 0.2s, color 0.2s',
+                      }}
+                      onMouseOver={e => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = '#e3e9f1';
+                        }
+                      }}
+                      onMouseOut={e => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = 'transparent';
+                        }
+                      }}
+                    >
+                      {link.label}
+                    </Link>
+                  );
+                })}
               <div className="nav-links-desktop">
                 {navLinks.map((link) => (
                   <Link

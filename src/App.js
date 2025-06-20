@@ -11,6 +11,8 @@ import LoginPage from "./pages/form/LoginPage";
 import About from "./components/About.jsx/Aboutus";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import BooksPage from "./pages/BooksPage";
+import BookDetails from "./pages/BookDetails";
+import ContactPage from "./pages/ContactPage";
 
 
 function App() {
@@ -24,8 +26,10 @@ function App() {
         <Route path="/orders/:id" element={<OrderDetailsPage />} />
         <Route path='/wishlist' element={<WishlistPage />} />
         <Route path="/books" element={<BooksPage />} />
+        <Route path="/books/:id" element={<BookDetails />} />
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/login' element={<LoginPage />} />
+        <Route path="/contact" element={<ContactPage />} />
         <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
 
       </Routes>

@@ -2265,360 +2265,7 @@
     opacity: 1;
   }
 }
-/*
-.testimonials-slider {
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 40px;
-}
 
-.testimonials-wrapper {
-  overflow: hidden;
-  border-radius: 25px;
-}
-
-.testimonials-track {
-  display: flex;
-  transition: transform 0.5s ease;
-}
-
-.testimonial-slide {
-  min-width: 100%;
-  display: flex;
-  justify-content: center;
-}
-
-.testimonial-content {
-  max-width: 800px;
-  padding: 0 20px;
-}
-
-.quote-mark {
-  font-size: 60px;
-  line-height: 1;
-  color: rgba(255, 255, 255, 0.3);
-  margin-bottom: 20px;
-  font-family: Georgia, serif;
-}
-
-.testimonial-text {
-  font-size: 24px;
-  line-height: 1.6;
-  color: white;
-  margin-bottom: 30px;
-  font-style: italic;
-}
-
-.client-info {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 15px;
-}
-
-.client-image-container {
-  position: relative;
-  display: inline-block;
-}
-
-.client-image {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 3px solid rgba(255, 255, 255, 0.3);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
-  transition: all 0.5s ease;
-}
-
-.testimonial-card:hover .client-image {
-  transform: scale(1.1);
-}
-
-.image-ring {
-  position: absolute;
-  inset: -8px;
-  border: 2px solid transparent;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  background-clip: padding-box;
-  opacity: 0;
-  transition: opacity 0.5s ease;
-}
-
-.testimonial-card:hover .image-ring {
-  opacity: 1;
-}
-
-.client-details {
-  text-align: center;
-}
-
-.client-name {
-  font-size: 18px;
-  font-weight: 600;
-  color: white;
-  margin: 0 0 5px 0;
-}
-
-.client-position {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.client-company {
-  display: block;
-  font-size: 0.875rem;
-  color: #6b7280;
-}
-
-.card-decoration {
-  position: absolute;
-  border-radius: 50%;
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-  opacity: 0;
-  transition: all 0.5s ease;
-}
-
-.decoration-1 {
-  width: 80px;
-  height: 80px;
-  top: -40px;
-  right: -40px;
-}
-
-.decoration-2 {
-  width: 60px;
-  height: 60px;
-  bottom: -30px;
-  left: -30px;
-}
-
-.testimonial-card:hover .card-decoration {
-  opacity: 1;
-}
-
-.pagination-dots {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-bottom: 40px;
-}
-
-.dot {
-  position: relative;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: rgba(255, 255, 255, 0.3);
-  border: none;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-  padding: 0;
-}
-
-.dot:hover {
-  background-color: rgba(255, 255, 255, 0.5);
-}
-
-.dot.active {
-  background-color: white;
-}
-
-.progress-ring {
-  position: absolute;
-  inset: -4px;
-}
-
-.progress-circle {
-  width: 24px;
-  height: 24px;
-  transform: rotate(-90deg);
-}
-
-.progress-path {
-  fill: none;
-  stroke: rgba(255, 255, 255, 0.8);
-  stroke-width: 2;
-  stroke-dasharray: 100, 100;
-  stroke-dashoffset: 100;
-  animation: progress 5s linear infinite;
-}
-
-@keyframes progress {
-  to {
-    stroke-dashoffset: 0;
-  }
-}
-
-.autoplay-control {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 40px;
-}
-
-.autoplay-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 25px;
-  color: white;
-  font-size: 0.875rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.autoplay-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-}
-
-.autoplay-text {
-  font-weight: 500;
-}
-
-.cta-section {
-  text-align: center;
-}
-
-.cta-button {
-  display: inline-flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px 32px;
-  background: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(10px);
-  color: white;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 50px;
-  font-weight: 600;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.cta-button:hover {
-  background: white;
-  color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.3);
-}
-
-.button-icon {
-  width: 20px;
-  height: 20px;
-  transition: transform 0.3s ease;
-}
-
-.cta-button:hover .button-icon {
-  transform: translateX(4px);
-}
-
-.bg-decoration {
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.1);
-  z-index: 1;
-}
-
-.testimonials-section .decoration-1 {
-  width: 300px;
-  height: 300px;
-  top: -150px;
-  right: -150px;
-  animation: float 6s ease-in-out infinite;
-}
-
-.testimonials-section .decoration-2 {
-  width: 200px;
-  height: 200px;
-  bottom: -100px;
-  left: -100px;
-  animation: float 8s ease-in-out infinite reverse;
-}
-
-.testimonials-section .decoration-3 {
-  width: 150px;
-  height: 150px;
-  top: 50%;
-  right: 10%;
-  animation: float 10s ease-in-out infinite;
-}
-
-@keyframes float {
-  0%,
-  100% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-20px);
-  }
-}
-
-@media (max-width: 1024px) {
-  .section-title {
-    font-size: 3rem;
-  }
-
-  .section-label {
-    font-size: 12px;
-  }
-
-  .testimonial-text {
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 768px) {
-  .testimonials-section {
-    padding: 80px 0;
-  }
-
-  .testimonials-container {
-    padding: 0 16px;
-  }
-
-  .section-header {
-    margin-bottom: 60px;
-  }
-
-  .section-title {
-    font-size: 36px;
-  }
-
-  .testimonial-text {
-    font-size: 20px;
-  }
-}
-
-@media (max-width: 480px) {
-  .testimonials-container {
-    padding: 0 16px;
-  }
-
-  .section-title {
-    font-size: 28px;
-  }
-
-  .testimonial-text {
-    font-size: 18px;
-  }
-
-  .client-image {
-    width: 70px;
-    height: 70px;
-  }
-
-  .quote-mark {
-    font-size: 40px;
-  }
-}
-
-
- */
 
 
 /* Blog Section - Enhanced Modern Design */
@@ -3611,24 +3258,55 @@
   gap: 16px;
 }
 
-/* Wishlist Badge Styles */
-.icon-button.wishlist-badge {
-  position: relative;
-  margin-right: 10px;
+.new-releases .books-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  justify-items: center;
 }
 
-.wishlist-count {
-  position: absolute;
-  top: -5px;
-  right: -5px;
-  background-color: #dc3545;
-  color: white;
-  border-radius: 50%;
-  width: 18px;
-  height: 18px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 10px;
-  font-weight: bold;
+.book-card {
+  max-width: 350px;
+  width: 100%;
 }
+
+/* Responsive Navbar Fix */
+
+/* Desktop nav links: تظهر فقط على الشاشات الكبيرة */
+@media (min-width: 1024px) {
+  .nav-links-desktop {
+    display: flex !important;
+  }
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}
+
+/* Mobile nav: تظهر فقط على الشاشات الصغيرة */
+@media (max-width: 1023px) {
+  .nav-links-desktop {
+    display: none !important;
+  }
+  .mobile-menu-toggle {
+    display: flex !important;
+  }
+  .auth-buttons-desktop {
+    display: none !important;
+  }
+}
+
+/* تأكد أن القائمة الجانبية للموبايل تغطي الشاشة بالكامل على الشاشات الصغيرة */
+@media (max-width: 640px) {
+  .mobile-menu {
+    width: 100% !important;
+  }
+}
+
+/* تأكد من ظهور auth-buttons-desktop فقط على الشاشات المتوسطة والكبيرة */
+@media (min-width: 768px) {
+  .auth-buttons-desktop {
+    display: flex !important;
+  }
+}
+
+/* نهاية التعديل */
