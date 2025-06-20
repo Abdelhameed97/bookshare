@@ -1,7 +1,8 @@
-import { useParams, useNavigate, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { Heart, Eye, ShoppingCart, Star } from "lucide-react";
 import notFoundImage from "../images/Pasted image.png";
+import "../style/category.css"; 
 
 const CategoryPage = () => {
   const { id } = useParams();
@@ -13,7 +14,6 @@ const CategoryPage = () => {
   const [apiError, setApiError] = useState(false);
   const [categoryFound, setCategoryFound] = useState(true);
 
-  // Search + Pagination states
   const [searchTerm, setSearchTerm] = useState("");
   const [priceFilter, setPriceFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
@@ -22,7 +22,12 @@ const CategoryPage = () => {
   useEffect(() => {
     const fetchCategoryBooks = async () => {
       try {
-        const res = await fetch(`http://localhost:8000/api/category/${id}`);
+const res = await fetch(`http://localhost:8001/api/categories/${id}`, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem("token")}`,
+    Accept: "application/json",
+  },
+});
         if (!res.ok) {
           setApiError(true);
           setLoading(false);
@@ -30,12 +35,41 @@ const CategoryPage = () => {
         }
 
         const data = await res.json();
-        console.log("✅ Category data:", data);
-
         if (!data || (!data.books && !data.name)) {
           setCategoryFound(false);
         } else {
-          setBooks(data.books || []);
+          const processedBooks = (data.books || []).map((book) => ({
+            id: book.id,
+            image: book.images?.[0]
+              ? book.images[0].startsWith("http")
+                ? book.images[0]
+                : `http://localhost:8000/storage/${book.images[0]}`
+              : "/placeholder.svg?height=300&width=200",
+            price: `${book.price}`,
+            originalPrice: book.rental_price ? `${book.rental_price}` : null,
+            title: book.title,
+            author: book.user?.name || "Unknown Author",
+            rating: book.ratings?.length
+              ? (
+                  book.ratings.reduce((acc, curr) => acc + curr.rating, 0) /
+                  book.ratings.length
+                ).toFixed(1)
+              : 0,
+            reviews: book.ratings?.length || 0,
+            status: book.status,
+            badge:
+              book.status === "available"
+                ? "New"
+                : book.status === "rented"
+                ? "Bestseller"
+                : book.status === "sold"
+                ? "Sale"
+                : "New",
+            category: book.category?.name || "Uncategorized",
+            description: book.description || "No description available",
+          }));
+
+          setBooks(processedBooks);
           setCategory(data.name || "Category");
           setCategoryFound(true);
         }
@@ -50,20 +84,17 @@ const CategoryPage = () => {
     fetchCategoryBooks();
   }, [id]);
 
-  // Filter books by search and price
   const filteredBooks = books.filter(
     (book) =>
       book.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
       (priceFilter === "" || parseFloat(book.price) <= parseFloat(priceFilter))
   );
 
-  // Pagination logic
   const indexOfLastBook = currentPage * booksPerPage;
   const indexOfFirstBook = indexOfLastBook - booksPerPage;
   const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook);
   const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
 
-  // Handlers
   const handleSearchChange = (e) => {
     setSearchTerm(e.target.value);
     setCurrentPage(1);
@@ -75,15 +106,11 @@ const CategoryPage = () => {
   };
 
   const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
+    if (currentPage > 1) setCurrentPage(currentPage - 1);
   };
 
   const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
+    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
   };
 
   if (loading) {
@@ -128,47 +155,21 @@ const CategoryPage = () => {
 
         {/* Filters */}
         <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="relative w-full md:w-1/3">
-            <input
-              type="text"
-              placeholder="Search by title..."
-              value={searchTerm}
-              onChange={handleSearchChange}
-              className="w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
-            />
-            {searchTerm && (
-              <button
-                onClick={() => setSearchTerm("")}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-          
-          <div className="relative w-full md:w-1/3">
-            <input
-              type="number"
-              placeholder="Max price"
-              min="0"
-              value={priceFilter}
-              onChange={handlePriceChange}
-              className="w-full border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
-            />
-            {priceFilter && (
-              <button
-                onClick={() => setPriceFilter("")}
-                className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-              >
-                ✕
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Results count */}
-        <div className="mb-6 text-gray-600">
-          Showing {currentBooks.length} of {filteredBooks.length} books
+          <input
+            type="text"
+            placeholder="Search by title..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            className="w-full md:w-1/3 border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
+          />
+          <input
+            type="number"
+            placeholder="Max price"
+            min="0"
+            value={priceFilter}
+            onChange={handlePriceChange}
+            className="w-full md:w-1/3 border px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
+          />
         </div>
 
         {/* Books List */}
@@ -196,105 +197,111 @@ const CategoryPage = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8">
               {currentBooks.map((book) => (
-                <div
-                  key={book.id}
-                  className="bg-white rounded-2xl shadow-lg overflow-hidden group hover:shadow-2xl transition duration-300 hover:-translate-y-1"
-                >
-                  <Link to={`/book/${book.id}`} className="block">
-                    <div className="relative h-64 overflow-hidden">
-                      <img
-                        src={book.image || "/placeholder.svg"}
-                        alt={book.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                      />
-                      <span className="absolute top-2 left-2 bg-[#199A8E] text-white px-3 py-1 rounded text-xs font-medium">
+                <div key={book.id} className="book-item bg-white rounded-2xl shadow hover:shadow-lg overflow-hidden transition">
+                  <div className={`book-badge p-1 px-3 text-xs text-white rounded-tl-2xl ${book.badge.toLowerCase()}`}>
+                    {book.badge}
+                  </div>
+
+                  <div className="relative group">
+                    <img
+                      src={book.image}
+                      alt={book.title}
+                      className="w-full h-64 object-cover"
+                      onError={(e) =>
+                        (e.target.src = "/placeholder.svg?height=300&width=200")
+                      }
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-10 flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                      <button
+                        onClick={() => console.log("Add to wishlist", book.id)}
+                        className="bg-white p-2 rounded-full shadow"
+                      >
+                        <Heart size={16} />
+                      </button>
+                      <button
+                        onClick={() => navigate(`/books/${book.id}`)}
+                        className="bg-white p-2 rounded-full shadow"
+                      >
+                        <Eye size={16} />
+                      </button>
+                      <button
+                        onClick={() => console.log("Add to cart", book.id)}
+                        className="bg-white p-2 rounded-full shadow"
+                      >
+                        <ShoppingCart size={16} />
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="p-4 text-center">
+                    <h3 className="font-semibold text-lg mb-1">{book.title}</h3>
+                    <p className="text-sm text-gray-500 mb-2">{book.author}</p>
+
+                    <div className="flex justify-center items-center gap-1 text-yellow-400 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          size={14}
+                          className={i < Math.floor(book.rating) ? "fill-current" : ""}
+                        />
+                      ))}
+                      <span className="text-gray-600 text-sm">
+                        {book.rating} ({book.reviews})
+                      </span>
+                    </div>
+
+                    <div className="mb-3">
+                      {book.originalPrice && (
+                        <span className="text-sm line-through text-gray-400 mr-2">
+                          ${book.originalPrice}
+                        </span>
+                      )}
+                      <span className="text-md font-bold text-[#199A8E]">
                         ${book.price}
                       </span>
                     </div>
-                    <div className="p-4 text-center">
-                      <h3 className="text-lg font-bold text-gray-800 mb-1">
-                        {book.title}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        by {book.user?.name || "Unknown Author"}
-                      </p>
-                    </div>
-                  </Link>
+
+                    <button
+                      onClick={() => console.log("Add to cart", book.id)}
+                      className="bg-[#199A8E] hover:bg-[#157d74] text-white px-4 py-2 rounded-full shadow transition"
+                    >
+                      <ShoppingCart size={16} className="inline-block mr-1" />
+                      Add to Cart
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex items-center justify-between border-t border-gray-200 pt-8 mt-8">
+              <div className="flex justify-center items-center gap-2 mt-10">
                 <button
                   onClick={goToPreviousPage}
                   disabled={currentPage === 1}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                    currentPage === 1
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className="px-3 py-1 border rounded text-sm text-gray-600 disabled:opacity-50"
                 >
-                  <FaChevronLeft /> Previous
+                  Prev
                 </button>
-                
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                    let pageNum;
-                    if (totalPages <= 5) {
-                      pageNum = i + 1;
-                    } else if (currentPage <= 3) {
-                      pageNum = i + 1;
-                    } else if (currentPage > totalPages - 3) {
-                      pageNum = totalPages - 4 + i;
-                    } else {
-                      pageNum = currentPage - 2 + i;
-                    }
-                    
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                          currentPage === pageNum
-                            ? "bg-[#199A8E] text-white"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                  
-                  {totalPages > 5 && currentPage < totalPages - 2 && (
-                    <span className="px-2 text-gray-500">...</span>
-                  )}
-                  
-                  {totalPages > 5 && currentPage < totalPages - 2 && (
-                    <button
-                      onClick={() => setCurrentPage(totalPages)}
-                      className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                        currentPage === totalPages
-                          ? "bg-[#199A8E] text-white"
-                          : "text-gray-700 hover:bg-gray-100"
-                      }`}
-                    >
-                      {totalPages}
-                    </button>
-                  )}
-                </div>
-                
+                {Array.from({ length: totalPages }, (_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setCurrentPage(i + 1)}
+                    className={`px-3 py-1 border rounded text-sm ${
+                      currentPage === i + 1
+                        ? "bg-[#199A8E] text-white"
+                        : "text-gray-600"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
                 <button
                   onClick={goToNextPage}
                   disabled={currentPage === totalPages}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg ${
-                    currentPage === totalPages
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:bg-gray-100"
-                  }`}
+                  className="px-3 py-1 border rounded text-sm text-gray-600 disabled:opacity-50"
                 >
-                  Next <FaChevronRight />
+                  Next
                 </button>
               </div>
             )}
