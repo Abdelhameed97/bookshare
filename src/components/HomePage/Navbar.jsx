@@ -108,17 +108,7 @@ const Navbar = () => {
                     </Link>
                   );
                 })}
-              <div className="nav-links-desktop">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.label}
-                    to={link.to}
-                    className={`nav-link ${link.active ? "active" : ""}`}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
+             
 
               {/* Right Side Actions - Positioned at the edge */}
               <div className="navbar-actions">
