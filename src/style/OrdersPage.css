@@ -1,0 +1,72 @@
+.orders-container {
+    max-width: 1200px;
+}
+
+.order-card {
+    border-radius: 12px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.order-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
+    border-color: rgba(11, 60, 93, 0.2);
+}
+
+.orders-tabs .nav-link {
+    color: #495057;
+    font-weight: 500;
+    border: none;
+    padding: 12px 20px;
+    transition: all 0.2s ease;
+}
+
+.orders-tabs .nav-link:hover {
+    color: #0b3c5d;
+    background-color: rgba(11, 60, 93, 0.05);
+}
+
+.orders-tabs .nav-link.active {
+    color: #0b3c5d;
+    font-weight: 600;
+    background-color: transparent;
+    border-bottom: 3px solid #0b3c5d;
+}
+
+.order-id {
+    color: #0b3c5d;
+    font-weight: 600;
+}
+
+.status-badge {
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    border-radius: 50px;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.tracking-info {
+    background-color: #f8f9fa;
+    padding: 8px 12px;
+    border-radius: 8px;
+    display: inline-block;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .order-card .row>div {
+        margin-bottom: 12px;
+    }
+
+    .order-card .text-end {
+        text-align: left !important;
+    }
+
+    .orders-tabs .nav-link {
+        padding: 8px 12px;
+        font-size: 0.85rem;
+    }
+}

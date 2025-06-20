@@ -1,5 +1,4 @@
 import React from "react";
-import Navbar from "../components/HomePage/Navbar.jsx";
 import Hero from "../components/HomePage/Hero.jsx";
 import Blog from "../components/HomePage/Blog.jsx";
 import Footer from "../components/HomePage/Footer.jsx";
@@ -11,7 +10,6 @@ import Estimonialssection from "../components/HomePage/Estimonialssection.jsx";
 const Home = () => {
   return (
     <>
-      <Navbar />
       <Hero />
       <Categories />
       <Welcome />

@@ -70,7 +70,11 @@ const SearchModal = ({ isOpen, onClose }) => {
                 >
                   <div className="book-image">
                     <img
-                      src={book.images?.[0] ? `http://localhost:8000/storage/${book.images[0]}` : "/placeholder.svg"}
+                      src={book.images?.[0]
+                        ? (book.images[0].startsWith('http')
+                            ? book.images[0]
+                            : `http://localhost:8000/storage/${book.images[0]}`)
+                        : "/placeholder.svg"}
                       alt={book.title}
                       onError={(e) => {
                         e.currentTarget.src = "/placeholder.svg";

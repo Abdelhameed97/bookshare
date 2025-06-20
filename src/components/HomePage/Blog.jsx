@@ -3,6 +3,7 @@ import blog1 from '../../images/midsection-man-working-office_1048944-27784392.a
 import blog2 from '../../images/what-we-do.jpg';
 import blog3 from '../../images/business-brainstorming-graph-chart-report-data-concept_53876-31213.avif';
 import '../../style/Homepagestyle.css'; // Ensure the path is correct
+import HomePageTitle from '../shared/HomePageTitle'
 
 
 const BlogSection = () => {
@@ -10,8 +11,7 @@ const BlogSection = () => {
     <section className="blog-section">
       <div className="container">
         <div className="section-header">
-          <span className="section-label">BLOG</span>
-          <h2 className="section-title">Recent Blog</h2>
+          <HomePageTitle>Recent Blog</HomePageTitle>
         </div>
 
         <div className="blog-grid">
@@ -67,6 +67,11 @@ const BlogSection = () => {
           </div>
         </div>
       </div>
+
+      {/* Background Decorations */}
+      <div className="bg-decoration decoration-1"></div>
+      <div className="bg-decoration decoration-2"></div>
+      <div className="bg-decoration decoration-3"></div>
     </section>
   );
 };
