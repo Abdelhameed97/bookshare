@@ -315,6 +315,13 @@ const Navbar = () => {
               >
                 My Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
               </Link>
+              <Link
+                to="/cart"
+                className="mobile-account-link"
+                onClick={closeMobileMenu}
+              >
+                My Cart {cartCount > 0 && `(${cartCount})`}
+              </Link>
             </div>
           )}
         </div>
