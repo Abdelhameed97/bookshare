@@ -3269,3 +3269,44 @@
   max-width: 350px;
   width: 100%;
 }
+
+/* Responsive Navbar Fix */
+
+/* Desktop nav links: تظهر فقط على الشاشات الكبيرة */
+@media (min-width: 1024px) {
+  .nav-links-desktop {
+    display: flex !important;
+  }
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+}
+
+/* Mobile nav: تظهر فقط على الشاشات الصغيرة */
+@media (max-width: 1023px) {
+  .nav-links-desktop {
+    display: none !important;
+  }
+  .mobile-menu-toggle {
+    display: flex !important;
+  }
+  .auth-buttons-desktop {
+    display: none !important;
+  }
+}
+
+/* تأكد أن القائمة الجانبية للموبايل تغطي الشاشة بالكامل على الشاشات الصغيرة */
+@media (max-width: 640px) {
+  .mobile-menu {
+    width: 100% !important;
+  }
+}
+
+/* تأكد من ظهور auth-buttons-desktop فقط على الشاشات المتوسطة والكبيرة */
+@media (min-width: 768px) {
+  .auth-buttons-desktop {
+    display: flex !important;
+  }
+}
+
+/* نهاية التعديل */
