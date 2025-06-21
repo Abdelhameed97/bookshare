@@ -13,6 +13,8 @@ import OrderDetailsPage from "./pages/OrderDetailsPage";
 import BooksPage from "./pages/BooksPage";
 import BookDetails from "./pages/BookDetails";
 import ContactPage from "./pages/ContactPage";
+import Dashboard from "./components/Library/Dashboard";
+import EditProfile from "./components/Library/EditProfile";
 
 
 function App() {
@@ -30,6 +32,8 @@ function App() {
         <Route path='/register' element={<RegisterPage />} />
         <Route path='/login' element={<LoginPage />} />
         <Route path="/contact" element={<ContactPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
         <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
       </Routes>
     </Router>
