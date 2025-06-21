@@ -10,6 +10,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import Navbar from '../HomePage/Navbar';
+import Footer from '../HomePage/Footer';
 
 const AddBookPage = () => {
   const [formData, setFormData] = useState({
@@ -444,33 +445,22 @@ const AddBookPage = () => {
                 type="submit"
                 disabled={loading}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px',
                   padding: '12px 24px',
                   borderRadius: '8px',
                   fontSize: '1rem',
                   fontWeight: '500',
-                  cursor: loading ? 'not-allowed' : 'pointer',
+                  cursor: 'pointer',
                   border: 'none',
                   transition: 'all 0.2s ease',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  backgroundColor: loading ? '#9ca3af' : '#3b82f6',
+                  backgroundColor: '#3b82f6',
                   color: 'white'
                 }}
               >
-                {loading ? (
-                  <>
-                    <div style={{
-                      width: '18px',
-                      height: '18px',
-                      border: '2px solid rgba(255, 255, 255, 0.5)',
-                      borderTopColor: 'white',
-                      borderRadius: '50%',
-                      animation: 'spin 0.8s linear infinite'
-                    }}></div>
-                    Adding Book...
-                  </>
-                ) : (
+                {loading ? 'Adding...' : (
                   <>
                     <Save size={18} />
                     Add Book
@@ -481,20 +471,7 @@ const AddBookPage = () => {
           </form>
         </div>
       </div>
-
-      <style>{`
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-        
-        @media (max-width: 600px) {
-          .form-row {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
+      <Footer />
     </>
   );
 };
