@@ -11,6 +11,9 @@ import {
   FaTimes,
   FaHeart,
   FaBoxOpen,
+  FaTachometerAlt,
+  FaBook,
+  FaUserEdit,
 } from "react-icons/fa";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
@@ -30,7 +33,9 @@ const Navbar = () => {
   const { orders } = useOrders(user?.id);
   const ordersCount = orders.length;
 
-  const navLinks = [
+  const isLibraryOwner = user?.role === "owner";
+
+  const regularNavLinks = [
     { to: "/", label: "HOME" },
     { to: "/about", label: "ABOUT" },
     { to: "/coming-soon", label: "COMING SOON" },
@@ -39,6 +44,15 @@ const Navbar = () => {
     { to: "/author", label: "AUTHOR" },
     { to: "/contact", label: "CONTACT" },
   ];
+
+  const ownerNavLinks = [
+    { to: "/", label: "HOME" },
+    { to: "/dashboard", label: "DASHBOARD", icon: FaTachometerAlt },
+    { to: "/edit-profile", label: "EDIT PROFILE", icon: FaUserEdit },
+    { to: "/add-book", label: "ADD BOOK", icon: FaBook },
+  ];
+
+  const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;
 
   const toggleMobileMenu = () => setIsOpen(!isOpen);
   const closeMobileMenu = () => setIsOpen(false);
@@ -97,6 +111,7 @@ const Navbar = () => {
               <div className="nav-links-desktop">
                 {navLinks.map((link) => {
                   const isActive = navLocation.pathname === link.to;
+                  const IconComponent = link.icon;
                   return (
                     <Link
                       key={link.label}
@@ -109,6 +124,9 @@ const Navbar = () => {
                         padding: "0.5rem 1.2rem",
                         fontWeight: isActive ? 700 : 500,
                         transition: "background 0.2s, color 0.2s",
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
                       }}
                       onMouseOver={(e) => {
                         if (!isActive) {
@@ -121,6 +139,7 @@ const Navbar = () => {
                         }
                       }}
                     >
+                      {IconComponent && <IconComponent size={16} />}
                       {link.label}
                     </Link>
                   );
@@ -136,38 +155,69 @@ const Navbar = () => {
                   <FaSearch size={18} />
                 </button>
 
-                <button
-                  className="icon-button wishlist-badge"
-                  title="Wishlist"
-                  onClick={() => handleProtectedAction("/wishlist")}
-                >
-                  <FaHeart size={18} />
-                  {wishlistCount > 0 && (
-                    <span className="wishlist-count">{wishlistCount}</span>
-                  )}
-                </button>
+                {!isLibraryOwner && (
+                  <>
+                    <button
+                      className="icon-button wishlist-badge"
+                      title="Wishlist"
+                      onClick={() => handleProtectedAction("/wishlist")}
+                    >
+                      <FaHeart size={18} />
+                      {wishlistCount > 0 && (
+                        <span className="wishlist-count">{wishlistCount}</span>
+                      )}
+                    </button>
 
-                <button
-                  className="icon-button order-badge"
-                  title="Orders"
-                  onClick={() => handleProtectedAction("/order")}
-                >
-                  <FaBoxOpen size={18} />
-                  {ordersCount > 0 && (
-                    <span className="order-count">{ordersCount}</span>
-                  )}
-                </button>
+                    <button
+                      className="icon-button order-badge"
+                      title="Orders"
+                      onClick={() => handleProtectedAction("/order")}
+                    >
+                      <FaBoxOpen size={18} />
+                      {ordersCount > 0 && (
+                        <span className="order-count">{ordersCount}</span>
+                      )}
+                    </button>
 
-                <button
-                  className="icon-button cart-badge"
-                  title="Shopping Cart"
-                  onClick={() => handleProtectedAction("/cart")}
-                >
-                  <FaShoppingCart size={18} />
-                  {cartCount > 0 && (
-                    <span className="cart-count">{cartCount}</span>
-                  )}
-                </button>
+                    <button
+                      className="icon-button cart-badge"
+                      title="Shopping Cart"
+                      onClick={() => handleProtectedAction("/cart")}
+                    >
+                      <FaShoppingCart size={18} />
+                      {cartCount > 0 && (
+                        <span className="cart-count">{cartCount}</span>
+                      )}
+                    </button>
+                  </>
+                )}
+
+                {isLibraryOwner && (
+                  <>
+                    <button
+                      className="icon-button"
+                      title="Manage Books"
+                      onClick={() => navigate("/dashboard")}
+                      style={{
+                        background: "#3B82F6",
+                        color: "white",
+                      }}
+                    >
+                      <FaBook size={18} />
+                    </button>
+                    <button
+                      className="icon-button"
+                      title="Edit Profile"
+                      onClick={() => navigate("/edit-profile")}
+                      style={{
+                        background: "#10B981",
+                        color: "white",
+                      }}
+                    >
+                      <FaUserEdit size={18} />
+                    </button>
+                  </>
+                )}
 
                 <div className="auth-buttons-desktop">
                   {!user ? (
@@ -184,11 +234,16 @@ const Navbar = () => {
                       <span
                         style={{
                           fontWeight: 600,
-                          color: "#10B981",
+                          color: isLibraryOwner ? "#3B82F6" : "#10B981",
                           fontSize: "1.1rem",
                         }}
                       >
                         Welcome, {user.name || "User"}
+                        {isLibraryOwner && (
+                          <span style={{ fontSize: "0.8rem", display: "block", color: "#6B7280" }}>
+                            Library Owner
+                          </span>
+                        )}
                       </span>
                       <button
                         className="btn"
@@ -249,7 +304,7 @@ const Navbar = () => {
                   className="btn btn-primary"
                   onClick={closeMobileMenu}
                 >
-                  Create Account
+                  Register
                 </Link>
                 <Link
                   to="/login"
@@ -261,14 +316,34 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <span className="mobile-welcome-text">
+                <span
+                  style={{
+                    fontWeight: 600,
+                    color: isLibraryOwner ? "#3B82F6" : "#10B981",
+                    fontSize: "1.1rem",
+                    textAlign: "center",
+                  }}
+                >
                   Welcome, {user.name || "User"}
+                  {isLibraryOwner && (
+                    <span style={{ fontSize: "0.8rem", display: "block", color: "#6B7280" }}>
+                      Library Owner
+                    </span>
+                  )}
                 </span>
                 <button
-                  className="btn btn-danger"
+                  className="btn"
+                  style={{
+                    background: "#EF4444",
+                    color: "white",
+                    fontWeight: 600,
+                    borderRadius: "2rem",
+                    padding: "0.4rem 1.2rem",
+                    border: "none",
+                  }}
                   onClick={() => {
-                    closeMobileMenu();
                     handleLogout();
+                    closeMobileMenu();
                   }}
                 >
                   Logout
@@ -278,52 +353,76 @@ const Navbar = () => {
           </div>
 
           <div className="mobile-nav-links">
-            {navLinks.map((link) => (
-              <Link
-                key={link.label}
-                to={link.to}
-                onClick={closeMobileMenu}
-                className={`mobile-nav-link ${
-                  location.pathname === link.to ? "active" : ""
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
+            {navLinks.map((link) => {
+              const isActive = navLocation.pathname === link.to;
+              const IconComponent = link.icon;
+              return (
+                <Link
+                  key={link.label}
+                  to={link.to}
+                  className={`mobile-nav-link${isActive ? " active" : ""}`}
+                  onClick={closeMobileMenu}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "0.5rem",
+                  }}
+                >
+                  {IconComponent && <IconComponent size={16} />}
+                  {link.label}
+                </Link>
+              );
+            })}
           </div>
 
-          {user && (
-            <div className="mobile-account-section">
-              <Link
-                to="/profile"
-                className="mobile-account-link"
-                onClick={closeMobileMenu}
-              >
-                My Profile
-              </Link>
-              <Link
-                to="/wishlist"
-                className="mobile-account-link"
-                onClick={closeMobileMenu}
-              >
-                My Wishlist {wishlistCount > 0 && `(${wishlistCount})`}
-              </Link>
-              <Link
-                to="/orders"
-                className="mobile-account-link"
-                onClick={closeMobileMenu}
-              >
-                My Orders {ordersCount > 0 && `(${ordersCount})`}
-              </Link>
-              <Link
-                to="/cart"
-                className="mobile-account-link"
-                onClick={closeMobileMenu}
-              >
-                My Cart {cartCount > 0 && `(${cartCount})`}
-              </Link>
-            </div>
-          )}
+          <div className="mobile-account-section">
+            {!isLibraryOwner ? (
+              <>
+                <Link
+                  to="/wishlist"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                >
+                  Wishlist ({wishlistCount})
+                </Link>
+                <Link
+                  to="/cart"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                >
+                  Cart ({cartCount})
+                </Link>
+                <Link
+                  to="/order"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                >
+                  Orders ({ordersCount})
+                </Link>
+              </>
+            ) : (
+              <>
+                <Link
+                  to="/dashboard"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                  style={{ color: "#3B82F6", fontWeight: 600 }}
+                >
+                  <FaTachometerAlt size={16} style={{ marginRight: "0.5rem" }} />
+                  Dashboard
+                </Link>
+                <Link
+                  to="/edit-profile"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                  style={{ color: "#10B981", fontWeight: 600 }}
+                >
+                  <FaUserEdit size={16} style={{ marginRight: "0.5rem" }} />
+                  Edit Profile
+                </Link>
+              </>
+            )}
+          </div>
         </div>
       </div>
     </>
