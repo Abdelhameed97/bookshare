@@ -10,9 +10,10 @@ import {
   EyeOff
 } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import api from '../../services/api';
+import apiService from '../../services/api';
 import Swal from 'sweetalert2';
 import Navbar from '../HomePage/Navbar';
+import Footer from '../HomePage/Footer';
 import './EditProfile.css';
 
 const EditProfile = () => {
@@ -20,8 +21,8 @@ const EditProfile = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
-    phone: '',
-    address: '',
+    phone_number: '',
+    location: '',
     bio: '',
     current_password: '',
     new_password: '',
@@ -59,8 +60,8 @@ const EditProfile = () => {
     setFormData({
       name: currentUser.name || '',
       email: currentUser.email || '',
-      phone: currentUser.phone || '',
-      address: currentUser.address || '',
+      phone_number: currentUser.phone_number || '',
+      location: currentUser.location || '',
       bio: currentUser.bio || '',
       current_password: '',
       new_password: '',
@@ -84,7 +85,7 @@ const EditProfile = () => {
     }
   };
 
-  const validateForm = () => {
+  const validateForm = (e) => {
     const newErrors = {};
 
     // Basic validation
@@ -98,25 +99,33 @@ const EditProfile = () => {
       newErrors.email = 'Email is invalid';
     }
 
-    if (formData.phone && !/^[\+]?[1-9][\d]{0,15}$/.test(formData.phone)) {
-      newErrors.phone = 'Phone number is invalid';
+    if (formData.phone_number && !/^01[0-9]\d{8}$/.test(formData.phone_number)) {
+      newErrors.phone_number = 'Phone number must be a valid 11-digit Egyptian mobile number.';
     }
 
-    // Password validation (only if user wants to change password)
-    if (formData.new_password || formData.confirm_password || formData.current_password) {
+    // Password validation logic
+    const isChangingPassword = formData.new_password || formData.confirm_password || formData.current_password;
+
+    // If on the password tab, and fields are empty, but user clicks save, show errors.
+    // Or if user has started filling any password field, enforce all fields.
+    if ((activeTab === 'password' && !isChangingPassword && e?.type === 'submit') || isChangingPassword) {
       if (!formData.current_password) {
-        newErrors.current_password = 'Current password is required to change password';
+        newErrors.current_password = 'Current password is required.';
+      }
+
+      if (!formData.new_password) {
+        newErrors.new_password = 'New password is required.';
+      } else if (formData.new_password.length < 6) {
+        newErrors.new_password = 'New password must be at least 6 characters.';
       }
       
-      if (formData.new_password && formData.new_password.length < 6) {
-        newErrors.new_password = 'New password must be at least 6 characters';
-      }
-      
-      if (formData.new_password && formData.confirm_password && formData.new_password !== formData.confirm_password) {
-        newErrors.confirm_password = 'Passwords do not match';
+      if (!formData.confirm_password) {
+        newErrors.confirm_password = 'Please confirm your new password.';
+      } else if (formData.new_password !== formData.confirm_password) {
+        newErrors.confirm_password = 'Passwords do not match.';
       }
     }
-
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -124,57 +133,117 @@ const EditProfile = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (!validateForm()) {
+    if (!validateForm(e)) {
       return;
     }
 
     try {
       setLoading(true);
+      console.log('=== PROFILE UPDATE DEBUG ===');
+      console.log('Current user:', currentUser);
+      console.log('Form data:', formData);
+      console.log('Token:', localStorage.getItem('token'));
 
-      // Prepare data for update
+      // Prepare data for update - match backend field names
       const updateData = {
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
-        address: formData.address,
-        bio: formData.bio
+        phone_number: formData.phone_number,
+        location: formData.location
       };
 
       // Add password fields if user wants to change password
       if (formData.new_password) {
+        updateData.password = formData.new_password;
+        updateData.password_confirmation = formData.confirm_password;
         updateData.current_password = formData.current_password;
-        updateData.new_password = formData.new_password;
-        updateData.confirm_password = formData.confirm_password;
       }
 
-      const response = await api.put(`/users/${currentUser.id}`, updateData);
+      console.log('Sending update data:', updateData);
+      console.log('API endpoint:', `/users/${currentUser.id}`);
+
+      // Use the API service method
+      const response = await apiService.updateUser(currentUser.id, updateData);
       
-      // Update local storage with new user data
-      const updatedUser = { ...currentUser, ...response.data.data };
-      localStorage.setItem('user', JSON.stringify(updatedUser));
+      console.log('Response received:', response);
+      console.log('Response data:', response.data);
 
-      await Swal.fire({
-        icon: 'success',
-        title: 'Profile Updated!',
-        text: 'Your profile has been updated successfully.',
-        timer: 2000
-      });
+      const passwordWasChanged = !!formData.new_password;
 
-      // Clear password fields
-      setFormData(prev => ({
-        ...prev,
-        current_password: '',
-        new_password: '',
-        confirm_password: ''
-      }));
+      if (passwordWasChanged) {
+        // Log user out by clearing local storage
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Password Updated!',
+          text: 'Your password has been changed successfully. Please log in again.',
+        });
+
+        // Redirect to login page
+        navigate('/login');
+
+      } else {
+        // Update local storage with new user data if only profile info was changed
+        const updatedUser = { ...currentUser, ...response.data.data };
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        console.log('Updated user in localStorage:', updatedUser);
+
+        await Swal.fire({
+          icon: 'success',
+          title: 'Profile Updated!',
+          text: 'Your profile has been updated successfully.',
+          timer: 2000
+        });
+
+        // Clear password fields
+        setFormData(prev => ({
+          ...prev,
+          current_password: '',
+          new_password: '',
+          confirm_password: ''
+        }));
+      }
 
     } catch (error) {
-      const message = error.response?.data?.message || 'Failed to update profile';
-      Swal.fire({
-        icon: 'error',
-        title: 'Update Failed',
-        text: message
-      });
+      console.error('=== PROFILE UPDATE ERROR ===');
+      console.error('Error object:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      console.error('Error message:', error.message);
+      
+      let errorMessage = 'Failed to update profile';
+      
+      if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else if (error.response?.data?.errors) {
+        // Handle validation errors
+        const validationErrors = error.response.data.errors;
+        console.error('Validation errors:', validationErrors);
+        const errorMessages = Object.values(validationErrors).flat();
+        errorMessage = errorMessages.join(', ');
+      } else if (error.message) {
+        errorMessage = error.message;
+      }
+      
+      console.error('Final error message:', errorMessage);
+      
+      // Specifically check for incorrect current password error
+      if (error.response?.data?.errors?.current_password) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Incorrect Password',
+          text: error.response.data.errors.current_password[0],
+        });
+      } else {
+        Swal.fire({
+          icon: 'error',
+          title: 'Update Failed',
+          text: errorMessage
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -255,31 +324,31 @@ const EditProfile = () => {
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="phone">
+                  <label htmlFor="phone_number">
                     <Phone size={18} />
                     Phone Number
                   </label>
                   <input
                     type="tel"
-                    id="phone"
-                    name="phone"
-                    value={formData.phone}
+                    id="phone_number"
+                    name="phone_number"
+                    value={formData.phone_number}
                     onChange={handleInputChange}
-                    className={errors.phone ? 'error' : ''}
-                    placeholder="Enter your phone number (e.g., +1234567890)"
+                    className={errors.phone_number ? 'error' : ''}
+                    placeholder="Enter your phone number (e.g., 01012345678)"
                   />
-                  {errors.phone && <span className="error-message">{errors.phone}</span>}
+                  {errors.phone_number && <span className="error-message">{errors.phone_number}</span>}
                 </div>
 
                 <div className="form-group">
-                  <label htmlFor="address">
+                  <label htmlFor="location">
                     <MapPin size={18} />
                     Address
                   </label>
                   <textarea
-                    id="address"
-                    name="address"
-                    value={formData.address}
+                    id="location"
+                    name="location"
+                    value={formData.location}
                     onChange={handleInputChange}
                     placeholder="Enter your complete address"
                     rows="3"
@@ -424,25 +493,20 @@ const EditProfile = () => {
               </button>
               <button
                 type="submit"
-                className="btn-primary"
+                className={`btn-primary ${loading ? 'loading' : ''}`}
                 disabled={loading}
               >
-                {loading ? (
-                  <>
-                    <div className="loading-spinner"></div>
-                    Saving Changes...
-                  </>
-                ) : (
-                  <>
-                    <Save size={18} />
-                    Save Changes
-                  </>
-                )}
+                <div className="loading-spinner"></div>
+                <div className="btn-content">
+                  <Save size={18} />
+                  <span>Save Changes</span>
+                </div>
               </button>
             </div>
           </form>
         </div>
       </div>
+      <Footer />
     </>
   );
 };
