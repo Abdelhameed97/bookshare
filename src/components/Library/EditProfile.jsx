@@ -16,6 +16,7 @@ import Navbar from '../HomePage/Navbar';
 import './EditProfile.css';
 
 const EditProfile = () => {
+  const [activeTab, setActiveTab] = useState('personal');
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -184,202 +185,219 @@ const EditProfile = () => {
             <p>Update your library owner profile information</p>
           </div>
 
+          <div className="profile-tabs">
+            <button
+              className={`tab-button ${activeTab === 'personal' ? 'active' : ''}`}
+              onClick={() => setActiveTab('personal')}
+            >
+              Personal Information
+            </button>
+            <button
+              className={`tab-button ${activeTab === 'password' ? 'active' : ''}`}
+              onClick={() => setActiveTab('password')}
+            >
+              Change Password
+            </button>
+          </div>
+
           <form onSubmit={handleSubmit} className="profile-form">
-            {/* Personal Information Section */}
-            <div className="form-section">
-              <h2>Personal Information</h2>
-              
-              <div className="form-group">
-                <label htmlFor="name">
-                  <User size={18} />
-                  Full Name *
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className={errors.name ? 'error' : ''}
-                  placeholder="Enter your full name"
-                  required
-                />
-                {errors.name && <span className="error-message">{errors.name}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="email">
-                  <Mail size={18} />
-                  Email Address *
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleInputChange}
-                  className={errors.email ? 'error' : ''}
-                  placeholder="Enter your email address"
-                  required
-                />
-                {errors.email && <span className="error-message">{errors.email}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="phone">
-                  <Phone size={18} />
-                  Phone Number
-                </label>
-                <input
-                  type="tel"
-                  id="phone"
-                  name="phone"
-                  value={formData.phone}
-                  onChange={handleInputChange}
-                  className={errors.phone ? 'error' : ''}
-                  placeholder="Enter your phone number (e.g., +1234567890)"
-                />
-                {errors.phone && <span className="error-message">{errors.phone}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="address">
-                  <MapPin size={18} />
-                  Address
-                </label>
-                <textarea
-                  id="address"
-                  name="address"
-                  value={formData.address}
-                  onChange={handleInputChange}
-                  placeholder="Enter your complete address"
-                  rows="3"
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="bio">
-                  <User size={18} />
-                  Bio
-                </label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleInputChange}
-                  placeholder="Tell us about yourself and your library..."
-                  rows="4"
-                />
-                <small style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block' }}>
-                  Share your story, experience, or what makes your library special
-                </small>
-              </div>
-            </div>
-
-            {/* Password Change Section */}
-            <div className="form-section">
-              <h2>Change Password</h2>
-              <p className="section-description">
-                Leave blank if you don't want to change your password. 
-                New password must be at least 6 characters long.
-              </p>
-              
-              <div className="form-group">
-                <label htmlFor="current_password">
-                  <Eye size={18} />
-                  Current Password
-                </label>
-                <div className="password-input">
+            {activeTab === 'personal' && (
+              <div className="form-section">
+                <h2>Personal Information</h2>
+                
+                <div className="form-group">
+                  <label htmlFor="name">
+                    <User size={18} />
+                    Full Name *
+                  </label>
                   <input
-                    type={showPassword ? 'text' : 'password'}
-                    id="current_password"
-                    name="current_password"
-                    value={formData.current_password}
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
                     onChange={handleInputChange}
-                    className={errors.current_password ? 'error' : ''}
-                    placeholder="Enter current password"
+                    className={errors.name ? 'error' : ''}
+                    placeholder="Enter your full name"
+                    required
                   />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowPassword(!showPassword)}
-                    title={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  {errors.name && <span className="error-message">{errors.name}</span>}
                 </div>
-                {errors.current_password && <span className="error-message">{errors.current_password}</span>}
-              </div>
 
-              <div className="form-group">
-                <label htmlFor="new_password">
-                  <Eye size={18} />
-                  New Password
-                </label>
-                <div className="password-input">
+                <div className="form-group">
+                  <label htmlFor="email">
+                    <Mail size={18} />
+                    Email Address *
+                  </label>
                   <input
-                    type={showNewPassword ? 'text' : 'password'}
-                    id="new_password"
-                    name="new_password"
-                    value={formData.new_password}
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={formData.email}
                     onChange={handleInputChange}
-                    className={errors.new_password ? 'error' : ''}
-                    placeholder="Enter new password (min 6 characters)"
+                    className={errors.email ? 'error' : ''}
+                    placeholder="Enter your email address"
+                    required
                   />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowNewPassword(!showNewPassword)}
-                    title={showNewPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  {errors.email && <span className="error-message">{errors.email}</span>}
                 </div>
-                {errors.new_password && <span className="error-message">{errors.new_password}</span>}
-                {formData.new_password && formData.new_password.length < 6 && (
-                  <small style={{ color: '#f59e0b', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
-                    Password must be at least 6 characters
-                  </small>
-                )}
-              </div>
 
-              <div className="form-group">
-                <label htmlFor="confirm_password">
-                  <Eye size={18} />
-                  Confirm New Password
-                </label>
-                <div className="password-input">
+                <div className="form-group">
+                  <label htmlFor="phone">
+                    <Phone size={18} />
+                    Phone Number
+                  </label>
                   <input
-                    type={showConfirmPassword ? 'text' : 'password'}
-                    id="confirm_password"
-                    name="confirm_password"
-                    value={formData.confirm_password}
+                    type="tel"
+                    id="phone"
+                    name="phone"
+                    value={formData.phone}
                     onChange={handleInputChange}
-                    className={errors.confirm_password ? 'error' : ''}
-                    placeholder="Confirm new password"
+                    className={errors.phone ? 'error' : ''}
+                    placeholder="Enter your phone number (e.g., +1234567890)"
                   />
-                  <button
-                    type="button"
-                    className="password-toggle"
-                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    title={showConfirmPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                  </button>
+                  {errors.phone && <span className="error-message">{errors.phone}</span>}
                 </div>
-                {errors.confirm_password && <span className="error-message">{errors.confirm_password}</span>}
-                {formData.new_password && formData.confirm_password && formData.new_password !== formData.confirm_password && (
-                  <small style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
-                    Passwords do not match
+
+                <div className="form-group">
+                  <label htmlFor="address">
+                    <MapPin size={18} />
+                    Address
+                  </label>
+                  <textarea
+                    id="address"
+                    name="address"
+                    value={formData.address}
+                    onChange={handleInputChange}
+                    placeholder="Enter your complete address"
+                    rows="3"
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="bio">
+                    <User size={18} />
+                    Bio
+                  </label>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    placeholder="Tell us about yourself and your library..."
+                    rows="4"
+                  />
+                  <small style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block' }}>
+                    Share your story, experience, or what makes your library special
                   </small>
-                )}
-                {formData.new_password && formData.confirm_password && formData.new_password === formData.confirm_password && formData.new_password.length >= 6 && (
-                  <small style={{ color: '#10b981', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
-                    ✓ Passwords match
-                  </small>
-                )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {activeTab === 'password' && (
+              <div className="form-section">
+                <h2>Change Password</h2>
+                <p className="section-description">
+                  Leave blank if you don't want to change your password. 
+                  New password must be at least 6 characters long.
+                </p>
+                
+                <div className="form-group">
+                  <label htmlFor="current_password">
+                    <Eye size={18} />
+                    Current Password
+                  </label>
+                  <div className="password-input">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="current_password"
+                      name="current_password"
+                      value={formData.current_password}
+                      onChange={handleInputChange}
+                      className={errors.current_password ? 'error' : ''}
+                      placeholder="Enter current password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                      title={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.current_password && <span className="error-message">{errors.current_password}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="new_password">
+                    <Eye size={18} />
+                    New Password
+                  </label>
+                  <div className="password-input">
+                    <input
+                      type={showNewPassword ? 'text' : 'password'}
+                      id="new_password"
+                      name="new_password"
+                      value={formData.new_password}
+                      onChange={handleInputChange}
+                      className={errors.new_password ? 'error' : ''}
+                      placeholder="Enter new password (min 6 characters)"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowNewPassword(!showNewPassword)}
+                      title={showNewPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.new_password && <span className="error-message">{errors.new_password}</span>}
+                  {formData.new_password && formData.new_password.length < 6 && (
+                    <small style={{ color: '#f59e0b', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                      Password must be at least 6 characters
+                    </small>
+                  )}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="confirm_password">
+                    <Eye size={18} />
+                    Confirm New Password
+                  </label>
+                  <div className="password-input">
+                    <input
+                      type={showConfirmPassword ? 'text' : 'password'}
+                      id="confirm_password"
+                      name="confirm_password"
+                      value={formData.confirm_password}
+                      onChange={handleInputChange}
+                      className={errors.confirm_password ? 'error' : ''}
+                      placeholder="Confirm new password"
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      title={showConfirmPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                  {errors.confirm_password && <span className="error-message">{errors.confirm_password}</span>}
+                  {formData.new_password && formData.confirm_password && formData.new_password !== formData.confirm_password && (
+                    <small style={{ color: '#ef4444', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                      Passwords do not match
+                    </small>
+                  )}
+                  {formData.new_password && formData.confirm_password && formData.new_password === formData.confirm_password && formData.new_password.length >= 6 && (
+                    <small style={{ color: '#10b981', fontSize: '0.8rem', marginTop: '0.25rem', display: 'block' }}>
+                      ✓ Passwords match
+                    </small>
+                  )}
+                </div>
+              </div>
+            )}
 
             {/* Form Actions */}
             <div className="form-actions">
