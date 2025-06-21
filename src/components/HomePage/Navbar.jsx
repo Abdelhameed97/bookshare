@@ -63,7 +63,6 @@ const Navbar = () => {
     if (storedUser) {
       try {
         const parsedUser = JSON.parse(storedUser);
-        console.log("User from localStorage:", parsedUser);
         setUser(parsedUser);
       } catch {
         setUser(null);
@@ -72,9 +71,6 @@ const Navbar = () => {
       setUser(null);
     }
   }, []);
-
-  console.log("Current user state:", user);
-  console.log("Is Library Owner:", isLibraryOwner);
 
   const handleLogout = () => {
     localStorage.removeItem("user");

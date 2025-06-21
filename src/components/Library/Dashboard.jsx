@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   BookOpen, 
   Users, 
@@ -11,13 +11,14 @@ import {
   Search,
   Filter,
   Calendar,
-  Star
+  Star,
+  RefreshCw
 } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
-import Navbar from '../HomePage/Navbar';
 import './Dashboard.css';
+import Navbar from '../HomePage/Navbar';
 
 const Dashboard = () => {
   const [stats, setStats] = useState({
@@ -29,22 +30,29 @@ const Dashboard = () => {
   const [recentBooks, setRecentBooks] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem('user'));
-
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'owner') {
-      navigate('/login');
-      return;
+  const location = useLocation();
+  
+  // Memoize currentUser to prevent unnecessary re-renders
+  const currentUser = useMemo(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch {
+        return null;
+      }
     }
-    
-    fetchDashboardData();
-  }, [currentUser, navigate]);
+    return null;
+  }, []);
 
   const fetchDashboardData = async () => {
+    if (!currentUser) return;
+    
     try {
       setLoading(true);
       
@@ -99,8 +107,37 @@ const Dashboard = () => {
       });
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+  };
+
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'owner') {
+      navigate('/login');
+      return;
+    }
+    
+    fetchDashboardData();
+  }, [currentUser, location.pathname]); // Added location.pathname to reload when page changes
+
+  // Add effect to reload data when page becomes visible
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && currentUser && currentUser.role === 'owner') {
+        fetchDashboardData();
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [currentUser]);
 
   const handleDeleteBook = async (bookId) => {
     try {
@@ -172,6 +209,15 @@ const Dashboard = () => {
             <p>Welcome back, {currentUser?.name || 'Library Owner'}</p>
           </div>
           <div className="dashboard-actions">
+            <button 
+              className="btn-refresh"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh Data"
+            >
+              <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
             <Link to="/add-book" className="btn-primary">
               <Plus size={20} />
               Add New Book
@@ -226,7 +272,7 @@ const Dashboard = () => {
         <div className="dashboard-section">
           <div className="section-header">
             <h2>Recent Books</h2>
-            <Link to="/show-library" className="view-all-link">
+            <Link to="/books" className="view-all-link">
               View All Books
             </Link>
           </div>
@@ -257,15 +303,8 @@ const Dashboard = () => {
                 </div>
                 <div className="book-actions">
                   <button 
-                    className="action-btn edit"
-                    onClick={() => navigate(`/edit-book/${book.id}`)}
-                    title="Edit Book"
-                  >
-                    <Edit size={16} />
-                  </button>
-                  <button 
                     className="action-btn view"
-                    onClick={() => navigate(`/book/${book.id}`)}
+                    onClick={() => navigate(`/books/${book.id}`)}
                     title="View Book"
                   >
                     <Eye size={16} />
@@ -287,7 +326,7 @@ const Dashboard = () => {
         <div className="dashboard-section">
           <div className="section-header">
             <h2>Recent Orders</h2>
-            <Link to="/orders" className="view-all-link">
+            <Link to="/order" className="view-all-link">
               View All Orders
             </Link>
           </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   User, 
   Mail, 
@@ -9,7 +9,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import Swal from 'sweetalert2';
 import Navbar from '../HomePage/Navbar';
@@ -34,7 +34,20 @@ const EditProfile = () => {
   const [errors, setErrors] = useState({});
   
   const navigate = useNavigate();
-  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const location = useLocation();
+  
+  // Memoize currentUser to prevent unnecessary re-renders
+  const currentUser = useMemo(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, []);
 
   useEffect(() => {
     if (!currentUser || currentUser.role !== 'owner') {

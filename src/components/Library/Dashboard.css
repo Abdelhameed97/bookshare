@@ -53,6 +53,39 @@
   box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
+.dashboard-actions .btn-refresh {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #10b981;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+  margin-left: 1rem;
+}
+
+.dashboard-actions .btn-refresh:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.dashboard-actions .btn-refresh:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.dashboard-actions .btn-refresh:disabled svg {
+  animation: spin 1s linear infinite;
+}
+
 /* Stats Grid */
 .stats-grid {
   display: grid;
