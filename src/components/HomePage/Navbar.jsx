@@ -50,6 +50,7 @@ const Navbar = () => {
     { to: "/dashboard", label: "DASHBOARD", icon: FaTachometerAlt },
     { to: "/edit-profile", label: "EDIT PROFILE", icon: FaUserEdit },
     { to: "/add-book", label: "ADD BOOK", icon: FaBook },
+    { to: "/libraries", label: "SHOW ALL LIBRARIES", icon: FaBook },
   ];
 
   const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;

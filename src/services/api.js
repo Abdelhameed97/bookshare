@@ -32,6 +32,12 @@ api.interceptors.response.use(
 );
 
 const apiService = {
+    // General HTTP methods
+    get: (url) => api.get(url),
+    post: (url, data, config = {}) => api.post(url, data, config),
+    put: (url, data) => api.put(url, data),
+    delete: (url) => api.delete(url),
+
     // Cart Endpoints
     getCart: () => api.get('/cart'),
 
@@ -79,6 +85,15 @@ const apiService = {
     // Book Endpoints
     getBooks: () => api.get('/books'),
     getBookDetails: (bookId) => api.get(`/books/${bookId}`),
+    addBook: (bookData) => api.post('/books', bookData),
+    updateBook: (bookId, bookData) => api.put(`/books/${bookId}`, bookData),
+    deleteBook: (bookId) => api.delete(`/books/${bookId}`),
+
+    // Category Endpoints
+    getCategories: () => api.get('/categories'),
+
+    // Notification Endpoints
+    getNotifications: () => api.get('/notifications'),
 
     // User Endpoints
     updateUser: (userId, userData) => {

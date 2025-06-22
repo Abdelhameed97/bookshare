@@ -16,6 +16,8 @@ import ContactPage from "./pages/ContactPage";
 import Dashboard from "./components/Library/Dashboard";
 import EditProfile from "./components/Library/EditProfile";
 import AddBookPage from "./components/Library/AddBookPage";
+import LibrariesPage from "./components/Library/LibrariesPage";
+import LibraryDetails from "./components/Library/LibraryDetails";
 
 
 function App() {
@@ -36,6 +38,8 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/add-book" element={<AddBookPage />} />
+        <Route path="/libraries" element={<LibrariesPage />} />
+        <Route path="/library/:id" element={<LibraryDetails />} />
         <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
       </Routes>
     </Router>

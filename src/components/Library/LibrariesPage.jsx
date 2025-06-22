@@ -2,23 +2,20 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   BookOpen, 
-  Users, 
   MapPin, 
   Star, 
   Search,
-  Filter,
   Building2
 } from 'lucide-react';
-import api from '../../services/api';
+import apiService from '../../services/api';
 import Navbar from '../HomePage/Navbar';
-import Footer from '../shared/Footer';
-import '../style/LibrariesPage.css';
+import Footer from '../HomePage/Footer';
+import '../../style/LibrariesPage.css';
 
 const LibrariesPage = () => {
   const [libraries, setLibraries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
 
   useEffect(() => {
     fetchLibraries();
@@ -28,12 +25,12 @@ const LibrariesPage = () => {
     try {
       setLoading(true);
       
-      // Fetch all users with owner role
-      const usersResponse = await api.get('/users');
-      const owners = usersResponse.data.data.filter(user => user.role === 'owner');
+      // Fetch all library owners using the new API
+      const librariesResponse = await apiService.get('/libraries');
+      const owners = librariesResponse.data.data;
       
       // Fetch books for each owner
-      const booksResponse = await api.get('/books');
+      const booksResponse = await apiService.get('/books');
       const allBooks = booksResponse.data.data;
       
       // Group books by owner and calculate stats
@@ -52,8 +49,8 @@ const LibrariesPage = () => {
           id: owner.id,
           name: owner.name,
           email: owner.email,
-          phone: owner.phone,
-          address: owner.address,
+          phone: owner.phone_number,
+          address: owner.location,
           bio: owner.bio,
           totalBooks,
           avgRating,
@@ -163,28 +160,10 @@ const LibrariesPage = () => {
 
                   {library.books.length > 0 && (
                     <div className="library-books">
-                      <h4>Featured Books</h4>
-                      <div className="books-preview">
-                        {library.books.map((book) => (
-                          <div key={book.id} className="book-preview">
-                            <img 
-                              src={book.images?.[0] 
-                                ? book.images[0].startsWith('http') 
-                                  ? book.images[0] 
-                                  : `http://localhost:8000/storage/${book.images[0]}`
-                                : '/placeholder.svg'
-                              } 
-                              alt={book.title}
-                              onError={(e) => {
-                                e.currentTarget.src = '/placeholder.svg';
-                              }}
-                            />
-                            <div className="book-info">
-                              <h5>{book.title}</h5>
-                              <p>${book.price}</p>
-                            </div>
-                          </div>
-                        ))}
+                      <h4>Featured Books ({library.totalBooks} total)</h4>
+                      <div className="books-count">
+                        <BookOpen size={20} />
+                        <span>{library.totalBooks} books available</span>
                       </div>
                     </div>
                   )}
@@ -193,11 +172,6 @@ const LibrariesPage = () => {
                     <Link to={`/library/${library.id}`} className="btn-view-library">
                       View Library
                     </Link>
-                    {library.phone && (
-                      <a href={`tel:${library.phone}`} className="btn-contact">
-                        Contact
-                      </a>
-                    )}
                   </div>
                 </div>
               ))
