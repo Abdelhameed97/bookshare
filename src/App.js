@@ -8,6 +8,7 @@ import OrdersPage from "./pages/OrdersPage";
 import WishlistPage from "./pages/WishlistPage";
 import RegisterPage from "./pages/form/RegisterPage";
 import LoginPage from "./pages/form/LoginPage";
+import GuestRoute from "./components/GuestRoute/GuestRoute";
 import About from "./components/About.jsx/Aboutus";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import BooksPage from "./pages/BooksPage";
@@ -30,8 +31,18 @@ function App() {
         <Route path='/wishlist' element={<WishlistPage />} />
         <Route path="/books" element={<BooksPage />} />
         <Route path="/books/:id" element={<BookDetails />} />
-        <Route path='/register' element={<RegisterPage />} />
-        <Route path='/login' element={<LoginPage />} />
+
+        <Route path='/register' element={
+          <RegisterPage />} />
+
+        <Route
+          path="/login"
+          element={
+            <GuestRoute>
+              <LoginPage />
+            </GuestRoute>
+          }
+        />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
