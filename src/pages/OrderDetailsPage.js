@@ -36,6 +36,12 @@ const OrderDetailsPage = () => {
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
+                const token = localStorage.getItem('token');
+                if (!token) {
+                    navigate('/login', { state: { from: `/orders/${id}` } });
+                    return;
+                }
+
                 const response = await api.getOrderDetails(id);
                 if (response.data && response.data.data) {
                     setOrder(response.data.data);
@@ -43,6 +49,11 @@ const OrderDetailsPage = () => {
                     setError('Order not found');
                 }
             } catch (err) {
+                if (err.response?.status === 401) {
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    navigate('/login', { state: { from: `/orders/${id}` } });
+                }
                 setError(err.response?.data?.message || 'Failed to load order details');
             } finally {
                 setLoading(false);
@@ -50,7 +61,7 @@ const OrderDetailsPage = () => {
         };
 
         fetchOrderDetails();
-    }, [id]);
+    }, [id, navigate]);
 
     const getStatusIcon = (status) => {
         if (!status) return <Clock size={20} className="text-secondary me-2" />;

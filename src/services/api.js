@@ -43,8 +43,8 @@ const apiService = {
             book_id: bookId,
             type: data.type,
             quantity: 1,
-            user_id: user.id,
-        }
+            user_id: user.id
+        };
 
         console.log("Sending to cart:", payload)
         return api.post("/cart", payload)
@@ -90,4 +90,4 @@ const apiService = {
     getUser: () => api.get("/user"),
 }
 
-export default apiService
+export default apiService;

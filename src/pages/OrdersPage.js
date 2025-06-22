@@ -89,6 +89,57 @@ const OrdersPage = () => {
         }
     };
 
+    const handleCancelOrder = async (orderId) => {
+        if (window.confirm('Are you sure you want to cancel this order?')) {
+            const { success, error } = await cancelOrder(orderId);
+            setAlertMessage(success ? 'Order cancelled successfully' : error);
+            setShowAlert(true);
+        }
+    };
+
+    if (!userId) {
+        return (
+            <div className="text-center py-5">
+                <Alert variant="warning">
+                    Please login to view your orders
+                </Alert>
+                <Button
+                    variant="primary"
+                    onClick={() => navigate('/login', { state: { from: '/orders' } })}
+                    className="mt-3"
+                >
+                    Login
+                </Button>
+            </div>
+        );
+    }
+
+    if (loading) {
+        return (
+            <div className="text-center py-5">
+                <Spinner animation="border" variant="primary" />
+                <p className="mt-2">Loading your orders...</p>
+            </div>
+        );
+    }
+
+    if (error) {
+        return (
+            <div className="text-center py-5">
+                <Alert variant="danger">
+                    {error}
+                </Alert>
+                <CustomButton
+                    variant="primary"
+                    onClick={() => window.location.reload()}
+                    className="mt-3"
+                >
+                    Try Again
+                </CustomButton>
+            </div>
+        );
+    }
+
     return (
         <>
             <Navbar />

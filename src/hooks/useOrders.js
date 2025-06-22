@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
-export const useOrders = () => {
+export const useOrders = (userId) => {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -11,16 +11,19 @@ export const useOrders = () => {
     const fetchOrders = async () => {
         setLoading(true);
         try {
-            const response = await api.getOrders();
+            if (!userId) {
+                setOrders([]);
+                setError('Please login to view your orders');
+                return;
+            }
 
-            // التأكد من أن البيانات تأتي في الحقل data وأنها مصفوفة
+            const response = await api.getOrders();
             const ordersData = response.data?.data || [];
 
             if (!Array.isArray(ordersData)) {
                 throw new Error('Expected array in response data');
             }
 
-            // إضافة items_count لكل طلب
             const ordersWithCount = ordersData.map(order => ({
                 ...order,
                 items_count: order.order_items?.length || 0,
@@ -31,7 +34,9 @@ export const useOrders = () => {
             setError(null);
         } catch (err) {
             if (err.response?.status === 401) {
-                navigate('/login');
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login', { state: { from: window.location.pathname } });
             }
             setError(err.response?.data?.message || err.message);
             setOrders([]);
@@ -57,7 +62,7 @@ export const useOrders = () => {
 
     useEffect(() => {
         fetchOrders();
-    }, []);
+    }, [userId]);
 
     return {
         orders,
