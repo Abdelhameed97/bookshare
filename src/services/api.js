@@ -50,7 +50,7 @@ const apiService = {
         return api.post('/cart', payload);
     },
 
-    updateCartItem: (cartItemId, quantity) => api.post(`/cart/${cartItemId}`, { quantity }),
+    updateCartItem: (cartItemId, quantity) => api.put(`/cart/${cartItemId}`, { quantity }),
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
 
     // Wishlist Endpoints
@@ -71,10 +71,23 @@ const apiService = {
     moveAllToCart: () => api.post('/wishlist/move-all-to-cart'),
 
     // Order Endpoints
-    getOrders: () => api.get('/order'),
-    getOrderDetails: (orderId) => api.get(`/order/${orderId}`),
-    createOrder: (orderData) => api.post('/order', orderData),
-    cancelOrder: (orderId) => api.delete(`/order/${orderId}`),
+    getOrders: () => api.get('/orders'),
+    createOrder: (orderData) => api.post('/orders', orderData),
+    getOrderDetails: (orderId) => api.get(`/orders/${orderId}`)
+        .catch(err => {
+            if (err.response?.status === 500 && err.response?.data?.error?.includes('No query results')) {
+                throw new Error('Order not found or already deleted');
+            }
+            throw err;
+        }),
+
+    cancelOrder: (orderId) => api.delete(`/orders/${orderId}`)
+        .catch(err => {
+            if (err.response?.status === 500 && err.response?.data?.error?.includes('No query results')) {
+                throw new Error('Order not found or already cancelled');
+            }
+            throw err;
+        }),
 
     // Book Endpoints
     getBooks: () => api.get('/books'),
