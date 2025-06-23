@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { FaCheck, FaTimes, FaGoogle, FaGithub } from "react-icons/fa";
 import logo from "../../assets/bookshare-logo.png";
@@ -9,6 +9,7 @@ const RegisterForm = () => {
   // Get role from location state if coming from GetStarted page
   const location = useLocation();
   const role = location.state?.role; // 'client' or 'owner'
+  
 
   const [form, setForm] = useState({
     name: "",
@@ -19,6 +20,12 @@ const RegisterForm = () => {
     national_id: "",
     role: role,
   });
+
+ 
+  // Add this useEffect to verify the role is received
+useEffect(() => {
+  console.log("Received role from location:", location.state?.role);
+}, [location.state]);
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});

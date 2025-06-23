@@ -1,11 +1,14 @@
 import { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
+import { useNavigate } from "react-router-dom";
 import logo from "../../assets/bookshare-logo.png";
-import { Link } from "react-router-dom";
+
 export default function GetStarted() {
   const [selectedRole, setSelectedRole] = useState(null);
   const [showModal, setShowModal] = useState(false);
+  const [confirmedRole, setConfirmedRole] = useState(null);
+  const navigate = useNavigate();
 
   const roles = [
     {
@@ -78,16 +81,37 @@ export default function GetStarted() {
     setShowModal(false);
   };
 
+  const handleSelectRole = () => {
+    if (!selectedRole) return;
+    setConfirmedRole(selectedRole);
+    setShowModal(false);
+  };
+
+  const handleContinue = () => {
+    if (confirmedRole) {
+      navigate("/register", {
+        state: {
+          role: confirmedRole.id,
+        },
+      });
+    }
+  };
+
   return (
     <div
       className='p-4 rounded-3 shadow-sm vh-100 align-items-center justify-content-center d-flex flex-column'
-      style={{ maxWidth: "60%" }}
+      style={{ maxWidth: "60%", width: "100%" }}
     >
       <img
         src={logo}
         alt='BookShare Logo'
         style={{ maxWidth: "200px", height: "auto" }}
+        onError={(e) => {
+          e.target.src = "/default-book-icon.png";
+          e.target.style.padding = "1rem";
+        }}
       />
+
       <h2 className='text-center mb-4 fw-bold text-dark'>
         How do you want to use our website?
       </h2>
@@ -95,17 +119,21 @@ export default function GetStarted() {
         We'll personalize your experience accordingly.
       </p>
 
-      <div className='mb-4'>
+      <div className='mb-4 w-100'>
         {roles.map((role) => (
           <div
             key={role.id}
-            className={`p-3 mb-3 border rounded-3 bg-white cursor-pointer ${
+            role='radio'
+            aria-checked={selectedRole?.id === role.id}
+            tabIndex={0}
+            className={`p-3 mb-3 border rounded-3 bg-white ${
               selectedRole?.id === role.id
                 ? "border-primary border-2 shadow-sm"
                 : "border-light-subtle"
             }`}
             style={{ cursor: "pointer" }}
             onClick={() => handleRoleClick(role)}
+            onKeyDown={(e) => e.key === "Enter" && handleRoleClick(role)}
           >
             <div className='form-check'>
               <input
@@ -123,26 +151,17 @@ export default function GetStarted() {
         ))}
       </div>
 
-      {/* Your role selection UI */}
+      <Button
+        variant='primary'
+        className='w-100 py-2 fw-bold rounded-2'
+        disabled={!confirmedRole}
+        onClick={handleContinue}
+      >
+        {confirmedRole
+          ? `Continue as ${confirmedRole.title.toLowerCase()}`
+          : "Select a role"}
+      </Button>
 
-      {selectedRole ? (
-        <Link
-          to={{
-            pathname: "/register",
-            state: { role: selectedRole.id },
-          }}
-          className='btn btn-primary w-100 py-2 fw-bold rounded-2 text-decoration-none'
-        >
-          Continue as {selectedRole.title.toLowerCase()}
-        </Link>
-      ) : (
-        <button
-          className='btn btn-primary w-100 py-2 fw-bold rounded-2'
-          disabled
-        >
-          Select a role
-        </button>
-      )}
       <Modal
         show={showModal}
         onHide={handleCloseModal}
@@ -172,7 +191,7 @@ export default function GetStarted() {
           </Button>
           <Button
             variant='primary'
-            onClick={handleCloseModal}
+            onClick={handleSelectRole}
             className='rounded-1'
           >
             Select This Role
