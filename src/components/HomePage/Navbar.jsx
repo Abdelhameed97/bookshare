@@ -47,7 +47,6 @@ const Navbar = () => {
   ];
 
   const ownerNavLinks = [
-    { to: "/", label: "HOME" },
     { to: "/dashboard", label: "DASHBOARD", icon: FaTachometerAlt },
     { to: "/edit-profile", label: "EDIT PROFILE", icon: FaUserEdit },
     { to: "/add-book", label: "ADD BOOK", icon: FaBook },
