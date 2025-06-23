@@ -9,7 +9,6 @@ const RegisterForm = () => {
   // Get role from location state if coming from GetStarted page
   const location = useLocation();
   const role = location.state?.role; // 'client' or 'owner'
-  
 
   const [form, setForm] = useState({
     name: "",
@@ -21,11 +20,13 @@ const RegisterForm = () => {
     role: role,
   });
 
- 
-  // Add this useEffect to verify the role is received
-useEffect(() => {
-  console.log("Received role from location:", location.state?.role);
-}, [location.state]);
+  // If user navigates directly to this page without selecting a role,
+  // redirect them to the Get Started page
+  useEffect(() => {
+    if (!form.role) {
+      navigate("/get-started");
+    }
+  }, [form.role]);
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
@@ -331,45 +332,14 @@ useEffect(() => {
                 </div>
               </div>
 
-              {/* Account Type Display
-              <div className='mb-3'>
-                <label className='form-label fw-bold'>Account Type</label>
-                <div className='d-flex gap-2'>
-                  <div
-                    className={`p-3 border rounded flex-grow-1 text-center ${
-                      form.role === "client"
-                        ? "border-primary bg-primary bg-opacity-10"
-                        : "border-secondary opacity-50"
-                    }`}
-                  >
-                    <h6 className='mb-1'>Book Lover</h6>
-                    <small className='text-muted'>Borrow books</small>
-                  </div>
-                  <div
-                    className={`p-3 border rounded flex-grow-1 text-center ${
-                      form.role === "owner"
-                        ? "border-primary bg-primary bg-opacity-10"
-                        : "border-secondary opacity-50"
-                    }`}
-                  >
-                    <h6 className='mb-1'>Library Owner</h6>
-                    <small className='text-muted'>Share books</small>
-                  </div>
-                </div>
-                <small className='text-muted d-block mt-1'>
-                  To change account type,{" "}
+              <div className='text-center my-2'>
+                <small className='text-muted'>
+                  Want to change your role?{" "}
                   <Link to='/get-started' className='text-primary'>
-                    go back
+                    Choose another account type
                   </Link>
                 </small>
-              </div> */}
-
-              <small className='text-muted d-block mt-1'>
-                  To change account type,{" "}
-                  <Link to='/get-started' className='text-primary'>
-                    go back
-                  </Link>
-                </small>
+              </div>
 
               <button
                 type='submit'
