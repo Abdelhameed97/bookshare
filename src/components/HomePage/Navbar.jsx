@@ -43,13 +43,15 @@ const Navbar = () => {
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
     { to: "/contact", label: "CONTACT" },
+    
   ];
 
   const ownerNavLinks = [
-    { to: "/", label: "HOME" },
     { to: "/dashboard", label: "DASHBOARD", icon: FaTachometerAlt },
     { to: "/edit-profile", label: "EDIT PROFILE", icon: FaUserEdit },
     { to: "/add-book", label: "ADD BOOK", icon: FaBook },
+    { to: "/libraries", label: "ALL LIBRARIES", icon: FaBook },
+    { to: "/all-orders", label: "ORDERS", icon: FaBoxOpen },
   ];
 
   const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;
