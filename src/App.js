@@ -10,6 +10,7 @@ import WishlistPage from "./pages/WishlistPage";
 import RegisterPage from "./pages/form/RegisterPage";
 import LoginPage from "./pages/form/LoginPage";
 import GuestRoute from "./components/GuestRoute/GuestRoute";
+import GetStartedPage from "./pages/form/GetStartedPage";
 import About from "./components/About.jsx/Aboutus";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import BooksPage from "./pages/BooksPage";
@@ -23,6 +24,7 @@ import LibraryDetails from "./components/Library/LibraryDetails";
 import PaymentPage from "./pages/PaymentPage";
 import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
+import SocialCallback from "./pages/SocialCallback";
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -55,6 +57,16 @@ function App() {
             </GuestRoute>
           }
         />
+        <Route 
+          path="/get-started" 
+          element={
+            <GuestRoute>
+              <GetStartedPage />
+            </GuestRoute>
+          }
+        />
+        <Route path="/social-callback" element={<SocialCallback />} />
+
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
