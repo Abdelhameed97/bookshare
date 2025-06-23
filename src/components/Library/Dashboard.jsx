@@ -174,9 +174,9 @@ const Dashboard = () => {
       
       const userOrders = ordersResponse.status === 'fulfilled' && ordersResponse.value.data.data 
         ? ordersResponse.value.data.data.filter(order => 
-            order.order_items.some(item => 
-              userBooks.some(book => book.id === item.book_id)
-            )
+        order.order_items.some(item => 
+          userBooks.some(book => book.id === item.book_id)
+        )
           )
         : [];
       console.log('User orders:', userOrders);
@@ -299,11 +299,11 @@ const Dashboard = () => {
           booksByCategory: {}
         });
       } else {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'Failed to load dashboard data'
-        });
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load dashboard data'
+      });
       }
     } finally {
       setLoading(false);
@@ -401,15 +401,15 @@ const Dashboard = () => {
           </div>
           <div className="dashboard-actions">
             <div className="action-group">
-              <button 
-                className="btn-refresh"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                title="Refresh Data"
-              >
-                <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
+            <button 
+              className="btn-refresh"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh Data"
+            >
+              <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
             </div>
             
             <div className="notification-section">
@@ -597,9 +597,9 @@ const Dashboard = () => {
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
               </select>
-              <Link to="/books" className="view-all-link">
-                View All Books
-              </Link>
+            <Link to="/books" className="view-all-link">
+              View All Books
+            </Link>
             </div>
           </div>
 
@@ -610,30 +610,30 @@ const Dashboard = () => {
             </div>
           ) : (
             <>
-              <div className="books-grid">
+          <div className="books-grid">
                 {filteredBooks.slice(0, 8).map((book) => (
-                  <div key={book.id} className="book-card">
-                    <div className="book-image">
-                      <img 
-                        src={book.image} 
-                        alt={book.title}
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                      />
-                      <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
-                        {book.status}
-                      </div>
+              <div key={book.id} className="book-card">
+                <div className="book-image">
+                  <img 
+                    src={book.image} 
+                    alt={book.title}
+                    onError={(e) => {
+                      e.currentTarget.src = '/placeholder.svg';
+                    }}
+                  />
+                  <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
+                    {book.status}
+                  </div>
                       <div className="book-overlay">
                         <div className="overlay-actions">
-                          <button 
+                  <button 
                             className="overlay-btn view"
-                            onClick={() => navigate(`/books/${book.id}`)}
-                            title="View Book"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button 
+                    onClick={() => navigate(`/books/${book.id}`)}
+                    title="View Book"
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button 
                             className="overlay-btn edit"
                             onClick={() => navigate(`/edit-book/${book.id}`)}
                             title="Edit Book"
@@ -642,11 +642,11 @@ const Dashboard = () => {
                           </button>
                           <button 
                             className="overlay-btn delete"
-                            onClick={() => handleDeleteBook(book.id)}
-                            title="Delete Book"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                    onClick={() => handleDeleteBook(book.id)}
+                    title="Delete Book"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                         </div>
                       </div>
                     </div>
@@ -679,10 +679,10 @@ const Dashboard = () => {
                       {book.description && (
                         <p className="book-description">{book.description.substring(0, 100)}...</p>
                       )}
-                    </div>
-                  </div>
-                ))}
+                </div>
               </div>
+            ))}
+          </div>
               
               {filteredBooks.length === 0 && (
                 <div className="empty-state">

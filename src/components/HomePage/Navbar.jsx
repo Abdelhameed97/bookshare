@@ -43,6 +43,7 @@ const Navbar = () => {
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
     { to: "/contact", label: "CONTACT" },
+    
   ];
 
   const ownerNavLinks = [
@@ -51,6 +52,7 @@ const Navbar = () => {
     { to: "/edit-profile", label: "EDIT PROFILE", icon: FaUserEdit },
     { to: "/add-book", label: "ADD BOOK", icon: FaBook },
     { to: "/libraries", label: "SHOW ALL LIBRARIES", icon: FaBook },
+    { to: "/all-orders", label: "ALL ORDERS", icon: FaBoxOpen },
   ];
 
   const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;
@@ -172,7 +174,7 @@ const Navbar = () => {
                     <button
                       className="icon-button order-badge"
                       title="Orders"
-                      onClick={() => handleProtectedAction("/order")}
+                      onClick={() => handleProtectedAction("/orders")}
                     >
                       <FaBoxOpen size={18} />
                       {ordersCount > 0 && (

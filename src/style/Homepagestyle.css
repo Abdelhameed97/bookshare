@@ -3731,3 +3731,18 @@
   text-align: center;
   box-shadow: 0 0 0 2px white;
 }
+
+.tab-btn {
+  padding: 8px 20px;
+  margin-right: 8px;
+  border: none;
+  background: #eee;
+  cursor: pointer;
+  border-radius: 4px 4px 0 0;
+  font-weight: 500;
+  transition: background 0.2s, color 0.2s;
+}
+.tab-btn.active {
+  background: #007bff;
+  color: #fff;
+}
