@@ -14,7 +14,7 @@ const NotFound = () => {
       padding: "2rem"
     }}>
       <img
-        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaFTWS03KtOH9GOL_fKMuaVHNihTtrefjoqw&s"
+        src="https://static.vecteezy.com/system/resources/previews/053/173/315/non_2x/illustration-of-404-not-found-with-people-engaged-in-activities-realizing-the-page-they-are-trying-to-reach-is-down-illustrated-with-the-404-error-text-free-vector.jpg"
         alt="404 Not Found"
         style={{ width: 260, marginBottom: 32 }}
       />
