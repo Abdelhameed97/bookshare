@@ -34,7 +34,6 @@ api.interceptors.response.use(
 const apiService = {
     // Cart Endpoints
     getCart: () => api.get('/cart'),
-
     addToCart: (bookId, data) => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || !user.id) throw new Error('User not logged in');
@@ -49,13 +48,11 @@ const apiService = {
         console.log("Sending to cart:", payload);
         return api.post('/cart', payload);
     },
-
     updateCartItem: (cartItemId, quantity) => api.put(`/cart/${cartItemId}`, { quantity }),
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
 
     // Wishlist Endpoints
     getWishlist: () => api.get('/wishlist'),
-
     addToWishlist: (bookId) => {
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user || !user.id) throw new Error('User not logged in');
@@ -65,7 +62,6 @@ const apiService = {
             user_id: user.id
         });
     },
-
     removeWishlistItem: (wishlistItemId) => api.delete(`/wishlist/${wishlistItemId}`),
     moveToCart: (wishlistItemId) => api.post(`/wishlist/${wishlistItemId}/move-to-cart`),
     moveAllToCart: () => api.post('/wishlist/move-all-to-cart'),
@@ -80,7 +76,6 @@ const apiService = {
             }
             throw err;
         }),
-
     cancelOrder: (orderId) => api.delete(`/orders/${orderId}`)
         .catch(err => {
             if (err.response?.status === 500 && err.response?.data?.error?.includes('No query results')) {
@@ -88,11 +83,21 @@ const apiService = {
             }
             throw err;
         }),
-    
+
     // Payment Endpoints
     createPayment: (paymentData) => api.post('/payments', paymentData),
     getPayment: (paymentId) => api.get(`/payments/${paymentId}`),
+    getOrderPayment: (orderId) => api.get(`/orders/${orderId}/payment`).catch(err => {
+        if (err.response?.status === 404) {
+            return { data: null };
+        }
+        throw err;
+    }),
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
+    getUserPayments: () => api.get('/payments'),
+
+    // Coupon Endpoints
+    applyCoupon: (couponCode) => api.post('/coupons/apply', { code: couponCode }),
 
     // Book Endpoints
     getBooks: () => api.get('/books'),

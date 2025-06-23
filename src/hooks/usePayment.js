@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
@@ -10,32 +10,36 @@ export const usePayment = () => {
     const [processing, setProcessing] = useState(false);
     const navigate = useNavigate();
 
-    const fetchPaymentDetails = async (orderId) => {
+    const fetchData = useCallback(async (orderId) => {
         setLoading(true);
         setError(null);
-
         try {
-            // Fetch order details first
             const orderResponse = await api.getOrderDetails(orderId);
+            const orderData = orderResponse.data?.data || orderResponse.data;
 
-            if (!orderResponse.data) {
+            if (!orderData) {
                 throw new Error('Order not found');
             }
 
-            setOrder(orderResponse.data);
-
-            // Then try to fetch payment if exists
             try {
                 const paymentResponse = await api.getOrderPayment(orderId);
-                if (paymentResponse.data) {
-                    setPayment(paymentResponse.data);
+                const paymentData = paymentResponse.data?.data || paymentResponse.data;
+
+                if (paymentData) {
+                    setPayment(paymentData);
                 }
             } catch (paymentError) {
                 console.log('No payment exists yet, will create new one');
             }
+
+            setOrder({
+                ...orderData,
+                items: orderData.order_items || []
+            });
+
         } catch (err) {
             console.error('Error fetching payment details:', err);
-            setError(err.message || 'Failed to load payment details');
+            setError(err.response?.data?.message || err.message || 'Failed to load payment details');
             if (err.response?.status === 401) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -44,14 +48,24 @@ export const usePayment = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     const createPayment = async (paymentData) => {
         setProcessing(true);
         try {
-            const response = await api.createPayment(paymentData);
-            setPayment(response.data);
-            return response.data;
+            const response = await api.createPayment({
+                ...paymentData,
+                status: 'pending'
+            });
+
+            const responseData = response.data?.data || response.data;
+
+            if (!responseData) {
+                throw new Error('No payment data returned');
+            }
+
+            setPayment(responseData);
+            return responseData;
         } catch (err) {
             console.error('Payment creation failed:', err);
             throw err;
@@ -60,14 +74,29 @@ export const usePayment = () => {
         }
     };
 
+    const fetchUserPayments = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            const response = await api.getUserPayments();
+            return response.data?.data || response.data;
+        } catch (err) {
+            console.error('Error fetching user payments:', err);
+            throw err.response?.data?.message || err.message || 'Failed to load payments';
+        } finally {
+            setLoading(false);
+        }
+    }, []);
+
     return {
         payment,
         order,
         loading,
         error,
         processing,
-        fetchPaymentDetails,
+        fetchData,
         createPayment,
-        setPayment
+        setPayment,
+        fetchUserPayments
     };
 };
