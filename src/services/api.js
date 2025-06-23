@@ -88,6 +88,11 @@ const apiService = {
             }
             throw err;
         }),
+    
+    // Payment Endpoints
+    createPayment: (paymentData) => api.post('/payments', paymentData),
+    getPayment: (paymentId) => api.get(`/payments/${paymentId}`),
+    updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
 
     // Book Endpoints
     getBooks: () => api.get('/books'),
