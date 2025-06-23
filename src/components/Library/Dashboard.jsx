@@ -13,7 +13,6 @@ import {
   Calendar,
   Star,
   RefreshCw,
-  Download,
   Upload,
   Settings,
   Bell,
@@ -22,7 +21,7 @@ import {
   User
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import api from '../../services/api';
+import apiService from '../../services/api';
 import Swal from 'sweetalert2';
 import './Dashboard.css';
 import Navbar from '../HomePage/Navbar';
@@ -37,7 +36,9 @@ const Dashboard = () => {
     monthlyRevenue: 0,
     weeklyOrders: 0,
     availableBooks: 0,
-    rentedBooks: 0
+    rentedBooks: 0,
+    soldBooks: 0,
+    booksByCategory: {}
   });
   const [recentBooks, setRecentBooks] = useState([]);
   const [recentOrders, setRecentOrders] = useState([]);
@@ -53,8 +54,6 @@ const Dashboard = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
-  const [autoRefresh, setAutoRefresh] = useState(false);
-  const [refreshInterval, setRefreshInterval] = useState(30000); // 30 seconds
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -77,10 +76,13 @@ const Dashboard = () => {
     let filtered = allBooks.filter(book => book.user_id === currentUser?.id);
     
     if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(book => 
-        book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        book.author?.toLowerCase().includes(searchTerm.toLowerCase())
+        book.title.toLowerCase().includes(searchLower) ||
+        book.description?.toLowerCase().includes(searchLower) ||
+        book.author?.toLowerCase().includes(searchLower) ||
+        book.genre?.toLowerCase().includes(searchLower) ||
+        book.category?.name?.toLowerCase().includes(searchLower)
       );
     }
     
@@ -89,7 +91,7 @@ const Dashboard = () => {
     }
     
     if (filterCategory !== 'all') {
-      filtered = filtered.filter(book => book.category_id === parseInt(filterCategory));
+      filtered = filtered.filter(book => book.category?.name === filterCategory);
     }
     
     // Sort books
@@ -151,21 +153,47 @@ const Dashboard = () => {
     
     try {
       setLoading(true);
+      console.log('Fetching dashboard data for user:', currentUser.id);
       
       // Fetch all data in parallel
-      const [booksResponse, ordersResponse, categoriesResponse, notificationsResponse] = await Promise.all([
-        api.get('/books'),
-        api.get('/orders'),
-        api.get('/categories'),
-        api.get('/notifications')
+      const [booksResponse, ordersResponse, categoriesResponse, notificationsResponse] = await Promise.allSettled([
+        apiService.getBooks(),
+        apiService.getOrders(),
+        apiService.getCategories(),
+        apiService.getNotifications()
       ]);
       
-      const userBooks = booksResponse.data.data.filter(book => book.user_id === currentUser.id);
-      const userOrders = ordersResponse.data.data.filter(order => 
+      console.log('Books response:', booksResponse);
+      console.log('Orders response:', ordersResponse);
+      
+      // Handle successful responses
+      const userBooks = booksResponse.status === 'fulfilled' && booksResponse.value.data.data 
+        ? booksResponse.value.data.data.filter(book => book.user_id === currentUser.id)
+        : [];
+      console.log('User books:', userBooks);
+      
+      const userOrders = ordersResponse.status === 'fulfilled' && ordersResponse.value.data.data 
+        ? ordersResponse.value.data.data.filter(order => 
         order.order_items.some(item => 
           userBooks.some(book => book.id === item.book_id)
         )
-      );
+          )
+        : [];
+      console.log('User orders:', userOrders);
+
+      // Log any failed API calls
+      if (booksResponse.status === 'rejected') {
+        console.error('Failed to fetch books:', booksResponse.reason);
+      }
+      if (ordersResponse.status === 'rejected') {
+        console.error('Failed to fetch orders:', ordersResponse.reason);
+      }
+      if (categoriesResponse.status === 'rejected') {
+        console.error('Failed to fetch categories:', categoriesResponse.reason);
+      }
+      if (notificationsResponse.status === 'rejected') {
+        console.error('Failed to fetch notifications:', notificationsResponse.reason);
+      }
 
       // Calculate comprehensive stats
       const totalRevenue = userOrders.reduce((sum, order) => {
@@ -198,6 +226,14 @@ const Dashboard = () => {
       // Count books by status
       const availableBooks = userBooks.filter(book => book.status === 'available').length;
       const rentedBooks = userBooks.filter(book => book.status === 'rented').length;
+      const soldBooks = userBooks.filter(book => book.status === 'sold').length;
+      
+      // Count books by category
+      const booksByCategory = userBooks.reduce((acc, book) => {
+        const categoryName = book.category?.name || 'Uncategorized';
+        acc[categoryName] = (acc[categoryName] || 0) + 1;
+        return acc;
+      }, {});
 
       setStats({
         totalBooks: userBooks.length,
@@ -207,7 +243,9 @@ const Dashboard = () => {
         monthlyRevenue: monthlyRevenue.toFixed(2),
         weeklyOrders,
         availableBooks,
-        rentedBooks
+        rentedBooks,
+        soldBooks,
+        booksByCategory
       });
 
       // Set all books with processed images
@@ -232,18 +270,41 @@ const Dashboard = () => {
       setRecentOrders(userOrders.slice(0, 5));
       
       // Set notifications
-      const userNotifications = notificationsResponse.data.data.filter(
-        notification => notification.user_id === currentUser.id
-      );
+      const userNotifications = notificationsResponse.status === 'fulfilled' && notificationsResponse.value.data.data 
+        ? notificationsResponse.value.data.data.filter(
+            notification => notification.user_id === currentUser.id
+          )
+        : [];
       setNotifications(userNotifications.slice(0, 5));
 
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 404) {
+        console.log('No data found, setting empty arrays');
+        setAllBooks([]);
+        setAllOrders([]);
+        setNotifications([]);
+        setStats({
+          totalBooks: 0,
+          totalOrders: 0,
+          totalRevenue: '0.00',
+          totalCustomers: 0,
+          monthlyRevenue: '0.00',
+          weeklyOrders: 0,
+          availableBooks: 0,
+          rentedBooks: 0,
+          soldBooks: 0,
+          booksByCategory: {}
+        });
+      } else {
       Swal.fire({
         icon: 'error',
         title: 'Error',
         text: 'Failed to load dashboard data'
       });
+      }
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -254,124 +315,6 @@ const Dashboard = () => {
     setRefreshing(true);
     await fetchDashboardData();
   };
-
-  const handleAutoRefreshToggle = () => {
-    setAutoRefresh(!autoRefresh);
-  };
-
-  const handleExportData = async () => {
-    try {
-      const data = {
-        stats,
-        books: filteredBooks,
-        orders: filteredOrders,
-        exportDate: new Date().toISOString()
-      };
-      
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `dashboard-export-${new Date().toISOString().split('T')[0]}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      Swal.fire({
-        icon: 'success',
-        title: 'Export Successful',
-        text: 'Dashboard data has been exported successfully!'
-      });
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Export Failed',
-        text: 'Failed to export dashboard data'
-      });
-    }
-  };
-
-  const handleBulkAction = async (action, selectedIds) => {
-    if (!selectedIds.length) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'No Selection',
-        text: 'Please select items to perform bulk action'
-      });
-      return;
-    }
-
-    try {
-      const result = await Swal.fire({
-        title: `Confirm ${action}`,
-        text: `Are you sure you want to ${action} ${selectedIds.length} item(s)?`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#d33',
-        cancelButtonColor: '#3085d6',
-        confirmButtonText: `Yes, ${action} them!`
-      });
-
-      if (result.isConfirmed) {
-        // Implement bulk actions here
-        await Promise.all(selectedIds.map(id => 
-          api.delete(`/books/${id}`)
-        ));
-        
-        await fetchDashboardData();
-        
-        Swal.fire(
-          'Success!',
-          `Successfully ${action}ed ${selectedIds.length} item(s).`,
-          'success'
-        );
-      }
-    } catch (error) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: `Failed to ${action} items`
-      });
-    }
-  };
-
-  useEffect(() => {
-    if (!currentUser || currentUser.role !== 'owner') {
-      navigate('/login');
-      return;
-    }
-    
-    fetchDashboardData();
-  }, [currentUser, location.pathname, fetchDashboardData]);
-
-  // Auto-refresh effect
-  useEffect(() => {
-    let interval;
-    if (autoRefresh) {
-      interval = setInterval(() => {
-        fetchDashboardData();
-      }, refreshInterval);
-    }
-    
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [autoRefresh, refreshInterval, fetchDashboardData]);
-
-  // Add effect to reload data when page becomes visible
-  useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (!document.hidden && currentUser && currentUser.role === 'owner') {
-        fetchDashboardData();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => {
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [currentUser, fetchDashboardData]);
 
   const handleDeleteBook = async (bookId) => {
     try {
@@ -386,7 +329,7 @@ const Dashboard = () => {
       });
 
       if (result.isConfirmed) {
-        await api.delete(`/books/${bookId}`);
+        await apiService.delete(`/books/${bookId}`);
         await fetchDashboardData();
         
         Swal.fire(
@@ -423,6 +366,15 @@ const Dashboard = () => {
     }
   };
 
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'owner') {
+      navigate('/login');
+      return;
+    }
+    
+    fetchDashboardData();
+  }, [currentUser, location.pathname, fetchDashboardData]);
+
   if (loading) {
     return (
       <div className="dashboard-loading">
@@ -444,37 +396,20 @@ const Dashboard = () => {
             <div className="dashboard-subtitle">
               <Activity size={16} />
               <span>Last updated: {new Date().toLocaleTimeString()}</span>
+              {refreshing && <span className="updating-indicator"> • Updating...</span>}
             </div>
           </div>
           <div className="dashboard-actions">
             <div className="action-group">
-              <button 
-                className={`btn-toggle ${autoRefresh ? 'active' : ''}`}
-                onClick={handleAutoRefreshToggle}
-                title={autoRefresh ? 'Disable Auto Refresh' : 'Enable Auto Refresh'}
-              >
-                <RefreshCw size={20} className={autoRefresh ? 'spinning' : ''} />
-                {autoRefresh ? 'Auto ON' : 'Auto OFF'}
-              </button>
-              
-              <button 
-                className="btn-secondary"
-                onClick={handleExportData}
-                title="Export Data"
-              >
-                <Download size={20} />
-                Export
-              </button>
-              
-              <button 
-                className="btn-refresh"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                title="Refresh Data"
-              >
-                <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
+            <button 
+              className="btn-refresh"
+              onClick={handleRefresh}
+              disabled={refreshing}
+              title="Refresh Data"
+            >
+              <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
+              {refreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
             </div>
             
             <div className="notification-section">
@@ -528,6 +463,7 @@ const Dashboard = () => {
               <div className="stat-details">
                 <span className="available">{stats.availableBooks} available</span>
                 <span className="rented">{stats.rentedBooks} rented</span>
+                {stats.soldBooks > 0 && <span className="sold">{stats.soldBooks} sold</span>}
               </div>
             </div>
           </div>
@@ -578,10 +514,19 @@ const Dashboard = () => {
             <Search size={20} />
             <input
               type="text"
-              placeholder="Search books by title, author, or description..."
+              placeholder="Search books by title, author, description, or genre..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
+            {searchTerm && (
+              <button 
+                className="clear-search"
+                onClick={() => setSearchTerm('')}
+                title="Clear search"
+              >
+                ×
+              </button>
+            )}
           </div>
           
           <div className="filter-controls">
@@ -594,6 +539,17 @@ const Dashboard = () => {
               <option value="available">Available</option>
               <option value="rented">Rented</option>
               <option value="sold">Sold</option>
+            </select>
+            
+            <select 
+              value={filterCategory} 
+              onChange={(e) => setFilterCategory(e.target.value)}
+              className="filter-select"
+            >
+              <option value="all">All Categories</option>
+              {Array.from(new Set(allBooks.map(book => book.category?.name).filter(Boolean))).map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
             </select>
             
             <select 
@@ -621,6 +577,15 @@ const Dashboard = () => {
           <div className="section-header">
             <h2>Books ({filteredBooks.length})</h2>
             <div className="section-actions">
+              <button 
+                className="btn-refresh-small"
+                onClick={handleRefresh}
+                disabled={refreshing}
+                title="Refresh Books"
+              >
+                <RefreshCw size={16} className={refreshing ? 'spinning' : ''} />
+                {refreshing ? 'Refreshing...' : 'Refresh'}
+              </button>
               <select 
                 value={selectedTimeRange} 
                 onChange={(e) => setSelectedTimeRange(e.target.value)}
@@ -632,14 +597,21 @@ const Dashboard = () => {
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
               </select>
-              <Link to="/books" className="view-all-link">
-                View All Books
-              </Link>
+            <Link to="/books" className="view-all-link">
+              View All Books
+            </Link>
             </div>
           </div>
 
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading your books...</p>
+            </div>
+          ) : (
+            <>
           <div className="books-grid">
-            {filteredBooks.slice(0, 8).map((book) => (
+                {filteredBooks.slice(0, 8).map((book) => (
               <div key={book.id} className="book-card">
                 <div className="book-image">
                   <img 
@@ -652,70 +624,99 @@ const Dashboard = () => {
                   <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
                     {book.status}
                   </div>
-                  <div className="book-overlay">
-                    <div className="overlay-actions">
-                      <button 
-                        className="overlay-btn view"
-                        onClick={() => navigate(`/books/${book.id}`)}
-                        title="View Book"
-                      >
-                        <Eye size={16} />
-                      </button>
-                      <button 
-                        className="overlay-btn edit"
-                        onClick={() => navigate(`/edit-book/${book.id}`)}
-                        title="Edit Book"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button 
-                        className="overlay-btn delete"
-                        onClick={() => handleDeleteBook(book.id)}
-                        title="Delete Book"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                      <div className="book-overlay">
+                        <div className="overlay-actions">
+                  <button 
+                            className="overlay-btn view"
+                    onClick={() => navigate(`/books/${book.id}`)}
+                    title="View Book"
+                  >
+                    <Eye size={16} />
+                  </button>
+                  <button 
+                            className="overlay-btn edit"
+                            onClick={() => navigate(`/edit-book/${book.id}`)}
+                            title="Edit Book"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="overlay-btn delete"
+                    onClick={() => handleDeleteBook(book.id)}
+                    title="Delete Book"
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </div>
-                <div className="book-info">
-                  <h3>{book.title}</h3>
-                  <p className="book-author">By {book.user?.name || 'Unknown'}</p>
-                  <div className="book-rating">
-                    <Star size={16} fill="#FBBF24" />
-                    <span>{book.ratings?.length ? (book.ratings.reduce((acc, r) => acc + r.rating, 0) / book.ratings.length).toFixed(1) : '0'}</span>
-                    <span className="rating-count">({book.ratings?.length || 0})</span>
-                  </div>
-                  <p className="book-price">${book.price}</p>
-                  <p className="book-date">Added: {new Date(book.created_at).toLocaleDateString()}</p>
+                    <div className="book-info">
+                      <h3>{book.title}</h3>
+                      <p className="book-author">By {book.author || book.user?.name || 'Unknown'}</p>
+                      <div className="book-category">
+                        <span className="category-badge">{book.category?.name || 'Uncategorized'}</span>
+                      </div>
+                      <div className="book-details">
+                        <span className="detail-badge condition">{book.condition || 'Unknown'}</span>
+                        {book.genre && <span className="detail-badge genre">{book.genre}</span>}
+                        {book.educational_level && <span className="detail-badge level">{book.educational_level}</span>}
+                      </div>
+                      <div className="book-rating">
+                        <Star size={16} fill="#FBBF24" />
+                        <span>{book.ratings?.length ? (book.ratings.reduce((acc, r) => acc + r.rating, 0) / book.ratings.length).toFixed(1) : '0'}</span>
+                        <span className="rating-count">({book.ratings?.length || 0})</span>
+                      </div>
+                      <div className="book-pricing">
+                        <p className="book-price">${book.price}</p>
+                        {book.rental_price && (
+                          <p className="book-rental-price">Rent: ${book.rental_price}</p>
+                        )}
+                      </div>
+                      <div className="book-meta">
+                        <span className="quantity-badge">Qty: {book.quantity || 1}</span>
+                        <p className="book-date">Added: {new Date(book.created_at).toLocaleDateString()}</p>
+                      </div>
+                      {book.description && (
+                        <p className="book-description">{book.description.substring(0, 100)}...</p>
+                      )}
                 </div>
               </div>
             ))}
           </div>
-          
-          {filteredBooks.length === 0 && (
-            <div className="empty-state">
-              <BookOpen size={48} />
-              <p>No books found matching your criteria</p>
-              <button 
-                className="btn-primary"
-                onClick={() => {
-                  setSearchTerm('');
-                  setFilterStatus('all');
-                  setFilterCategory('all');
-                }}
-              >
-                Clear Filters
-              </button>
-            </div>
+              
+              {filteredBooks.length === 0 && (
+                <div className="empty-state">
+                  <BookOpen size={48} />
+                  <p>{loading ? 'Loading books...' : allBooks.length === 0 ? 'No books found in your library' : 'No books found matching your criteria'}</p>
+                  {!loading && allBooks.length === 0 && (
+                    <Link to="/add-book" className="btn-primary">
+                      <Plus size={16} />
+                      Add Your First Book
+                    </Link>
+                  )}
+                  {!loading && allBooks.length > 0 && (
+                    <button 
+                      className="btn-primary"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setFilterStatus('all');
+                        setFilterCategory('all');
+                      }}
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
           )}
         </div>
 
         {/* Dynamic Orders Section */}
         <div className="dashboard-section">
           <div className="section-header">
-            <h2>Recent Orders ({filteredOrders.length})</h2>
-            <Link to="/order" className="view-all-link">
+            <h2>Recent Orders ({filteredOrders.filter(order => order.status === 'pending').length})</h2>
+            <Link to="/all-orders" className="view-all-link" >
               View All Orders
             </Link>
           </div>
@@ -728,13 +729,11 @@ const Dashboard = () => {
               <div className="header-cell">Total</div>
               <div className="header-cell">Status</div>
               <div className="header-cell">Date</div>
-              <div className="header-cell">Actions</div>
             </div>
-            
-            {filteredOrders.slice(0, 10).map((order) => (
+            {filteredOrders.filter(order => order.status === 'pending').slice(0, 4).map((order) => (
               <div key={order.id} className="table-row">
                 <div className="table-cell">#{order.id}</div>
-                <div className="table-cell">{order.user?.name || 'Unknown'}</div>
+                <div className="table-cell">{order.client?.name || order.user?.name || 'Unknown'}</div>
                 <div className="table-cell">
                   {order.order_items.length} book{order.order_items.length !== 1 ? 's' : ''}
                 </div>
@@ -755,22 +754,12 @@ const Dashboard = () => {
                 <div className="table-cell">
                   {new Date(order.created_at).toLocaleDateString()}
                 </div>
-                <div className="table-cell">
-                  <button 
-                    className="action-btn view"
-                    onClick={() => navigate(`/order/${order.id}`)}
-                    title="View Order"
-                  >
-                    <Eye size={16} />
-                  </button>
-                </div>
               </div>
             ))}
-            
-            {filteredOrders.length === 0 && (
+            {filteredOrders.filter(order => order.status === 'pending').length === 0 && (
               <div className="empty-state">
                 <TrendingUp size={48} />
-                <p>No orders found</p>
+                <p>No pending orders found.</p>
               </div>
             )}
           </div>

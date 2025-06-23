@@ -1,6 +1,6 @@
 // App.js
 import React from "react";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
@@ -19,13 +19,25 @@ import ContactPage from "./pages/ContactPage";
 import Dashboard from "./components/Library/Dashboard";
 import EditProfile from "./components/Library/EditProfile";
 import AddBookPage from "./components/Library/AddBookPage";
+import LibrariesPage from "./components/Library/LibrariesPage";
+import LibraryDetails from "./components/Library/LibraryDetails";
 import PaymentPage from "./pages/PaymentPage";
+import AllOrdersPage from './components/Library/AllOrdersPage';
+import useAuth from "./hooks/useAuth";
+
+function RedirectToDashboardOrHome() {
+  const { user } = useAuth();
+  if (user && user.role === "owner") {
+    return <Navigate to="/dashboard" replace />;
+  }
+  return <Home />;
+}
 
 function App() {
   return (
     <Router>
       <Routes>
-        <Route path='/' element={<Home />} />
+        <Route path='/' element={<RedirectToDashboardOrHome />} />
         <Route path='/about' element={<About />} />
         <Route path='/cart' element={<CartPage />} />
         <Route path='/orders' element={<OrdersPage />} />
@@ -34,9 +46,8 @@ function App() {
         <Route path="/payment/:orderId" element={<PaymentPage />} />
         <Route path="/books" element={<BooksPage />} />
         <Route path="/books/:id" element={<BookDetails />} />
-
         <Route path='/register' element={<RegisterPage />} />
-
+        <Route path='/login' element={<LoginPage />} />
         <Route
           path="/login"
           element={
@@ -57,6 +68,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/add-book" element={<AddBookPage />} />
+        <Route path="/libraries" element={<LibrariesPage />} />
+        <Route path="/library/:id" element={<LibraryDetails />} />
+        <Route path="/all-orders" element={<AllOrdersPage />} />
         <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
       </Routes>
     </Router>
