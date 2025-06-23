@@ -24,6 +24,7 @@ import LibraryDetails from "./components/Library/LibraryDetails";
 import PaymentPage from "./pages/PaymentPage";
 import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
+import SocialCallback from "./pages/SocialCallback";
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -64,6 +65,8 @@ function App() {
             </GuestRoute>
           }
         />
+        <Route path="/social-callback" element={<SocialCallback />} />
+
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
