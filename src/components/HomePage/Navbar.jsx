@@ -171,7 +171,7 @@ const Navbar = () => {
                     <button
                       className="icon-button order-badge"
                       title="Orders"
-                      onClick={() => handleProtectedAction("/order")}
+                      onClick={() => handleProtectedAction("/orders")}
                     >
                       <FaBoxOpen size={18} />
                       {ordersCount > 0 && (

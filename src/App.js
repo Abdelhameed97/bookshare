@@ -1,3 +1,4 @@
+// App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
@@ -17,7 +18,7 @@ import ContactPage from "./pages/ContactPage";
 import Dashboard from "./components/Library/Dashboard";
 import EditProfile from "./components/Library/EditProfile";
 import AddBookPage from "./components/Library/AddBookPage";
-
+import PaymentPage from "./pages/PaymentPage";
 
 function App() {
   return (
@@ -26,14 +27,14 @@ function App() {
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />
         <Route path='/cart' element={<CartPage />} />
-        <Route path='/order' element={<OrdersPage />} />
+        <Route path='/orders' element={<OrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailsPage />} />
         <Route path='/wishlist' element={<WishlistPage />} />
+        <Route path="/payment/:orderId" element={<PaymentPage />} />
         <Route path="/books" element={<BooksPage />} />
         <Route path="/books/:id" element={<BookDetails />} />
 
-        <Route path='/register' element={
-          <RegisterPage />} />
+        <Route path='/register' element={<RegisterPage />} />
 
         <Route
           path="/login"

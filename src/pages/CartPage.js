@@ -99,23 +99,29 @@ const CartPage = () => {
     };
 
     const handleQuantityChange = async (itemId, newQuantity) => {
-        if (newQuantity < 1) return;
+        const parsedQuantity = Number.parseInt(newQuantity, 10);
+
+        if (isNaN(parsedQuantity) || parsedQuantity < 1) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Invalid Quantity',
+                text: 'Please enter a whole number 1 or greater'
+            });
+            return;
+        }
+
         if (!user) {
             navigate('/login', { state: { from: '/cart' } });
             return;
         }
 
         try {
-            await api.updateCartItem(itemId, { quantity: newQuantity });
+            await api.updateCartItem(itemId, { quantity: parsedQuantity });
+
             const updatedItems = cartItems.map(item =>
-                item.id === itemId ? { ...item, quantity: parseInt(newQuantity) } : item
+                item.id === itemId ? { ...item, quantity: parsedQuantity } : item
             );
             setCartItems(updatedItems);
-            await Swal.fire({
-                icon: 'success',
-                title: 'Quantity Updated',
-                timer: 1500
-            });
         } catch (err) {
             await Swal.fire({
                 icon: 'error',
@@ -124,6 +130,7 @@ const CartPage = () => {
             });
         }
     };
+    
 
     const handleRemoveItem = async (itemId) => {
         const result = await Swal.fire({
@@ -356,8 +363,14 @@ const CartPage = () => {
                                                                 <Form.Control
                                                                     type="number"
                                                                     min="1"
+                                                                    step="1"
                                                                     value={item.quantity}
-                                                                    onChange={(e) => handleQuantityChange(item.id, e.target.value)}
+                                                                    onChange={(e) => {
+                                                                        const value = e.target.value;
+                                                                        if (/^\d*$/.test(value)) {
+                                                                            handleQuantityChange(item.id, value);
+                                                                        }
+                                                                    }}
                                                                     className="quantity-input mx-2 text-center"
                                                                 />
                                                                 <CustomButton
