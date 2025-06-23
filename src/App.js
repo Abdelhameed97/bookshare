@@ -18,7 +18,11 @@ import ContactPage from "./pages/ContactPage";
 import Dashboard from "./components/Library/Dashboard";
 import EditProfile from "./components/Library/EditProfile";
 import AddBookPage from "./components/Library/AddBookPage";
+import LibrariesPage from "./components/Library/LibrariesPage";
+import LibraryDetails from "./components/Library/LibraryDetails";
 import PaymentPage from "./pages/PaymentPage";
+import AllOrdersPage from './components/Library/AllOrdersPage';
+
 
 function App() {
   return (
@@ -34,7 +38,10 @@ function App() {
         <Route path="/books" element={<BooksPage />} />
         <Route path="/books/:id" element={<BookDetails />} />
 
+
         <Route path='/register' element={<RegisterPage />} />
+        <Route path='/login' element={<LoginPage />} />
+
 
         <Route
           path="/login"
@@ -48,6 +55,9 @@ function App() {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/add-book" element={<AddBookPage />} />
+        <Route path="/libraries" element={<LibrariesPage />} />
+        <Route path="/library/:id" element={<LibraryDetails />} />
+        <Route path="/all-orders" element={<AllOrdersPage />} />
         <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
       </Routes>
     </Router>

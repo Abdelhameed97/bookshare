@@ -338,7 +338,7 @@ const NewReleases = () => {
         </div>
 
         <div className="view-all-section">
-          <HomePageButton>
+          <HomePageButton onClick={() => navigate("/books")}>
             <span>View All Books</span>
             <svg
               className="button-icon"

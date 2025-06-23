@@ -7,19 +7,24 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import api from '../../services/api';
+import apiService from '../../services/api';
 import Swal from 'sweetalert2';
 import Navbar from '../HomePage/Navbar';
-import Footer from '../HomePage/Footer';
 
 const AddBookPage = () => {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    author: '',
+    genre: '',
+    educational_level: '',
+    condition: 'new',
     price: '',
     rental_price: '',
     category_id: '',
-    status: 'available'
+    status: 'available',
+    quantity: 1,
+    images: []
   });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -43,10 +48,13 @@ const AddBookPage = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await api.get('/categories');
-      setCategories(response.data.data);
+      const response = await apiService.get('/categories');
+      // Backend returns { categories: [...] } structure
+      const categoriesData = response.data?.categories || response.data?.data || response.data || [];
+      setCategories(Array.isArray(categoriesData) ? categoriesData : []);
     } catch (error) {
       console.error('Error fetching categories:', error);
+      setCategories([]); // Set empty array on error
     }
   };
 
@@ -75,11 +83,55 @@ const AddBookPage = () => {
     }
   };
 
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    // Validate file types and sizes
+    const validFiles = files.filter(file => {
+      const isValidType = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'].includes(file.type);
+      const isValidSize = file.size <= 2 * 1024 * 1024; // 2MB max
+      
+      if (!isValidType) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid File Type',
+          text: `${file.name} is not a valid image file. Please use JPEG, PNG, JPG, or GIF.`
+        });
+      }
+      
+      if (!isValidSize) {
+        Swal.fire({
+          icon: 'error',
+          title: 'File Too Large',
+          text: `${file.name} is too large. Maximum size is 2MB.`
+        });
+      }
+      
+      return isValidType && isValidSize;
+    });
+    
+    setFormData(prev => ({
+      ...prev,
+      images: [...prev.images, ...validFiles]
+    }));
+  };
+
+  const removeImage = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      images: prev.images.filter((_, i) => i !== index)
+    }));
+  };
+
   const validateForm = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
       newErrors.title = 'Title is required';
+    }
+
+    if (!formData.author.trim()) {
+      newErrors.author = 'Author is required';
     }
 
     if (!formData.description.trim()) {
@@ -92,6 +144,10 @@ const AddBookPage = () => {
 
     if (!formData.category_id) {
       newErrors.category_id = 'Category is required';
+    }
+
+    if (!formData.quantity || parseInt(formData.quantity) <= 0) {
+      newErrors.quantity = 'Valid quantity is required';
     }
 
     setErrors(newErrors);
@@ -108,20 +164,59 @@ const AddBookPage = () => {
     try {
       setLoading(true);
 
-      const bookData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        rental_price: formData.rental_price ? parseFloat(formData.rental_price) : null
-      };
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
+      
+      // Add text fields
+      formDataToSend.append('title', formData.title);
+      formDataToSend.append('description', formData.description);
+      formDataToSend.append('author', formData.author);
+      formDataToSend.append('genre', formData.genre);
+      formDataToSend.append('educational_level', formData.educational_level);
+      formDataToSend.append('condition', formData.condition);
+      formDataToSend.append('price', formData.price);
+      formDataToSend.append('rental_price', formData.rental_price || '');
+      formDataToSend.append('category_id', formData.category_id);
+      formDataToSend.append('status', formData.status);
+      formDataToSend.append('quantity', formData.quantity);
+      formDataToSend.append('user_id', currentUser.id);
 
-      await api.post('/books', bookData);
+      // Add images
+      formData.images.forEach((image, index) => {
+        formDataToSend.append(`images[${index}]`, image);
+      });
+
+      // Use direct API call with FormData
+      const response = await apiService.post('/books', formDataToSend, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       
       await Swal.fire({
         icon: 'success',
-        title: 'Book Added!',
-        text: 'Your book has been added successfully.',
-        timer: 2000
+        title: 'Book Added Successfully!',
+        text: `${formData.title} has been added to your library.`,
+        timer: 3000,
+        showConfirmButton: false
       });
+
+      // Reset form
+      setFormData({
+        title: '',
+        description: '',
+        author: '',
+        genre: '',
+        educational_level: '',
+        condition: 'new',
+        price: '',
+        rental_price: '',
+        category_id: '',
+        status: 'available',
+        quantity: 1,
+        images: []
+      });
+      setErrors({});
 
       navigate('/dashboard');
 
@@ -162,7 +257,7 @@ const AddBookPage = () => {
             padding: '40px 20px',
             borderBottom: '1px solid #e5e7eb',
             position: 'relative'
-          }}>
+          }} className="header-container">
             <Link to="/dashboard" style={{
               position: 'absolute',
               left: '20px',
@@ -175,7 +270,7 @@ const AddBookPage = () => {
               textDecoration: 'none',
               fontWeight: '500',
               transition: 'color 0.2s'
-            }}>
+            }} className="back-link">
               <ArrowLeft size={20} />
               Back to Dashboard
             </Link>
@@ -191,7 +286,7 @@ const AddBookPage = () => {
             }}>Add a new book to your library collection</p>
           </div>
 
-          <form onSubmit={handleSubmit} style={{ padding: '30px' }}>
+          <form onSubmit={handleSubmit} style={{ padding: '30px' }} className="form-container">
             <div style={{ marginBottom: '30px' }}>
               <h2 style={{
                 fontSize: '1.25rem',
@@ -246,6 +341,39 @@ const AddBookPage = () => {
                   marginBottom: '8px'
                 }}>
                   <BookOpen size={18} />
+                  Author *
+                </label>
+                <input
+                  type="text"
+                  name="author"
+                  value={formData.author}
+                  onChange={handleInputChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: errors.author ? '1px solid #ef4444' : '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    color: '#1f2937',
+                    transition: 'all 0.2s ease'
+                  }}
+                  placeholder="Enter book author"
+                  required
+                />
+                {errors.author && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '5px' }}>{errors.author}</span>}
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#4b5563',
+                  marginBottom: '8px'
+                }}>
+                  <BookOpen size={18} />
                   Description *
                 </label>
                 <textarea
@@ -269,7 +397,7 @@ const AddBookPage = () => {
                 {errors.description && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '5px' }}>{errors.description}</span>}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }} className="form-grid">
                 <div>
                   <label style={{
                     display: 'flex',
@@ -342,6 +470,146 @@ const AddBookPage = () => {
                 </div>
               </div>
 
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    marginBottom: '8px'
+                  }}>
+                    <BookOpen size={18} />
+                    Genre
+                  </label>
+                  <input
+                    type="text"
+                    name="genre"
+                    value={formData.genre}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      color: '#1f2937',
+                      transition: 'all 0.2s ease'
+                    }}
+                    placeholder="e.g., Fiction, Science, History"
+                  />
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    marginBottom: '8px'
+                  }}>
+                    <BookOpen size={18} />
+                    Educational Level
+                  </label>
+                  <select
+                    name="educational_level"
+                    value={formData.educational_level}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      color: '#1f2937',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <option value="">Select level</option>
+                    <option value="Children">Children</option>
+                    <option value="Teen">Teen</option>
+                    <option value="Young Adult">Young Adult</option>
+                    <option value="Adult">Adult</option>
+                    <option value="Academic">Academic</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    marginBottom: '8px'
+                  }}>
+                    <AlertCircle size={18} />
+                    Condition
+                  </label>
+                  <select
+                    name="condition"
+                    value={formData.condition}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      color: '#1f2937',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <option value="new">New</option>
+                    <option value="like-new">Like New</option>
+                    <option value="good">Good</option>
+                    <option value="fair">Fair</option>
+                    <option value="poor">Poor</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    marginBottom: '8px'
+                  }}>
+                    <BookOpen size={18} />
+                    Quantity *
+                  </label>
+                  <input
+                    type="number"
+                    name="quantity"
+                    value={formData.quantity}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: errors.quantity ? '1px solid #ef4444' : '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      color: '#1f2937',
+                      transition: 'all 0.2s ease'
+                    }}
+                    placeholder="1"
+                    min="1"
+                    required
+                  />
+                  {errors.quantity && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '5px' }}>{errors.quantity}</span>}
+                </div>
+              </div>
+
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                 <div>
                   <label style={{
@@ -372,11 +640,13 @@ const AddBookPage = () => {
                     required
                   >
                     <option value="">Select a category</option>
-                    {categories.map(category => (
+                    {categories && categories.length > 0 ? categories.map(category => (
                       <option key={category.id} value={category.id}>
                         {category.name}
                       </option>
-                    ))}
+                    )) : (
+                      <option value="" disabled>No categories available</option>
+                    )}
                   </select>
                   {errors.category_id && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '5px' }}>{errors.category_id}</span>}
                 </div>
@@ -416,6 +686,117 @@ const AddBookPage = () => {
               </div>
             </div>
 
+            {/* Image Upload Section */}
+            <div style={{ marginBottom: '30px' }}>
+              <h2 style={{
+                fontSize: '1.25rem',
+                fontWeight: '600',
+                color: '#374151',
+                borderBottom: '1px solid #e5e7eb',
+                paddingBottom: '10px',
+                marginBottom: '20px'
+              }}>Book Images</h2>
+              
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  fontSize: '0.9rem',
+                  fontWeight: '500',
+                  color: '#4b5563',
+                  marginBottom: '8px'
+                }}>
+                  <BookOpen size={18} />
+                  Upload Images
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    border: '1px solid #d1d5db',
+                    borderRadius: '8px',
+                    fontSize: '1rem',
+                    color: '#1f2937',
+                    transition: 'all 0.2s ease'
+                  }}
+                />
+                <small style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block' }}>
+                  You can upload multiple images. Maximum file size: 2MB. Supported formats: JPEG, PNG, JPG, GIF
+                </small>
+              </div>
+
+              {/* Display selected images */}
+              {formData.images.length > 0 && (
+                <div style={{ marginTop: '20px' }}>
+                  <h3 style={{
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    color: '#374151',
+                    marginBottom: '15px'
+                  }}>Selected Images ({formData.images.length})</h3>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                    gap: '15px'
+                  }}>
+                    {formData.images.map((image, index) => (
+                      <div key={index} style={{
+                        position: 'relative',
+                        border: '1px solid #d1d5db',
+                        borderRadius: '8px',
+                        overflow: 'hidden'
+                      }}>
+                        <img
+                          src={URL.createObjectURL(image)}
+                          alt={`Preview ${index + 1}`}
+                          style={{
+                            width: '100%',
+                            height: '120px',
+                            objectFit: 'cover'
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => removeImage(index)}
+                          style={{
+                            position: 'absolute',
+                            top: '5px',
+                            right: '5px',
+                            background: '#ef4444',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '24px',
+                            height: '24px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            cursor: 'pointer',
+                            fontSize: '12px'
+                          }}
+                        >
+                          ×
+                        </button>
+                        <div style={{
+                          padding: '8px',
+                          fontSize: '0.8rem',
+                          color: '#6b7280',
+                          textAlign: 'center'
+                        }}>
+                          {image.name}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
             <div style={{
               display: 'flex',
               justifyContent: 'flex-end',
@@ -445,22 +826,33 @@ const AddBookPage = () => {
                 type="submit"
                 disabled={loading}
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '8px',
                   padding: '12px 24px',
                   borderRadius: '8px',
                   fontSize: '1rem',
                   fontWeight: '500',
-                  cursor: 'pointer',
+                  cursor: loading ? 'not-allowed' : 'pointer',
                   border: 'none',
                   transition: 'all 0.2s ease',
-                  backgroundColor: '#3b82f6',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  backgroundColor: loading ? '#9ca3af' : '#3b82f6',
                   color: 'white'
                 }}
               >
-                {loading ? 'Adding...' : (
+                {loading ? (
+                  <>
+                    <div style={{
+                      width: '18px',
+                      height: '18px',
+                      border: '2px solid rgba(255, 255, 255, 0.5)',
+                      borderTopColor: 'white',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite'
+                    }}></div>
+                    Adding Book...
+                  </>
+                ) : (
                   <>
                     <Save size={18} />
                     Add Book
@@ -471,7 +863,49 @@ const AddBookPage = () => {
           </form>
         </div>
       </div>
-      <Footer />
+
+      <style>{`
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        @media (max-width: 768px) {
+          .form-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .form-container {
+            padding: 20px !important;
+          }
+          
+          .header-container {
+            padding: 20px !important;
+          }
+          
+          .back-link {
+            position: static !important;
+            transform: none !important;
+            margin-bottom: 15px !important;
+            justify-content: center !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .form-container {
+            padding: 15px !important;
+          }
+          
+          .header-container {
+            padding: 15px !important;
+          }
+          
+          h1 {
+            font-size: 1.5rem !important;
+          }
+        }
+      `}</style>
     </>
   );
 };
