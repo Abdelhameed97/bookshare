@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap/dist/js/bootstrap.bundle.min";
 
+// الصفحات
 import Home from "./pages/Home";
 import CartPage from "./pages/CartPage";
 import OrdersPage from "./pages/OrdersPage";
@@ -12,22 +13,25 @@ import LoginPage from "./pages/form/LoginPage";
 import About from "./components/About.jsx/Aboutus";
 import BooksPage from "./pages/BooksPage";
 import CategoryPage from "./pages/CategoryPage";
-import Navbar from "./components/HomePage/Navbar.jsx";
 import RagChat from "./pages/RagChat";
 import OrderDetailsPage from "./pages/OrderDetailsPage";
 import BookDetails from "./pages/BookDetails";
 import ContactPage from "./pages/ContactPage";
-import AdminCategories from './pages/admin/AdminCategories';
-import CreateCategory from './pages/admin/CreateCategory';
-import EditCategory from './pages/admin/EditCategory';
-import AdminLayout from './layouts/AdminLayout';
-
-
+import Dashboard from "./components/Library/Dashboard";
+import EditProfile from "./components/Library/EditProfile";
+import AddBookPage from "./components/Library/AddBookPage";
+import AdminCategories from "./pages/admin/AdminCategories";
+import CreateCategory from "./pages/admin/CreateCategory";
+import EditCategory from "./pages/admin/EditCategory";
+import AdminLayout from "./layouts/AdminLayout";
+import Navbar from "./components/HomePage/Navbar";
+import FloatingChatButton from "./components/FloatingChatButton"; // ✅ الزر العائم
+import "./App.css";
 
 function App() {
   return (
     <Router>
-      
+      <Navbar />
       <Routes>
         <Route path='/' element={<Home />} />
         <Route path='/about' element={<About />} />
@@ -42,16 +46,23 @@ function App() {
         <Route path='/orders/:id' element={<OrderDetailsPage />} />
         <Route path='/contact' element={<ContactPage />} />
         <Route path='/rag-chat' element={<RagChat />} />
-        <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
-      
-         
-        {/* Admin Routes */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route path="categories" element={<AdminCategories />} />
-          <Route path="categories/create" element={<CreateCategory />} />
-          <Route path="categories/:id/edit" element={<EditCategory />} />
+        <Route path='/dashboard' element={<Dashboard />} />
+        <Route path='/edit-profile' element={<EditProfile />} />
+        <Route path='/add-book' element={<AddBookPage />} />
+
+        <Route path='/admin' element={<AdminLayout />}>
+          <Route path='categories' element={<AdminCategories />} />
+          <Route path='categories/create' element={<CreateCategory />} />
+          <Route path='categories/:id/edit' element={<EditCategory />} />
         </Route>
+
+        <Route
+          path='*'
+          element={<h1 className='text-center mt-5'>404 Not Found</h1>}
+        />
       </Routes>
+
+      <FloatingChatButton />
     </Router>
   );
 }

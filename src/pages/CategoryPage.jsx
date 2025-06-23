@@ -1,24 +1,28 @@
-import { useParams, useNavigate } from "react-router-dom"
-import { useEffect, useState } from "react"
-import { Heart, Eye, ShoppingCart, Star, Search, Filter } from "lucide-react"
-import notFoundImage from "../images/Pasted image.png"
-import "../style/category.css"
+import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { Search, Filter } from "lucide-react";
+import notFoundImage from "../images/Pasted image.png";
+import BookCard from "../components/BooksPage/BookCard";
+import "../style/category.css";
 
 const CategoryPage = () => {
-    const { id } = useParams()
-    const navigate = useNavigate()
+    const { id } = useParams();
+    const navigate = useNavigate();
 
-    const [books, setBooks] = useState([])
-    const [category, setCategory] = useState("")
-    const [loading, setLoading] = useState(true)
-    const [apiError, setApiError] = useState(false)
-    const [categoryFound, setCategoryFound] = useState(true)
+    const [books, setBooks] = useState([]);
+    const [category, setCategory] = useState("");
+    const [loading, setLoading] = useState(true);
+    const [apiError, setApiError] = useState(false);
+    const [categoryFound, setCategoryFound] = useState(true);
+    const [wishlist, setWishlist] = useState([]);
+    const [cart, setCart] = useState([]);
 
-    const [searchTerm, setSearchTerm] = useState("")
-    const [priceFilter, setPriceFilter] = useState("")
-    const [currentPage, setCurrentPage] = useState(1)
-    const booksPerPage = 8
+    const [searchTerm, setSearchTerm] = useState("");
+    const [priceFilter, setPriceFilter] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const booksPerPage = 8;
 
+    // Fetch category books
     useEffect(() => {
         const fetchCategoryBooks = async () => {
             try {
@@ -26,22 +30,20 @@ const CategoryPage = () => {
                     `http://localhost:8000/api/categories/${id}`,
                     {
                         headers: {
-                            Authorization: `Bearer ${localStorage.getItem(
-                                "token"
-                            )}`,
+                            Authorization: `Bearer ${localStorage.getItem("token")}`,
                             Accept: "application/json",
                         },
                     }
-                )
+                );
                 if (!res.ok) {
-                    setApiError(true)
-                    setLoading(false)
-                    return
+                    setApiError(true);
+                    setLoading(false);
+                    return;
                 }
 
-                const data = await res.json()
+                const data = await res.json();
                 if (!data || (!data.books && !data.name)) {
-                    setCategoryFound(false)
+                    setCategoryFound(false);
                 } else {
                     const processedBooks = (data.books || []).map(book => ({
                         id: book.id,
@@ -77,61 +79,151 @@ const CategoryPage = () => {
                         category: book.category?.name || "Uncategorized",
                         description:
                             book.description || "No description available",
-                    }))
+                    }));
 
-                    setBooks(processedBooks)
-                    setCategory(data.name || "Category")
-                    setCategoryFound(true)
+                    setBooks(processedBooks);
+                    setCategory(data.name || "Category");
+                    setCategoryFound(true);
                 }
             } catch (error) {
-                console.error("❌ API error:", error)
-                setApiError(true)
+                console.error("❌ API error:", error);
+                setApiError(true);
             } finally {
-                setLoading(false)
+                setLoading(false);
             }
+        };
+
+        const fetchWishlist = async () => {
+            try {
+                const res = await fetch("http://localhost:8000/api/wishlist", {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setWishlist(data);
+                }
+            } catch (error) {
+                console.error("Error fetching wishlist:", error);
+            }
+        };
+
+        const fetchCart = async () => {
+            try {
+                const res = await fetch("http://localhost:8000/api/cart", {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`,
+                    },
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    setCart(data);
+                }
+            } catch (error) {
+                console.error("Error fetching cart:", error);
+            }
+        };
+
+        fetchCategoryBooks();
+        fetchWishlist();
+        fetchCart();
+    }, [id]);
+
+    // Helper functions
+    const isInWishlist = (bookId) => {
+        return wishlist.some(item => item.book_id === bookId);
+    };
+
+    const isInCart = (bookId) => {
+        return cart.some(item => item.book_id === bookId);
+    };
+
+    const handleAddToWishlist = async (bookId) => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/wishlist`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ book_id: bookId })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                setWishlist([...wishlist, data]);
+            }
+        } catch (error) {
+            console.error("Error adding to wishlist:", error);
         }
+    };
 
-        fetchCategoryBooks()
-    }, [id])
+    const handleAddToCart = async (bookId) => {
+        try {
+            const res = await fetch(`http://localhost:8000/api/cart`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ book_id: bookId })
+            });
+            
+            if (res.ok) {
+                const data = await res.json();
+                setCart([...cart, data]);
+            }
+        } catch (error) {
+            console.error("Error adding to cart:", error);
+        }
+    };
 
+    const handleQuickView = (bookId) => {
+        navigate(`/books/${bookId}`);
+    };
+
+    // Filtering and pagination
     const filteredBooks = books.filter(
         book =>
             book.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
             (priceFilter === "" ||
                 parseFloat(book.price) <= parseFloat(priceFilter))
-    )
+    );
 
-    const indexOfLastBook = currentPage * booksPerPage
-    const indexOfFirstBook = indexOfLastBook - booksPerPage
-    const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook)
-    const totalPages = Math.ceil(filteredBooks.length / booksPerPage)
+    const indexOfLastBook = currentPage * booksPerPage;
+    const indexOfFirstBook = indexOfLastBook - booksPerPage;
+    const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook);
+    const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
 
     const handleSearchChange = e => {
-        setSearchTerm(e.target.value)
-        setCurrentPage(1)
-    }
+        setSearchTerm(e.target.value);
+        setCurrentPage(1);
+    };
 
     const handlePriceChange = e => {
-        setPriceFilter(e.target.value)
-        setCurrentPage(1)
-    }
+        setPriceFilter(e.target.value);
+        setCurrentPage(1);
+    };
 
     const goToPreviousPage = () => {
-        if (currentPage > 1) setCurrentPage(currentPage - 1)
-    }
+        if (currentPage > 1) setCurrentPage(currentPage - 1);
+    };
 
     const goToNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(currentPage + 1)
-    }
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
+    };
 
+    // Loading state
     if (loading) {
         return (
             <div className="flex justify-center items-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#199A8E]"></div>
             </div>
-        )
+        );
     }
 
+    // Error state
     if (apiError || !categoryFound) {
         return (
             <section className="bg-[#F5F8FF] py-16 min-h-screen flex items-center justify-center">
@@ -171,7 +263,7 @@ const CategoryPage = () => {
                     </button>
                 </div>
             </section>
-        )
+        );
     }
 
     return (
@@ -237,8 +329,8 @@ const CategoryPage = () => {
                         </p>
                         <button
                             onClick={() => {
-                                setSearchTerm("")
-                                setPriceFilter("")
+                                setSearchTerm("");
+                                setPriceFilter("");
                             }}
                             className="bg-[#199A8E] hover:bg-[#157d74] text-white px-6 py-3 rounded-full shadow-lg transition"
                         >
@@ -248,128 +340,17 @@ const CategoryPage = () => {
                 ) : (
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {currentBooks.map(book => (
-                                <div
+                            {currentBooks.map((book, index) => (
+                                <BookCard
                                     key={book.id}
-                                    className="book-item bg-white rounded-xl shadow-md hover:shadow-lg overflow-hidden transition-transform hover:-translate-y-1"
-                                >
-                                    {/* Book Badge */}
-                                    <div
-                                        className={`book-badge ${book.status.toLowerCase()} absolute top-3 left-3 z-10 px-3 py-1 text-xs font-semibold text-white rounded-full shadow`}
-                                    >
-                                        {book.badge}
-                                    </div>
-
-                                    {/* Book Image */}
-                                    <div className="relative group h-64 overflow-hidden">
-                                        <img
-                                            src={book.image}
-                                            alt={book.title}
-                                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                                            onError={e =>
-                                                (e.target.src =
-                                                    "/placeholder.svg?height=300&width=200")
-                                            }
-                                        />
-                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-all duration-300">
-                                            <button
-                                                onClick={() =>
-                                                    console.log(
-                                                        "Add to wishlist",
-                                                        book.id
-                                                    )
-                                                }
-                                                className="bg-white p-2 rounded-full shadow hover:bg-[#199A8E] hover:text-white transition"
-                                                aria-label="Add to wishlist"
-                                            >
-                                                <Heart size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    navigate(
-                                                        `/books/${book.id}`
-                                                    )
-                                                }
-                                                className="bg-white p-2 rounded-full shadow hover:bg-[#199A8E] hover:text-white transition"
-                                                aria-label="View details"
-                                            >
-                                                <Eye size={18} />
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    console.log(
-                                                        "Add to cart",
-                                                        book.id
-                                                    )
-                                                }
-                                                className="bg-white p-2 rounded-full shadow hover:bg-[#199A8E] hover:text-white transition"
-                                                aria-label="Add to cart"
-                                            >
-                                                <ShoppingCart size={18} />
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    {/* Book Info */}
-                                    <div className="p-5">
-                                        <h3 className="font-bold text-lg mb-1 text-gray-900 line-clamp-1">
-                                            {book.title}
-                                        </h3>
-                                        <p className="text-sm text-gray-500 mb-3">
-                                            {book.author}
-                                        </p>
-
-                                        {/* Rating */}
-                                        <div className="flex items-center gap-1 mb-3">
-                                            <div className="flex text-yellow-400">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        size={16}
-                                                        className={
-                                                            i <
-                                                            Math.floor(
-                                                                book.rating
-                                                            )
-                                                                ? "fill-current"
-                                                                : ""
-                                                        }
-                                                    />
-                                                ))}
-                                            </div>
-                                            <span className="text-gray-600 text-sm ml-1">
-                                                {book.rating} ({book.reviews}{" "}
-                                                reviews)
-                                            </span>
-                                        </div>
-
-                                        {/* Price */}
-                                        <div className="mb-4">
-                                            {book.originalPrice && (
-                                                <span className="text-sm line-through text-gray-400 mr-2">
-                                                    ${book.originalPrice}
-                                                </span>
-                                            )}
-                                            <span className="text-lg font-bold text-[#199A8E]">
-                                                ${book.price}
-                                            </span>
-                                        </div>
-
-                                        {/* Add to Cart Button */}
-                                        <button
-                                            onClick={() =>
-                                                console.log(
-                                                    "Add to cart",
-                                                    book.id
-                                                )
-                                            }
-                                            className="w-full bg-[#199A8E] hover:bg-[#157d74] text-white py-2 rounded-lg shadow transition flex items-center justify-center gap-2"
-                                        >
-                                            <ShoppingCart size={16} />
-                                            Add to Cart
-                                        </button>
-                                    </div>
-                                </div>
+                                    book={book}
+                                    index={index}
+                                    isInWishlist={isInWishlist}
+                                    isInCart={isInCart}
+                                    handleAddToWishlist={handleAddToWishlist}
+                                    handleAddToCart={handleAddToCart}
+                                    handleQuickView={handleQuickView}
+                                />
                             ))}
                         </div>
 
@@ -458,7 +439,7 @@ const CategoryPage = () => {
                 )}
             </div>
         </section>
-    )
-}
+    );
+};
 
-export default CategoryPage
+export default CategoryPage;

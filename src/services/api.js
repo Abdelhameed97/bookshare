@@ -83,6 +83,12 @@ const apiService = {
     getBooks: () => api.get("/books"),
     getBookDetails: bookId => api.get(`/books/${bookId}`),
 
+    // User Endpoints
+    updateUser: (userId, userData) => {
+        console.log('API Service - updateUser called with:', { userId, userData });
+        return api.put(`/users/${userId}`, userData);
+    },
+
     // Auth Endpoints
     login: credentials => api.post("/login", credentials),
     register: userData => api.post("/register", userData),
