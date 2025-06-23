@@ -140,7 +140,7 @@ const AllOrdersPage = () => {
                       <td>#{order.id}</td>
                       <td>
                         <FaUserCircle className="orders-icon user" />
-                        {order.user?.name || 'Unknown'}
+                        {order.client?.name || order.user?.name || 'Unknown'}
                       </td>
                       <td>
                         <ul className="orders-books-list">

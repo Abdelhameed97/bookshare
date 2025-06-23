@@ -715,8 +715,8 @@ const Dashboard = () => {
         {/* Dynamic Orders Section */}
         <div className="dashboard-section">
           <div className="section-header">
-            <h2>Recent Orders ({filteredOrders.length})</h2>
-            <Link to="/order" className="view-all-link">
+            <h2>Recent Orders ({filteredOrders.filter(order => order.status === 'pending').length})</h2>
+            <Link to="/all-orders" className="view-all-link" >
               View All Orders
             </Link>
           </div>
@@ -729,13 +729,11 @@ const Dashboard = () => {
               <div className="header-cell">Total</div>
               <div className="header-cell">Status</div>
               <div className="header-cell">Date</div>
-              <div className="header-cell">Actions</div>
             </div>
-            
-            {filteredOrders.slice(0, 10).map((order) => (
+            {filteredOrders.filter(order => order.status === 'pending').slice(0, 4).map((order) => (
               <div key={order.id} className="table-row">
                 <div className="table-cell">#{order.id}</div>
-                <div className="table-cell">{order.user?.name || 'Unknown'}</div>
+                <div className="table-cell">{order.client?.name || order.user?.name || 'Unknown'}</div>
                 <div className="table-cell">
                   {order.order_items.length} book{order.order_items.length !== 1 ? 's' : ''}
                 </div>
@@ -756,27 +754,12 @@ const Dashboard = () => {
                 <div className="table-cell">
                   {new Date(order.created_at).toLocaleDateString()}
                 </div>
-                <div className="table-cell">
-                  <button 
-                    className="action-btn view"
-                    onClick={() => navigate(`/order/${order.id}`)}
-                    title="View Order"
-                  >
-                    <Eye size={16} />
-                  </button>
-                </div>
               </div>
             ))}
-            
-            {filteredOrders.length === 0 && (
+            {filteredOrders.filter(order => order.status === 'pending').length === 0 && (
               <div className="empty-state">
                 <TrendingUp size={48} />
-                <p>{loading ? 'Loading orders...' : allOrders.length === 0 ? 'No orders found yet' : 'No orders found in selected time range'}</p>
-                {!loading && allOrders.length === 0 && (
-                  <small style={{ color: '#6b7280', display: 'block', marginTop: '0.5rem' }}>
-                    Orders will appear here when customers place orders for your books
-                  </small>
-                )}
+                <p>No pending orders found.</p>
               </div>
             )}
           </div>

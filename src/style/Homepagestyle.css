@@ -1,13 +1,3 @@
-/* ============================================= */
-/* ==  FORCEFUL NAVBAR RESPONSIVE STYLES  == */
-/* ============================================= */
-
-/* --- Mobile First (Default) --- */
-/* On small screens, hide desktop links and show mobile toggle */
-.nav-links-desktop,
-.auth-buttons-desktop {
-  display: none !important;
-}
 
 .mobile-menu-toggle {
   display: flex !important;
@@ -25,11 +15,34 @@
 /* --- Desktop and Up (>= 1024px) --- */
 /* Show desktop links, hide mobile toggle */
 @media (min-width: 1024px) {
+  /* Force navbar to single row, no wrapping */
+  .navbar-content {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    flex-wrap: nowrap !important;
+    gap: 32px !important;
+  }
   .nav-links-desktop {
     display: flex !important;
+    align-items: center !important;
+    gap: 18px !important;
+    flex-wrap: nowrap !important;
   }
-  .mobile-menu-toggle {
-    display: none !important;
+  .navbar-actions {
+    display: flex !important;
+    align-items: center !important;
+    gap: 16px !important;
+    flex-wrap: nowrap !important;
+    margin-left: auto !important;
+  }
+  .auth-buttons-desktop {
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    margin-left: 1rem !important;
+    padding-left: 1rem !important;
+    border-left: 1px solid #e5e7eb !important;
   }
 }
 /* ============================================= */
