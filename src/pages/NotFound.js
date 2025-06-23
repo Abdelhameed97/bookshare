@@ -1,0 +1,50 @@
+import React from "react";
+import { useNavigate } from "react-router-dom";
+
+const NotFound = () => {
+  const navigate = useNavigate();
+  return (
+    <div style={{
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      background: "linear-gradient(135deg, #f8fafc 0%, #e0e7ff 100%)",
+      padding: "2rem"
+    }}>
+      <img
+        src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSaFTWS03KtOH9GOL_fKMuaVHNihTtrefjoqw&s"
+        alt="404 Not Found"
+        style={{ width: 260, marginBottom: 32 }}
+      />
+      <h1 style={{ fontSize: "5rem", fontWeight: 900, color: "#6366f1", margin: 0 }}>404</h1>
+      <h2 style={{ color: "#1e293b", margin: "1rem 0 0.5rem 0", fontWeight: 700 }}>Page Not Found</h2>
+      <p style={{ color: "#64748b", fontSize: "1.2rem", marginBottom: 32, textAlign: "center", maxWidth: 400 }}>
+        Oops! The page you are looking for doesn't exist or has been moved.<br />
+        Try going back to the homepage.
+      </p>
+      <button
+        onClick={() => navigate("/")}
+        style={{
+          background: "#6366f1",
+          color: "white",
+          border: "none",
+          borderRadius: 8,
+          padding: "0.75rem 2rem",
+          fontSize: "1.1rem",
+          fontWeight: 600,
+          cursor: "pointer",
+          boxShadow: "0 2px 8px rgba(99,102,241,0.15)",
+          transition: "background 0.2s"
+        }}
+        onMouseOver={e => (e.target.style.background = '#4338ca')}
+        onMouseOut={e => (e.target.style.background = '#6366f1')}
+      >
+        Go Home
+      </button>
+    </div>
+  );
+};
+
+export default NotFound; 

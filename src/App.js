@@ -23,6 +23,7 @@ import LibraryDetails from "./components/Library/LibraryDetails";
 import PaymentPage from "./pages/PaymentPage";
 import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
+import NotFound from "./pages/NotFound";
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -62,7 +63,7 @@ function App() {
         <Route path="/libraries" element={<LibrariesPage />} />
         <Route path="/library/:id" element={<LibraryDetails />} />
         <Route path="/all-orders" element={<AllOrdersPage />} />
-        <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
+        <Route path='*' element={<NotFound />} />
       </Routes>
     </Router>
   );
