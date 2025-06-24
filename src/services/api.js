@@ -59,7 +59,7 @@ const apiService = {
             quantity: parseInt(quantity, 10) 
         });
     },
-        removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
+    removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
 
     // Wishlist Endpoints
     getWishlist: () => api.get('/wishlist'),
