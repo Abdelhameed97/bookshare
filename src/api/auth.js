@@ -1,19 +1,26 @@
-import axios from 'axios';
+// api/auth.js
+import axios from "axios";
 
+// Create axios instance
 const api = axios.create({
-  baseURL: 'http://localhost:8000/api', // Laravel API base URL
+  baseURL: "http://localhost:8000/api", // adjust if your backend uses another port
+  // ❌ Don't use withCredentials unless you're using cookies/session (you're using token)
 });
 
-// ✅ Automatically attach token to every request if exists
+// ✅ Automatically attach Authorization token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  config.headers.Accept = "application/json";
   return config;
 });
 
-// 🧠 Auth endpoints
-export const login = (data) => api.post('/login', data);
-export const register = (data) => api.post('/register', data);
-export const logout = () => api.post('/logout'); // No need to pass token manually
+// Auth-related API functions
+export const login = (data) => api.post("/login", data);
+export const register = (data) => api.post("/register", data);
+export const logout = () => api.post("/logout");
+export const getUser = () => api.get("/user");
+
+export default api;

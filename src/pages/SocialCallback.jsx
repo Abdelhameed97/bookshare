@@ -1,9 +1,10 @@
-// src/pages/SocialCallback.jsx
+// SocialCallback.jsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Spinner } from "react-bootstrap"; // or use your own spinner
-import "../style/SocialCallback.css"; // Ensure you have this CSS file for styling
+import { Spinner } from "react-bootstrap";
 import logo from "../assets/bookshare-logo.png";
+import { getUser } from "../api/auth";
+
 const SocialCallback = () => {
   const navigate = useNavigate();
 
@@ -17,10 +18,23 @@ const SocialCallback = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
-      // توجيه بعد 2 ثانية
-      setTimeout(() => {
-        navigate("/"); // أو "/owner-dashboard" لو عندك صفحات مختلفة
-      }, 2000);
+      getUser()
+        .then((response) => {
+          console.log("User from API:", response.data);
+
+          // Navigate based on role
+          if (response.data.role === "owner") {
+            navigate("/dashboard");
+          } else if (response.data.role === "client") {
+            navigate("/");
+          } else {
+            navigate("/login");
+          }
+        })
+        .catch((error) => {
+          console.error("Error fetching user:", error);
+          navigate("/login");
+        });
     } else {
       navigate("/login");
     }
@@ -30,13 +44,8 @@ const SocialCallback = () => {
     <div className='callback-container d-flex flex-column align-items-center justify-content-center vh-100'>
       <div className='callback-box text-center p-4 shadow-sm rounded'>
         <Spinner animation='border' variant='primary' className='mb-3' />
-        <img
-          src={logo}
-          alt='BookShare Logo'
-          className='logo mb-3'
-          width={200}
-        />
-        <h5>Welcome to BookShare </h5>
+        <img src={logo} alt='BookShare Logo' width={200} />
+        <h5>Welcome to BookShare</h5>
         <p className='text-muted'>Redirecting to your dashboard...</p>
       </div>
     </div>
