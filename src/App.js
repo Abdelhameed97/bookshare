@@ -21,9 +21,11 @@ import EditProfile from "./components/Library/EditProfile";
 import AddBookPage from "./components/Library/AddBookPage";
 import LibrariesPage from "./components/Library/LibrariesPage";
 import LibraryDetails from "./components/Library/LibraryDetails";
-import PaymentPage from "./pages/PaymentPage";
+import PaymentsPage from "./pages/PaymentsPage";
+import PaymentDetailsPage from './pages/PaymentDetailsPage';
 import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
+import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
 
 function RedirectToDashboardOrHome() {
@@ -44,7 +46,8 @@ function App() {
         <Route path='/orders' element={<OrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailsPage />} />
         <Route path='/wishlist' element={<WishlistPage />} />
-        <Route path="/payment/:orderId" element={<PaymentPage />} />
+        <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/payment/:orderId" element={<PaymentDetailsPage />} />
         <Route path="/books" element={<BooksPage />} />
         <Route path="/books/:id" element={<BookDetails />} />
         <Route path='/register' element={<RegisterPage />} />
@@ -74,7 +77,7 @@ function App() {
         <Route path="/libraries" element={<LibrariesPage />} />
         <Route path="/library/:id" element={<LibraryDetails />} />
         <Route path="/all-orders" element={<AllOrdersPage />} />
-        <Route path='*' element={<h1 className='text-center mt-5'>404 Not Found</h1>} />
+        <Route path='*' element={<NotFound />} />
       </Routes>
     </Router>
   );
