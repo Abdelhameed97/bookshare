@@ -41,17 +41,17 @@ const Navbar = () => {
     { to: "/coming-soon", label: "COMING SOON" },
     { to: "/top-seller", label: "TOP SELLER" },
     { to: "/books", label: "BOOKS" },
-    { to: "/author", label: "AUTHOR" },
+    // { to: "/author", label: "AUTHOR" },
     { to: "/contact", label: "CONTACT" },
     
   ];
 
   const ownerNavLinks = [
-    { to: "/dashboard", label: "DASHBOARD", icon: FaTachometerAlt },
-    { to: "/edit-profile", label: "EDIT PROFILE", icon: FaUserEdit },
-    { to: "/add-book", label: "ADD BOOK", icon: FaBook },
-    { to: "/libraries", label: "ALL LIBRARIES", icon: FaBook },
-    { to: "/all-orders", label: "ORDERS", icon: FaBoxOpen },
+    { to: "/dashboard", label: "DASHBOARD" },
+    { to: "/edit-profile", label: "EDIT PROFILE" },
+    { to: "/add-book", label: "ADD BOOK" },
+    { to: "/libraries", label: "ALL LIBRARIES" },
+    { to: "/all-orders", label: "ORDERS" },
   ];
 
   const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;

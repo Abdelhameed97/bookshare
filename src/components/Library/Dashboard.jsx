@@ -54,6 +54,8 @@ const Dashboard = () => {
   const [selectedTimeRange, setSelectedTimeRange] = useState('all');
   const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 6;
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -120,6 +122,16 @@ const Dashboard = () => {
     
     return filtered;
   }, [allBooks, currentUser, searchTerm, filterStatus, filterCategory, sortBy, sortOrder]);
+
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+  const paginatedBooks = useMemo(() => {
+    const start = (currentPage - 1) * booksPerPage;
+    return filteredBooks.slice(start, start + booksPerPage);
+  }, [filteredBooks, currentPage]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus, filterCategory, sortBy, sortOrder]);
 
   // Memoized filtered orders
   const filteredOrders = useMemo(() => {
@@ -597,9 +609,9 @@ const Dashboard = () => {
                 <option value="month">This Month</option>
                 <option value="year">This Year</option>
               </select>
-            <Link to="/books" className="view-all-link">
-              View All Books
-            </Link>
+              <Link to="/books" className="view-all-link">
+                View All Books
+              </Link>
             </div>
           </div>
 
@@ -610,30 +622,30 @@ const Dashboard = () => {
             </div>
           ) : (
             <>
-          <div className="books-grid">
-                {filteredBooks.slice(0, 8).map((book) => (
-              <div key={book.id} className="book-card">
-                <div className="book-image">
-                  <img 
-                    src={book.image} 
-                    alt={book.title}
-                    onError={(e) => {
-                      e.currentTarget.src = '/placeholder.svg';
-                    }}
-                  />
-                  <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
-                    {book.status}
-                  </div>
+              <div className="books-grid">
+                {paginatedBooks.map((book) => (
+                  <div key={book.id} className="book-card">
+                    <div className="book-image">
+                      <img 
+                        src={book.image} 
+                        alt={book.title}
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
+                      />
+                      <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
+                        {book.status}
+                      </div>
                       <div className="book-overlay">
                         <div className="overlay-actions">
-                  <button 
+                          <button 
                             className="overlay-btn view"
-                    onClick={() => navigate(`/books/${book.id}`)}
-                    title="View Book"
-                  >
-                    <Eye size={16} />
-                  </button>
-                  <button 
+                            onClick={() => navigate(`/books/${book.id}`)}
+                            title="View Book"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button 
                             className="overlay-btn edit"
                             onClick={() => navigate(`/edit-book/${book.id}`)}
                             title="Edit Book"
@@ -642,11 +654,11 @@ const Dashboard = () => {
                           </button>
                           <button 
                             className="overlay-btn delete"
-                    onClick={() => handleDeleteBook(book.id)}
-                    title="Delete Book"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                            onClick={() => handleDeleteBook(book.id)}
+                            title="Delete Book"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -679,11 +691,35 @@ const Dashboard = () => {
                       {book.description && (
                         <p className="book-description">{book.description.substring(0, 100)}...</p>
                       )}
-                </div>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-              
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    {'<'}
+                  </button>
+                  {[...Array(totalPages)].map((_, idx) => (
+                    <button
+                      key={idx + 1}
+                      className={currentPage === idx + 1 ? 'active' : ''}
+                      onClick={() => setCurrentPage(idx + 1)}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    {'>'}
+                  </button>
+                </div>
+              )}
               {filteredBooks.length === 0 && (
                 <div className="empty-state">
                   <BookOpen size={48} />
