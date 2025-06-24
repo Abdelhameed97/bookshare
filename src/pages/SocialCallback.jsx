@@ -1,9 +1,10 @@
-// src/pages/SocialCallback.jsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Spinner } from "react-bootstrap"; // or use your own spinner
-import "../style/SocialCallback.css"; // Ensure you have this CSS file for styling
+import { Spinner } from "react-bootstrap";
+import "../style/SocialCallback.css";
 import logo from "../assets/bookshare-logo.png";
+import api from "../api/auth"; // لازم يكون فيه export default
+
 const SocialCallback = () => {
   const navigate = useNavigate();
 
@@ -17,10 +18,25 @@ const SocialCallback = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
-      // توجيه بعد 2 ثانية
-      setTimeout(() => {
-        navigate("/"); // أو "/owner-dashboard" لو عندك صفحات مختلفة
-      }, 2000);
+      // ✅ checkAuth بعد حفظ التوكن
+      const checkAuth = async () => {
+        try {
+          const res = await api.get("/user");
+          console.log("✅ User info:", res.data);
+
+          // ✅ توجيه حسب الدور بعد التأكد من المصادقة
+          if (role === "owner") {
+            navigate("/dashboard");
+          } else {
+            navigate("/");
+          }
+        } catch (err) {
+          console.error("❌ Not authenticated:", err);
+          navigate("/login");
+        }
+      };
+
+      checkAuth();
     } else {
       navigate("/login");
     }

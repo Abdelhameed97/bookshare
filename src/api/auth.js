@@ -13,6 +13,9 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// 🧠 Export the instance
+export default api;
+
 // 🧠 Auth endpoints
 export const login = (data) => api.post('/login', data);
 export const register = (data) => api.post('/register', data);
