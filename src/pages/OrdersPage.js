@@ -1,6 +1,27 @@
 import React, { useState } from 'react';
-import { Container, Row, Col, Card, Tab, Nav, Badge } from 'react-bootstrap';
-import { Clock, CheckCircle, Truck, XCircle, RefreshCw } from 'lucide-react';
+import {
+    Container,
+    Row,
+    Col,
+    Card,
+    Tab,
+    Nav,
+    Badge,
+    Spinner,
+    Alert,
+    Button
+} from 'react-bootstrap';
+import {
+    Clock,
+    CheckCircle,
+    Truck,
+    XCircle,
+    RefreshCw,
+    ChevronLeft,
+    FileText,
+    ShoppingCart
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
 import '../style/OrdersPage.css';
@@ -9,61 +30,19 @@ import Footer from "../components/HomePage/Footer.jsx";
 
 const OrdersPage = () => {
     const [activeTab, setActiveTab] = useState('all');
+    const [showAlert, setShowAlert] = useState(false);
+    const [alertMessage, setAlertMessage] = useState('');
+    const navigate = useNavigate();
 
-    const orders = [
-        {
-            id: '#ORD-2023-001',
-            date: '15 Oct 2023',
-            status: 'Delivered',
-            items: 3,
-            total: 245.97,
-            delivery: 'Standard',
-            tracking: 'TRK-934857',
-            itemsDetails: [
-                { name: 'Atomic Habits', price: 89.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'The Psychology of Money', price: 75.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71g2ednj0JL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'Book Cover', price: 79.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        },
-        {
-            id: '#ORD-2023-002',
-            date: '10 Oct 2023',
-            status: 'Shipped',
-            items: 2,
-            total: 155.98,
-            delivery: 'Express',
-            tracking: 'TRK-784512',
-            itemsDetails: [
-                { name: 'Deep Work', price: 75.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'Digital Minimalism', price: 79.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71g2ednj0JL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        },
-        {
-            id: '#ORD-2023-003',
-            date: '5 Oct 2023',
-            status: 'Processing',
-            items: 1,
-            total: 89.99,
-            delivery: 'Standard',
-            tracking: null,
-            itemsDetails: [
-                { name: 'The Alchemist', price: 89.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        },
-        {
-            id: '#ORD-2023-004',
-            date: '1 Oct 2023',
-            status: 'Cancelled',
-            items: 2,
-            total: 165.98,
-            delivery: 'Standard',
-            tracking: null,
-            itemsDetails: [
-                { name: 'Thinking Fast and Slow', price: 85.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71tbalAHYCL._AC_UF1000,1000_QL80_.jpg' },
-                { name: 'Bookmark Set', price: 79.99, quantity: 1, image: 'https://m.media-amazon.com/images/I/71g2ednj0JL._AC_UF1000,1000_QL80_.jpg' }
-            ]
-        }
-    ];
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user?.id;
+
+    const {
+        orders,
+        loading,
+        error,
+        cancelOrder
+    } = useOrders(userId);
 
     const filteredOrders = activeTab === 'all'
         ? orders
@@ -93,7 +72,7 @@ const OrdersPage = () => {
             case 'cancelled': return 'danger';
             default: return 'secondary';
         }
-        };
+    };
 
     const handleCancelOrder = async (orderId) => {
         if (window.confirm('Are you sure you want to cancel this order?')) {
@@ -105,18 +84,28 @@ const OrdersPage = () => {
 
     if (!userId) {
         return (
-            <div className="text-center py-5">
-                <Alert variant="warning">
-                    Please login to view your orders
-                </Alert>
-                <Button
-                    variant="primary"
-                    onClick={() => navigate('/login', { state: { from: '/orders' } })}
-                    className="mt-3"
-                >
-                    Login
-                </Button>
-            </div>
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="warning" className="d-flex align-items-center">
+                        <LogIn size={24} className="me-2" />
+                        <div>
+                            <h5>Authentication Required</h5>
+                            <p className="mb-0">Please login to view your orders.</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4">
+                        <CustomButton
+                            variant="primary"
+                            onClick={() => navigate('/login', { state: { from: '/orders' } })}
+                            className="px-4"
+                        >
+                            Login
+                        </CustomButton>
+                    </div>
+                </Container>
+                <Footer />
+            </>
         );
     }
 
@@ -129,22 +118,37 @@ const OrdersPage = () => {
         );
     }
 
-    if (error) {
-        return (
-            <div className="text-center py-5">
-                <Alert variant="danger">
-                    {error}
-                </Alert>
-                <CustomButton
-                    variant="primary"
-                    onClick={() => window.location.reload()}
-                    className="mt-3"
-                >
-                    Try Again
-                </CustomButton>
-            </div>
-        );
-    }
+    // if (error) {
+    //     return (
+    //         <>
+    //             <Navbar />
+    //             <Container className="py-5">
+    //                 <Alert variant="danger" className="d-flex align-items-center">
+    //                     <AlertCircle size={24} className="me-2" />
+    //                     <div>
+    //                         <h5>Failed to Load Orders</h5>
+    //                         <p className="mb-0">{error}</p>
+    //                     </div>
+    //                 </Alert>
+    //                 <div className="d-flex justify-content-center mt-4 gap-3">
+    //                     <CustomButton
+    //                         variant="primary"
+    //                         onClick={() => window.location.reload()}
+    //                     >
+    //                         Retry
+    //                     </CustomButton>
+    //                     <CustomButton
+    //                         variant="outline-primary"
+    //                         onClick={() => navigate('/books')}
+    //                     >
+    //                         Browse Books
+    //                     </CustomButton>
+    //                 </div>
+    //             </Container>
+    //             <Footer />
+    //         </>
+    //     );
+    // }
 
     return (
         <>
@@ -250,15 +254,18 @@ const OrdersPage = () => {
                                         </div>
                                     ) : (
                                         <div className="text-center py-5">
-                                            <img
-                                                src="https://cdn-icons-png.flaticon.com/512/4076/4076478.png"
-                                                alt="No orders"
-                                                style={{ width: '120px', opacity: 0.7 }}
-                                            />
-                                            <h5 className="mt-3">No orders found</h5>
-                                            <p className="text-muted">You don't have any {activeTab === 'all' ? '' : activeTab} orders yet</p>
-                                            <CustomButton variant="primary" className="mt-3">
-                                                Start Shopping
+                                            <ShoppingCart size={48} className="text-muted mb-3" />
+                                            <h4>No orders found</h4>
+                                            <p className="text-muted mb-4">
+                                                {activeTab === 'all'
+                                                    ? "You haven't placed any orders yet"
+                                                    : `You don't have any ${activeTab} orders`}
+                                            </p>
+                                            <CustomButton
+                                                variant="primary"
+                                                onClick={() => navigate('/books')}
+                                            >
+                                                Browse Books
                                             </CustomButton>
                                         </div>
                                     )}

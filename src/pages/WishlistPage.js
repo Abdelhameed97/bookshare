@@ -16,7 +16,9 @@ import {
     ShoppingCart,
     Filter,
     X,
-    ChevronLeft
+    ChevronLeft,
+    AlertCircle,
+    LogIn
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
@@ -165,21 +167,31 @@ const WishlistPage = () => {
         }
     };
 
-    // Show login prompt if user is not logged in
+
     if (!userId) {
         return (
-            <div className="text-center py-5">
-                <Alert variant="warning">
-                    Please login to view your wishlist
-                </Alert>
-                <CustomButton
-                    variant="primary"
-                    onClick={() => navigate('/login', { state: { from: '/wishlist' } })}
-                    className="mt-3"
-                >
-                    Login
-                </CustomButton>
-            </div>
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="warning" className="d-flex align-items-center">
+                        <LogIn size={24} className="me-2" />
+                        <div>
+                            <h5>Authentication Required</h5>
+                            <p className="mb-0">Please login to view your wishlist.</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4">
+                        <CustomButton
+                            variant="primary"
+                            onClick={() => navigate('/login', { state: { from: '/wishlist' } })}
+                            className="mt-3 px-4"
+                        >
+                            Login
+                        </CustomButton>
+                    </div>
+                </Container>
+                <Footer />
+            </>
         );
     }
 
@@ -194,18 +206,33 @@ const WishlistPage = () => {
 
     if (error) {
         return (
-            <div className="text-center py-5">
-                <Alert variant="danger">
-                    {error}
-                </Alert>
-                <CustomButton
-                    variant="primary"
-                    onClick={() => window.location.reload()}
-                    className="mt-3"
-                >
-                    Try Again
-                </CustomButton>
-            </div>
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="danger" className="d-flex align-items-center">
+                        <AlertCircle size={24} className="me-2" />
+                        <div>
+                            <h5>Wishlist Error</h5>
+                            <p className="mb-0">{error}</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4 gap-3">
+                        <CustomButton
+                            variant="primary"
+                            onClick={() => window.location.reload()}
+                        >
+                            Retry
+                        </CustomButton>
+                        <CustomButton
+                            variant="outline-primary"
+                            onClick={() => navigate('/books')}
+                        >
+                            Browse Books
+                        </CustomButton>
+                    </div>
+                </Container>
+                <Footer />
+            </>
         );
     }
 
