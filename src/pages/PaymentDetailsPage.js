@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Container, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
-import { CheckCircle, CreditCard, Landmark, Wallet, ArrowLeft } from 'lucide-react';
+import { CheckCircle, CreditCard, Landmark, Wallet, ArrowLeft, AlertCircle } from 'lucide-react';
 import Swal from 'sweetalert2';
 import { usePayment } from '../hooks/usePayment';
 import Title from '../components/shared/Title';
@@ -90,6 +90,7 @@ const PaymentDetailsPage = () => {
         const num = parseFloat(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
     };
+    
 
     if (loading && !isInitialLoad) {
         return (
@@ -102,26 +103,33 @@ const PaymentDetailsPage = () => {
 
     if (error || !order) {
         return (
-            <div className="text-center py-5">
-                <Alert variant="danger">
-                    {error || 'Could not load order details'}
-                </Alert>
-                <div className="d-flex justify-content-center mt-3">
-                    <CustomButton
-                        variant="primary"
-                        onClick={() => navigate('/orders')}
-                        className="me-2"
-                    >
-                        View Orders
-                    </CustomButton>
-                    <CustomButton
-                        variant="outline-secondary"
-                        onClick={() => fetchData(orderId)}
-                    >
-                        Retry
-                    </CustomButton>
-                </div>
-            </div>
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="danger" className="d-flex align-items-center">
+                        <AlertCircle size={24} className="me-2" />
+                        <div>
+                            <h5>Payment Error</h5>
+                            <p className="mb-0">{error || 'Could not load order details'}</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4 gap-3">
+                        <CustomButton
+                            variant="primary"
+                            onClick={() => navigate('/orders')}
+                        >
+                            View Orders
+                        </CustomButton>
+                        <CustomButton
+                            variant="outline-primary"
+                            onClick={() => fetchData(orderId)}
+                        >
+                            Retry
+                        </CustomButton>
+                    </div>
+                </Container>
+                <Footer />
+            </>
         );
     }
 

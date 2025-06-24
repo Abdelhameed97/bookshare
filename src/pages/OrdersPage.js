@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Container,
     Row,
@@ -19,9 +19,11 @@ import {
     RefreshCw,
     ChevronLeft,
     FileText,
-    ShoppingCart
+    ShoppingCart,
+    LogIn,
+    AlertCircle
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
 import { useOrders } from '../hooks/useOrders';
@@ -34,6 +36,13 @@ const OrdersPage = () => {
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
     const navigate = useNavigate();
+    const location = useLocation();
+
+    useEffect(() => {
+        if (location.state?.activeTab) {
+            setActiveTab(location.state.activeTab);
+        }
+    }, [location.state]);
 
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user?.id;
@@ -51,9 +60,12 @@ const OrdersPage = () => {
 
     const getStatusIcon = (status) => {
         switch (status.toLowerCase()) {
+            case 'accepted': return <CheckCircle size={18} className="text-success me-1" />;
+            case 'rejected': return <XCircle size={18} className="text-danger me-1" />;
+            case 'pending': return <Clock size={18} className="text-warning me-1" />;
             case 'delivered': return <CheckCircle size={18} className="text-success me-1" />;
             case 'shipped': return <Truck size={18} className="text-primary me-1" />;
-            case 'processing': return <RefreshCw size={18} className="text-warning me-1" />;
+            case 'processing': return <RefreshCw size={18} className="text-secondary me-1" />;
             case 'cancelled': return <XCircle size={18} className="text-danger me-1" />;
             default: return <Clock size={18} className="text-secondary me-1" />;
         }
@@ -61,9 +73,12 @@ const OrdersPage = () => {
 
     const getStatusBadge = (status) => {
         switch (status.toLowerCase()) {
+            case 'accepted': return 'success';
+            case 'rejected': return 'danger';
+            case 'pending': return 'warning';
             case 'delivered': return 'success';
             case 'shipped': return 'primary';
-            case 'processing': return 'warning';
+            case 'processing': return 'secondary';
             case 'cancelled': return 'danger';
             default: return 'secondary';
         }
@@ -79,18 +94,28 @@ const OrdersPage = () => {
 
     if (!userId) {
         return (
-            <div className="text-center py-5">
-                <Alert variant="warning">
-                    Please login to view your orders
-                </Alert>
-                <Button
-                    variant="primary"
-                    onClick={() => navigate('/login', { state: { from: '/orders' } })}
-                    className="mt-3"
-                >
-                    Login
-                </Button>
-            </div>
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="warning" className="d-flex align-items-center">
+                        <LogIn size={24} className="me-2" />
+                        <div>
+                            <h5>Authentication Required</h5>
+                            <p className="mb-0">Please login to view your orders.</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4">
+                        <CustomButton
+                            variant="primary"
+                            onClick={() => navigate('/login', { state: { from: '/orders' } })}
+                            className="px-4"
+                        >
+                            Login
+                        </CustomButton>
+                    </div>
+                </Container>
+                <Footer />
+            </>
         );
     }
 
@@ -103,22 +128,37 @@ const OrdersPage = () => {
         );
     }
 
-    if (error) {
-        return (
-            <div className="text-center py-5">
-                <Alert variant="danger">
-                    {error}
-                </Alert>
-                <CustomButton
-                    variant="primary"
-                    onClick={() => window.location.reload()}
-                    className="mt-3"
-                >
-                    Try Again
-                </CustomButton>
-            </div>
-        );
-    }
+    // if (error) {
+    //     return (
+    //         <>
+    //             <Navbar />
+    //             <Container className="py-5">
+    //                 <Alert variant="danger" className="d-flex align-items-center">
+    //                     <AlertCircle size={24} className="me-2" />
+    //                     <div>
+    //                         <h5>Failed to Load Orders</h5>
+    //                         <p className="mb-0">{error}</p>
+    //                     </div>
+    //                 </Alert>
+    //                 <div className="d-flex justify-content-center mt-4 gap-3">
+    //                     <CustomButton
+    //                         variant="primary"
+    //                         onClick={() => window.location.reload()}
+    //                     >
+    //                         Retry
+    //                     </CustomButton>
+    //                     <CustomButton
+    //                         variant="outline-primary"
+    //                         onClick={() => navigate('/books')}
+    //                     >
+    //                         Browse Books
+    //                     </CustomButton>
+    //                 </div>
+    //             </Container>
+    //             <Footer />
+    //         </>
+    //     );
+    // }
 
     return (
         <>
@@ -262,19 +302,24 @@ const OrdersPage = () => {
                                         </div>
                                     ) : (
                                         <div className="text-center py-5">
-                                            <ShoppingCart size={48} className="text-muted mb-3" />
-                                            <h4>No orders found</h4>
-                                            <p className="text-muted mb-4">
-                                                {activeTab === 'all'
-                                                    ? "You haven't placed any orders yet"
-                                                    : `You don't have any ${activeTab} orders`}
-                                            </p>
-                                            <CustomButton
-                                                variant="primary"
-                                                onClick={() => navigate('/books')}
-                                            >
-                                                Browse Books
-                                            </CustomButton>
+                                            <Card className="no-orders-card">
+                                                <Card.Body>
+                                                    <ShoppingCart size={64} className="text-muted mb-4" style={{ opacity: 0.5 }} />
+                                                    <h4 className="mb-3">No Orders Yet</h4>
+                                                    <p className="text-muted mb-4">
+                                                        {activeTab === 'all'
+                                                            ? "You haven't placed any orders yet. Start shopping to see your orders here!"
+                                                            : `You don't have any ${activeTab} orders at the moment.`}
+                                                    </p>
+                                                    <CustomButton
+                                                        variant="primary"
+                                                        onClick={() => navigate('/books')}
+                                                        className="px-4"
+                                                    >
+                                                        Browse Books
+                                                    </CustomButton>
+                                                </Card.Body>
+                                            </Card>
                                         </div>
                                     )}
                                 </Tab.Pane>
