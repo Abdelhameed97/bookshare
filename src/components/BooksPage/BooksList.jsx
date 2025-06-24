@@ -52,7 +52,7 @@ const BooksList = () => {
             try {
                 setLoading(true)
                 setError(null)
-                const response = await fetch("http://localhost:8001/api/books")
+                const response = await fetch("http://localhost:8000/api/books")
                 if (!response.ok) throw new Error("Failed to fetch books")
                 const data = await response.json()
 
@@ -62,7 +62,7 @@ const BooksList = () => {
                     image: book.images?.[0]
                         ? book.images[0].startsWith("http")
                             ? book.images[0]
-                            : `http://localhost:8001/storage/${book.images[0]}`
+                            : `http://localhost:8000/storage/${book.images[0]}`
                         : "/placeholder.svg?height=300&width=200",
                     price: `${book.price} $`,
                     originalPrice: book.rental_price

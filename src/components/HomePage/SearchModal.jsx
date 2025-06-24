@@ -17,7 +17,7 @@ const SearchModal = ({ isOpen, onClose }) => {
             setLoading(true)
             try {
                 const response = await fetch(
-                    `http://localhost:8001/api/books?title=${encodeURIComponent(
+                    `http://localhost:8000/api/books?title=${encodeURIComponent(
                         searchQuery
                     )}`
                 )
@@ -80,7 +80,7 @@ const SearchModal = ({ isOpen, onClose }) => {
                                                           "http"
                                                       )
                                                         ? book.images[0]
-                                                        : `http://localhost:8001/storage/${book.images[0]}`
+                                                        : `http://localhost:8000/storage/${book.images[0]}`
                                                     : "/placeholder.svg"
                                             }
                                             alt={book.title}

@@ -64,7 +64,7 @@ const LibrariesPage = () => {
                     image: ownerBooks[0]?.images?.[0]
                         ? ownerBooks[0].images[0].startsWith("http")
                             ? ownerBooks[0].images[0]
-                            : `http://localhost:8001/storage/${ownerBooks[0].images[0]}`
+                            : `http://localhost:8000/storage/${ownerBooks[0].images[0]}`
                         : "/placeholder.svg",
                 }
             })

@@ -10,7 +10,7 @@ const CommentsSection = ({ bookId, currentUser }) => {
 
     const fetchComments = async () => {
         try {
-            const res = await fetch("http://localhost:8001/api/comment")
+            const res = await fetch("http://localhost:8000/api/comment")
             const data = await res.json()
             const filtered = data.filter(c => c.book_id === bookId)
             setComments(filtered)
@@ -35,7 +35,7 @@ const CommentsSection = ({ bookId, currentUser }) => {
         }
 
         try {
-            const res = await fetch("http://localhost:8001/api/comment", {
+            const res = await fetch("http://localhost:8000/api/comment", {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -57,7 +57,7 @@ const CommentsSection = ({ bookId, currentUser }) => {
         if (!window.confirm("Are you sure you want to delete this comment?"))
             return
         try {
-            await fetch(`http://localhost:8001/api/comment/${id}`, {
+            await fetch(`http://localhost:8000/api/comment/${id}`, {
                 method: "DELETE",
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -76,7 +76,7 @@ const CommentsSection = ({ bookId, currentUser }) => {
 
     const handleEditSubmit = async id => {
         try {
-            await fetch(`http://localhost:8001/api/comment/${id}`, {
+            await fetch(`http://localhost:8000/api/comment/${id}`, {
                 method: "PUT",
                 headers: {
                     "Content-Type": "application/json",

@@ -13,6 +13,7 @@ import WishlistPage from "./pages/WishlistPage";
 import RegisterPage from "./pages/form/RegisterPage";
 import LoginPage from "./pages/form/LoginPage";
 import GuestRoute from "./components/GuestRoute/GuestRoute";
+import GetStartedPage from "./pages/form/GetStartedPage";
 import About from "./components/About.jsx/Aboutus";
 import BooksPage from "./pages/BooksPage";
 import CategoryPage from "./pages/CategoryPage";
@@ -31,9 +32,12 @@ import Navbar from "./components/HomePage/Navbar";
 import FloatingChatButton from "./components/FloatingChatButton";
 import LibrariesPage from "./components/Library/LibrariesPage";
 import LibraryDetails from "./components/Library/LibraryDetails";
-import PaymentPage from "./pages/PaymentPage";
-import AllOrdersPage from "./components/Library/AllOrdersPage";
+import PaymentsPage from "./pages/PaymentsPage";
+import PaymentDetailsPage from './pages/PaymentDetailsPage';
+import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
+import NotFound from "./pages/NotFound";
+import SocialCallback from "./pages/SocialCallback";
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -46,16 +50,42 @@ function RedirectToDashboardOrHome() {
 function App() {
   return (
     <Router>
-      
       <Routes>
         <Route path="/" element={<RedirectToDashboardOrHome />} />
+
+        {/* صفحات عامة */}
         <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/rag-chat" element={<RagChat />} />
+
+        {/* الكتب والتصنيفات */}
+        <Route path="/books" element={<BooksPage />} />
+        <Route path="/books/:id" element={<BookDetails />} />
+        <Route path="/category/:id" element={<CategoryPage />} />
+
+        {/* الطلبات */}
         <Route path="/cart" element={<CartPage />} />
-        <Route path="/order" element={<OrdersPage />} />
         <Route path="/orders" element={<OrdersPage />} />
         <Route path="/orders/:id" element={<OrderDetailsPage />} />
+        <Route path="/all-orders" element={<AllOrdersPage />} />
+
+        {/* الدفع */}
+        <Route path="/payments" element={<PaymentsPage />} />
+        <Route path="/payment/:orderId" element={<PaymentDetailsPage />} />
+
+        {/* المفضلة */}
         <Route path="/wishlist" element={<WishlistPage />} />
+
+        {/* تسجيل المستخدمين */}
         <Route path="/register" element={<RegisterPage />} />
+        <Route
+          path="/get-started"
+          element={
+            <GuestRoute>
+              <GetStartedPage />
+            </GuestRoute>
+          }
+        />
         <Route
           path="/login"
           element={
@@ -64,27 +94,26 @@ function App() {
             </GuestRoute>
           }
         />
-        <Route path="/category/:id" element={<CategoryPage />} />
-        <Route path="/books" element={<BooksPage />} />
-        <Route path="/books/:id" element={<BookDetails />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/rag-chat" element={<RagChat />} />
+        <Route path="/social-callback" element={<SocialCallback />} />
+
+        {/* المكتبة */}
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
         <Route path="/add-book" element={<AddBookPage />} />
         <Route path="/libraries" element={<LibrariesPage />} />
         <Route path="/library/:id" element={<LibraryDetails />} />
-        <Route path="/payment/:orderId" element={<PaymentPage />} />
-        <Route path="/all-orders" element={<AllOrdersPage />} />
 
+        {/* لوحة تحكم الأدمن */}
         <Route path="/admin" element={<AdminLayout />}>
           <Route path="categories" element={<AdminCategories />} />
           <Route path="categories/create" element={<CreateCategory />} />
           <Route path="categories/:id/edit" element={<EditCategory />} />
         </Route>
 
-        <Route path="*" element={<h1 className="text-center mt-5">404 Not Found</h1>} />
+        {/* صفحة غير موجودة */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
+
       <FloatingChatButton />
     </Router>
   );

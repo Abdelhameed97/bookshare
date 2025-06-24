@@ -59,14 +59,14 @@ const BookDetails = () => {
         setLoading(true)
         try {
             const response = await axios.get(
-                `http://localhost:8001/api/books/${id}`
+                `http://localhost:8000/api/books/${id}`
             )
             setBook(response.data.data)
 
             const userId = response.data.data.user?.id
             if (userId) {
                 const res = await axios.get(
-                    `http://localhost:8001/api/books?user_id=${userId}`
+                    `http://localhost:8000/api/books?user_id=${userId}`
                 )
                 setAuthorBooks(
                     res.data.data.filter(b => b.id !== response.data.data.id)
@@ -86,7 +86,7 @@ const BookDetails = () => {
             setLoadingStatus(true)
             try {
                 const response = await axios.get(
-                    `http://localhost:8001/api/wishlist`,
+                    `http://localhost:8000/api/wishlist`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem(
@@ -119,7 +119,7 @@ const BookDetails = () => {
             setLoadingStatus(true)
             try {
                 const response = await axios.get(
-                    `http://localhost:8001/api/cart`,
+                    `http://localhost:8000/api/cart`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem(
@@ -148,7 +148,7 @@ const BookDetails = () => {
     const fetchBookWithComments = useCallback(async () => {
         try {
             const response = await axios.get(
-                `http://localhost:8001/api/books/${id}`
+                `http://localhost:8000/api/books/${id}`
             )
             setBook(response.data.data)
         } catch (err) {
@@ -166,7 +166,7 @@ const BookDetails = () => {
 
         try {
             await axios.post(
-                "http://localhost:8001/api/comment",
+                "http://localhost:8000/api/comment",
                 {
                     user_id: user.id,
                     book_id: id,
@@ -215,7 +215,7 @@ const BookDetails = () => {
 
         try {
             await axios.put(
-                `http://localhost:8001/api/comment/${editingComment}`,
+                `http://localhost:8000/api/comment/${editingComment}`,
                 {
                     comment: editCommentText,
                 },
@@ -252,7 +252,7 @@ const BookDetails = () => {
 
             if (result.isConfirmed) {
                 await axios.delete(
-                    `http://localhost:8001/api/comment/${commentId}`,
+                    `http://localhost:8000/api/comment/${commentId}`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem(
@@ -471,7 +471,7 @@ const BookDetails = () => {
     const bookImageUrl = bookImagePath
         ? bookImagePath.startsWith("http")
             ? bookImagePath
-            : `http://localhost:8001/storage/${bookImagePath}`
+            : `http://localhost:8000/storage/${bookImagePath}`
         : "/placeholder.svg?height=300&width=200"
 
     return (
@@ -802,7 +802,7 @@ const BookDetails = () => {
                                                       "http"
                                                   )
                                                     ? authorBookImagePath
-                                                    : `http://localhost:8001/storage/${authorBookImagePath}`
+                                                    : `http://localhost:8000/storage/${authorBookImagePath}`
                                                 : "/placeholder.svg?height=300&width=200"
                                         return (
                                             <div

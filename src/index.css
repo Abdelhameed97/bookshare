@@ -11,3 +11,32 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+body[data-theme='dark'] {
+  background: #18181b;
+  color: #f3f4f6;
+}
+body[data-theme='dark'] .dashboard-container,
+body[data-theme='dark'] .dashboard-section,
+body[data-theme='dark'] .stat-card,
+body[data-theme='dark'] .books-grid,
+body[data-theme='dark'] .orders-table,
+body[data-theme='dark'] .search-filter-section {
+  background: #23232b !important;
+  color: #f3f4f6 !important;
+}
+body[data-theme='dark'] .stat-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+body[data-theme='dark'] .pagination button {
+  background: #23232b;
+  color: #f3f4f6;
+}
+body[data-theme='dark'] .pagination button.active {
+  background: linear-gradient(135deg, #7f3afc 0%, #a259f7 100%);
+  color: #fff;
+}
+body[data-theme='dark'] .pagination button:disabled {
+  background: #23232b;
+  color: #888;
+}

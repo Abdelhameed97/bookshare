@@ -74,7 +74,7 @@ export default function RagChat() {
                         <div className="card h-100 shadow-sm">
                             {book.images && book.images.length > 0 ? (
                                 <img
-                                    src={`http://localhost:8001/storage/${book.images[0]}`}
+                                    src={`http://localhost:8000/storage/${book.images[0]}`}
                                     alt={book.title}
                                     className="card-img-top"
                                     style={{

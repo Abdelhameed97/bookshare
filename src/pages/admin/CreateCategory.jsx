@@ -13,7 +13,7 @@ const CreateCategory = () => {
         try {
             const token = localStorage.getItem("token")
             const response = await fetch(
-                "http://localhost:8001/api/categories",
+                "http://localhost:8000/api/categories",
                 {
                     method: "POST",
                     headers: {

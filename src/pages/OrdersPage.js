@@ -71,9 +71,12 @@ const OrdersPage = () => {
 
     const getStatusIcon = (status) => {
         switch (status.toLowerCase()) {
+            case 'accepted': return <CheckCircle size={18} className="text-success me-1" />;
+            case 'rejected': return <XCircle size={18} className="text-danger me-1" />;
+            case 'pending': return <Clock size={18} className="text-warning me-1" />;
             case 'delivered': return <CheckCircle size={18} className="text-success me-1" />;
             case 'shipped': return <Truck size={18} className="text-primary me-1" />;
-            case 'processing': return <RefreshCw size={18} className="text-warning me-1" />;
+            case 'processing': return <RefreshCw size={18} className="text-secondary me-1" />;
             case 'cancelled': return <XCircle size={18} className="text-danger me-1" />;
             default: return <Clock size={18} className="text-secondary me-1" />;
         }
@@ -81,13 +84,16 @@ const OrdersPage = () => {
 
     const getStatusBadge = (status) => {
         switch (status.toLowerCase()) {
+            case 'accepted': return 'success';
+            case 'rejected': return 'danger';
+            case 'pending': return 'warning';
             case 'delivered': return 'success';
             case 'shipped': return 'primary';
-            case 'processing': return 'warning';
+            case 'processing': return 'secondary';
             case 'cancelled': return 'danger';
             default: return 'secondary';
         }
-    };
+        };
 
     const handleCancelOrder = async (orderId) => {
         if (window.confirm('Are you sure you want to cancel this order?')) {

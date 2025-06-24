@@ -210,3 +210,25 @@
     color: #6b7280;
     font-size: 1.08rem;
   }
+
+body[data-theme='dark'] .all-orders-container {
+  background: #23232b;
+  color: #f3f4f6;
+}
+body[data-theme='dark'] .orders-table {
+  background: #23232b;
+  color: #f3f4f6;
+}
+body[data-theme='dark'] .orders-table th,
+body[data-theme='dark'] .orders-table td {
+  background: #23232b;
+  color: #f3f4f6;
+}
+body[data-theme='dark'] .tab-btn {
+  background: #18181b;
+  color: #f3f4f6;
+}
+body[data-theme='dark'] .tab-btn.active {
+  background: #7f3afc;
+  color: #fff;
+}

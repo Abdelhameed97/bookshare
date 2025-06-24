@@ -2,7 +2,7 @@
 import axios from "axios"
 
 const API = axios.create({
-    baseURL: "http://localhost:8001/api",
+    baseURL: "http://localhost:8000/api",
 })
 
 // لو عندك توكين (مسجل دخول)

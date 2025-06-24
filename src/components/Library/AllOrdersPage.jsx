@@ -19,6 +19,8 @@ const AllOrdersPage = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filteredOrders, setFilteredOrders] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ordersPerPage = 10;
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -47,6 +49,13 @@ const AllOrdersPage = () => {
     }
     setFilteredOrders(filtered);
   }, [orders, activeTab, search]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeTab, search]);
+
+  const totalPages = Math.ceil(filteredOrders.length / ordersPerPage);
+  const paginatedOrders = filteredOrders.slice((currentPage - 1) * ordersPerPage, currentPage * ordersPerPage);
 
   const handleStatusChange = async (orderId, action) => {
     let apiCall, confirmText, successText;
@@ -130,12 +139,12 @@ const AllOrdersPage = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredOrders.length === 0 ? (
+                {paginatedOrders.length === 0 ? (
                   <tr>
                     <td colSpan="7" className="text-center">No orders in this tab.</td>
                   </tr>
                 ) : (
-                  filteredOrders.map(order => (
+                  paginatedOrders.map(order => (
                     <tr key={order.id}>
                       <td>#{order.id}</td>
                       <td>
@@ -199,6 +208,31 @@ const AllOrdersPage = () => {
                 )}
               </tbody>
             </table>
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                  disabled={currentPage === 1}
+                >
+                  {'<'}
+                </button>
+                {[...Array(totalPages)].map((_, idx) => (
+                  <button
+                    key={idx + 1}
+                    className={currentPage === idx + 1 ? 'active' : ''}
+                    onClick={() => setCurrentPage(idx + 1)}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                  disabled={currentPage === totalPages}
+                >
+                  {'>'}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>

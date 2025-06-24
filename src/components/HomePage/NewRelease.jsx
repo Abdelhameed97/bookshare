@@ -23,7 +23,7 @@ const NewReleases = () => {
     useEffect(() => {
         const fetchLatestBooks = async () => {
             try {
-                const response = await fetch("http://localhost:8001/api/books")
+                const response = await fetch("http://localhost:8000/api/books")
                 if (!response.ok) {
                     throw new Error("Failed to fetch books")
                 }
@@ -35,7 +35,7 @@ const NewReleases = () => {
                     image: book.images?.[0]
                         ? book.images[0].startsWith("http")
                             ? book.images[0]
-                            : `http://localhost:8001/storage/${book.images[0]}`
+                            : `http://localhost:8000/storage/${book.images[0]}`
                         : "/placeholder.svg?height=300&width=200",
                     price: `$${book.price}`,
                     originalPrice: book.rental_price

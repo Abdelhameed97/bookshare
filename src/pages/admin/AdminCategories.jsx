@@ -17,7 +17,7 @@ const AdminCategories = () => {
             try {
                 const token = localStorage.getItem("token")
                 const response = await fetch(
-                    `http://localhost:8001/api/categories?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}`,
+                    `http://localhost:8000/api/categories?page=${currentPage}&per_page=${itemsPerPage}&search=${searchTerm}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -53,7 +53,7 @@ const AdminCategories = () => {
             try {
                 const token = localStorage.getItem("token")
                 const response = await fetch(
-                    `http://localhost:8001/api/categories/${id}`,
+                    `http://localhost:8000/api/categories/${id}`,
                     {
                         method: "DELETE",
                         headers: {

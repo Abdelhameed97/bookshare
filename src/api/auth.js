@@ -1,7 +1,7 @@
 import axios from "axios"
 
 const api = axios.create({
-    baseURL: "http://localhost:8001/api", // Laravel API base URL
+    baseURL: "http://localhost:8000/api", // Laravel API base URL
 })
 
 // ✅ Automatically attach token to every request if exists

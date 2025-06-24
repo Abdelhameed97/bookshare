@@ -16,7 +16,6 @@ import api from "../services/api"
 import { useCart } from "../hooks/useCart"
 import { useWishlist } from "../hooks/useWishlist"
 import Navebar from "../components/HomePage/Navbar.jsx"
-
 ;<Navebar />
 const CategoryPage = () => {
     const { id } = useParams()
@@ -52,7 +51,7 @@ const CategoryPage = () => {
         const fetchCategoryBooks = async () => {
             try {
                 const res = await fetch(
-                    `http://localhost:8001/api/categories/${id}`,
+                    `http://localhost:8000/api/categories/${id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${localStorage.getItem(
@@ -78,7 +77,7 @@ const CategoryPage = () => {
                         image: book.images?.[0]
                             ? book.images[0].startsWith("http")
                                 ? book.images[0]
-                                : `http://localhost:8001/storage/${book.images[0]}`
+                                : `http://localhost:8000/storage/${book.images[0]}`
                             : "/placeholder.svg?height=300&width=200",
                         price: `${book.price} $`,
                         originalPrice: book.rental_price
