@@ -1,20 +1,23 @@
+// api/auth.js
 import axios from "axios";
 
+// Create axios instance
 const api = axios.create({
-  baseURL: "http://localhost:8000/api",
-  withCredentials: true, //
+  baseURL: "http://localhost:8000/api", // adjust if your backend uses another port
+  // ❌ Don't use withCredentials unless you're using cookies/session (you're using token)
 });
 
-// ✅ Attach token from localStorage
+// ✅ Automatically attach Authorization token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  config.headers.Accept = "application/json"; // مهم جدًا
+  config.headers.Accept = "application/json";
   return config;
 });
 
+// Auth-related API functions
 export const login = (data) => api.post("/login", data);
 export const register = (data) => api.post("/register", data);
 export const logout = () => api.post("/logout");

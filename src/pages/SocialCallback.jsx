@@ -1,8 +1,9 @@
+// SocialCallback.jsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
 import logo from "../assets/bookshare-logo.png";
-import api, { getUser } from "../api/auth";
+import { getUser } from "../api/auth";
 
 const SocialCallback = () => {
   const navigate = useNavigate();
@@ -17,10 +18,11 @@ const SocialCallback = () => {
       localStorage.setItem("token", token);
       localStorage.setItem("role", role);
 
-      // ✅ بعد ما نحفظ التوكن، استدعي getUser
       getUser()
         .then((response) => {
           console.log("User from API:", response.data);
+
+          // Navigate based on role
           if (response.data.role === "owner") {
             navigate("/dashboard");
           } else if (response.data.role === "client") {
@@ -34,7 +36,6 @@ const SocialCallback = () => {
           navigate("/login");
         });
     } else {
-      // في حالة مفيش توكن في URL
       navigate("/login");
     }
   }, [navigate]);
