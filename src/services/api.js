@@ -54,8 +54,12 @@ const apiService = {
         console.log("Sending to cart:", payload);
         return api.post('/cart', payload);
     },
-    updateCartItem: (cartItemId, quantity) => api.put(`/cart/${cartItemId}`, { quantity }),
-    removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
+    updateCartItem: (cartItemId, quantity) => {
+        return api.put(`/cart/${cartItemId}`, {
+            quantity: parseInt(quantity, 10) 
+        });
+    },
+        removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
 
     // Wishlist Endpoints
     getWishlist: () => api.get('/wishlist'),
