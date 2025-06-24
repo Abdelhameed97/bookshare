@@ -1,8 +1,10 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import useTranslation from '../hooks/useTranslation';
 
 const NotFound = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   return (
     <div style={{
       minHeight: "100vh",
@@ -18,11 +20,10 @@ const NotFound = () => {
         alt="404 Not Found"
         style={{ width: 260, marginBottom: 32 }}
       />
-      <h1 style={{ fontSize: "5rem", fontWeight: 900, color: "#6366f1", margin: 0 }}>404</h1>
-      <h2 style={{ color: "#1e293b", margin: "1rem 0 0.5rem 0", fontWeight: 700 }}>Page Not Found</h2>
+      <h1 style={{ fontSize: "5rem", fontWeight: 900, color: "#6366f1", margin: 0 }}>{t('notFoundTitle')}</h1>
+      <h2 style={{ color: "#1e293b", margin: "1rem 0 0.5rem 0", fontWeight: 700 }}>{t('notFoundSubtitle')}</h2>
       <p style={{ color: "#64748b", fontSize: "1.2rem", marginBottom: 32, textAlign: "center", maxWidth: 400 }}>
-        Oops! The page you are looking for doesn't exist or has been moved.<br />
-        Try going back to the homepage.
+        {t('notFoundDescription')}
       </p>
       <button
         onClick={() => navigate("/")}
@@ -41,7 +42,7 @@ const NotFound = () => {
         onMouseOver={e => (e.target.style.background = '#4338ca')}
         onMouseOut={e => (e.target.style.background = '#6366f1')}
       >
-        Go Home
+        {t('goHomeButton')}
       </button>
     </div>
   );

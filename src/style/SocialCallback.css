@@ -1,0 +1,11 @@
+/* في ملف SocialCallback.css */
+.callback-container {
+  background: linear-gradient(to bottom, #f4f6f9, #e1e8ed);
+}
+
+.callback-box {
+  background-color: #fff;
+  border-radius: 12px;
+  max-width: 400px;
+  width: 90%;
+}
