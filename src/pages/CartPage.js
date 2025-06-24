@@ -116,7 +116,7 @@ const CartPage = () => {
         }
 
         try {
-            await api.updateCartItem(itemId, { quantity: parsedQuantity });
+            await api.updateCartItem(itemId, parsedQuantity);
 
             const updatedItems = cartItems.map(item =>
                 item.id === itemId ? { ...item, quantity: parsedQuantity } : item
@@ -130,7 +130,7 @@ const CartPage = () => {
             });
         }
     };
-    
+
 
     const handleRemoveItem = async (itemId) => {
         const result = await Swal.fire({
@@ -235,15 +235,26 @@ const CartPage = () => {
             };
 
             const response = await api.createOrder(orderData);
-            navigate(`/order-confirmation/${response.data.id}`);
+            console.log("Order response:", response.data);
+
+            const orderList = response.data?.data;
+            const orderId = Array.isArray(orderList) && orderList.length > 0 ? orderList[0].id : null;
+
+            if (!orderId) {
+                throw new Error("Order ID not found in response");
+            }
+
+            navigate(`/payment/${orderId}`);
         } catch (err) {
+            console.error("Checkout error:", err);
             await Swal.fire({
                 icon: 'error',
                 title: 'Checkout Failed',
-                text: err.response?.data?.message || 'Unable to process your order',
+                text: err.response?.data?.message || err.message || 'Unable to process your order',
             });
         }
     };
+
 
     const showAlertMessage = (message, variant) => {
         setAlertMessage(message);
@@ -570,4 +581,4 @@ const CartPage = () => {
     );
 };
 
-export default CartPage;
+export default CartPage; 
