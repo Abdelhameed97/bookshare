@@ -15,7 +15,7 @@ const EditCategory = () => {
             try {
                 const token = localStorage.getItem("token")
                 const response = await fetch(
-                    `http://localhost:8000/api/categories/${id}`,
+                    `http://localhost:8001/api/categories/${id}`,
                     {
                         headers: {
                             Authorization: `Bearer ${token}`,
@@ -46,7 +46,7 @@ const EditCategory = () => {
         try {
             const token = localStorage.getItem("token")
             const response = await fetch(
-                `http://localhost:8000/api/categories/${id}`,
+                `http://localhost:8001/api/categories/${id}`,
                 {
                     method: "PUT",
                     headers: {

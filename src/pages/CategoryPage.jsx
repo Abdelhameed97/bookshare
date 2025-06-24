@@ -1,60 +1,88 @@
-import { useParams, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
-import { Search, Filter } from "lucide-react";
-import notFoundImage from "../images/Pasted image.png";
-import BookCard from "../components/BooksPage/BookCard";
-import "../style/category.css";
+import { useParams, useNavigate } from "react-router-dom"
+import { useEffect, useState, useCallback } from "react"
+import {
+    Search,
+    Filter,
+    Heart,
+    Eye,
+    ShoppingCart,
+    Star,
+    Check,
+} from "lucide-react"
+import notFoundImage from "../images/Pasted image.png"
+import "../style/category.css"
+import Swal from "sweetalert2"
+import api from "../services/api"
+import { useCart } from "../hooks/useCart"
+import { useWishlist } from "../hooks/useWishlist"
+import Navebar from "../components/HomePage/Navbar.jsx"
 
+;<Navebar />
 const CategoryPage = () => {
-    const { id } = useParams();
-    const navigate = useNavigate();
+    const { id } = useParams()
+    const navigate = useNavigate()
+    const { cartItems, fetchCartItems } = useCart()
+    const { wishlistItems, fetchWishlist, addToWishlist, removeItem } =
+        useWishlist()
 
-    const [books, setBooks] = useState([]);
-    const [category, setCategory] = useState("");
-    const [loading, setLoading] = useState(true);
-    const [apiError, setApiError] = useState(false);
-    const [categoryFound, setCategoryFound] = useState(true);
-    const [wishlist, setWishlist] = useState([]);
-    const [cart, setCart] = useState([]);
+    const [books, setBooks] = useState([])
+    const [category, setCategory] = useState("")
+    const [loading, setLoading] = useState(true)
+    const [apiError, setApiError] = useState(false)
+    const [categoryFound, setCategoryFound] = useState(true)
+    const [searchLoading, setSearchLoading] = useState(false)
 
-    const [searchTerm, setSearchTerm] = useState("");
-    const [priceFilter, setPriceFilter] = useState("");
-    const [currentPage, setCurrentPage] = useState(1);
-    const booksPerPage = 8;
+    const [searchTerm, setSearchTerm] = useState("")
+    const [priceFilter, setPriceFilter] = useState("")
+    const [currentPage, setCurrentPage] = useState(1)
+    const booksPerPage = 8
+
+    const debouncedSearch = useCallback(term => {
+        let timeoutId
+        clearTimeout(timeoutId)
+        setSearchLoading(true)
+        timeoutId = setTimeout(() => {
+            setSearchTerm(term)
+            setSearchLoading(false)
+        }, 300)
+    }, [])
 
     // Fetch category books
     useEffect(() => {
         const fetchCategoryBooks = async () => {
             try {
                 const res = await fetch(
-                    `http://localhost:8000/api/categories/${id}`,
+                    `http://localhost:8001/api/categories/${id}`,
                     {
                         headers: {
-                            Authorization: `Bearer ${localStorage.getItem("token")}`,
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
                             Accept: "application/json",
                         },
                     }
-                );
+                )
                 if (!res.ok) {
-                    setApiError(true);
-                    setLoading(false);
-                    return;
+                    setApiError(true)
+                    setLoading(false)
+                    return
                 }
 
-                const data = await res.json();
+                const data = await res.json()
                 if (!data || (!data.books && !data.name)) {
-                    setCategoryFound(false);
+                    setCategoryFound(false)
                 } else {
                     const processedBooks = (data.books || []).map(book => ({
                         id: book.id,
+                        user_id: book.user_id,
                         image: book.images?.[0]
                             ? book.images[0].startsWith("http")
                                 ? book.images[0]
-                                : `http://localhost:8000/storage/${book.images[0]}`
+                                : `http://localhost:8001/storage/${book.images[0]}`
                             : "/placeholder.svg?height=300&width=200",
-                        price: `${book.price}`,
+                        price: `${book.price} $`,
                         originalPrice: book.rental_price
-                            ? `${book.rental_price}`
+                            ? `${book.rental_price} $`
                             : null,
                         title: book.title,
                         author: book.user?.name || "Unknown Author",
@@ -79,109 +107,141 @@ const CategoryPage = () => {
                         category: book.category?.name || "Uncategorized",
                         description:
                             book.description || "No description available",
-                    }));
+                    }))
 
-                    setBooks(processedBooks);
-                    setCategory(data.name || "Category");
-                    setCategoryFound(true);
+                    setBooks(processedBooks)
+                    setCategory(data.name || "Category")
+                    setCategoryFound(true)
                 }
             } catch (error) {
-                console.error("❌ API error:", error);
-                setApiError(true);
+                console.error("❌ API error:", error)
+                setApiError(true)
             } finally {
-                setLoading(false);
+                setLoading(false)
             }
-        };
+        }
 
-        const fetchWishlist = async () => {
-            try {
-                const res = await fetch("http://localhost:8000/api/wishlist", {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setWishlist(data);
-                }
-            } catch (error) {
-                console.error("Error fetching wishlist:", error);
-            }
-        };
-
-        const fetchCart = async () => {
-            try {
-                const res = await fetch("http://localhost:8000/api/cart", {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`,
-                    },
-                });
-                if (res.ok) {
-                    const data = await res.json();
-                    setCart(data);
-                }
-            } catch (error) {
-                console.error("Error fetching cart:", error);
-            }
-        };
-
-        fetchCategoryBooks();
-        fetchWishlist();
-        fetchCart();
-    }, [id]);
+        fetchCategoryBooks()
+        fetchWishlist()
+        fetchCartItems()
+    }, [id])
 
     // Helper functions
-    const isInWishlist = (bookId) => {
-        return wishlist.some(item => item.book_id === bookId);
-    };
+    const isInCart = bookId => {
+        return (
+            Array.isArray(cartItems) &&
+            cartItems.some(item => item.book_id === bookId)
+        )
+    }
 
-    const isInCart = (bookId) => {
-        return cart.some(item => item.book_id === bookId);
-    };
+    const isInWishlist = bookId => {
+        return (
+            Array.isArray(wishlistItems) &&
+            wishlistItems.some(item => item.book_id === bookId)
+        )
+    }
 
-    const handleAddToWishlist = async (bookId) => {
+    const handleAddToWishlist = async bookId => {
         try {
-            const res = await fetch(`http://localhost:8000/api/wishlist`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ book_id: bookId })
-            });
-            
-            if (res.ok) {
-                const data = await res.json();
-                setWishlist([...wishlist, data]);
-            }
-        } catch (error) {
-            console.error("Error adding to wishlist:", error);
-        }
-    };
+            const currentUser = JSON.parse(localStorage.getItem("user"))
+            const book = books.find(b => b.id === bookId)
 
-    const handleAddToCart = async (bookId) => {
+            if (!book || !currentUser) {
+                throw new Error("Missing book or user info")
+            }
+
+            const isOwnBook = book.user_id === currentUser.id
+
+            if (isOwnBook) {
+                await Swal.fire({
+                    icon: "info",
+                    title: "Invalid Action",
+                    text: "You cannot add your own book to your wishlist.",
+                    timer: 2000,
+                })
+                return
+            }
+
+            if (isInWishlist(bookId)) {
+                const itemToRemove = wishlistItems.find(
+                    item => item.book_id === bookId
+                )
+                await removeItem(itemToRemove.id)
+                await Swal.fire({
+                    icon: "success",
+                    title: "Removed!",
+                    text: "Book removed from wishlist",
+                    timer: 1500,
+                })
+            } else {
+                await addToWishlist(bookId)
+                await Swal.fire({
+                    icon: "success",
+                    title: "Added!",
+                    text: "Book added to wishlist",
+                    timer: 1500,
+                })
+            }
+
+            await fetchWishlist()
+        } catch (err) {
+            console.error("Wishlist error:", err)
+            await Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: err.message,
+            })
+        }
+    }
+
+    const handleAddToCart = async bookId => {
         try {
-            const res = await fetch(`http://localhost:8000/api/cart`, {
-                method: "POST",
-                headers: {
-                    "Authorization": `Bearer ${localStorage.getItem("token")}`,
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ book_id: bookId })
-            });
-            
-            if (res.ok) {
-                const data = await res.json();
-                setCart([...cart, data]);
-            }
-        } catch (error) {
-            console.error("Error adding to cart:", error);
-        }
-    };
+            const result = await Swal.fire({
+                title: "Add to Cart?",
+                text: "This book will be added to your shopping cart",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#6c757d",
+            })
 
-    const handleQuickView = (bookId) => {
-        navigate(`/books/${bookId}`);
-    };
+            if (!result.isConfirmed) return
+
+            const book = books.find(b => b.id === bookId)
+            const type = book.originalPrice ? "rent" : "buy"
+
+            await api.addToCart(book.id, { type, quantity: 1 })
+            await fetchCartItems()
+
+            await Swal.fire({
+                icon: "success",
+                title: "Added to Cart!",
+                text: "The book has been added to your shopping cart",
+                timer: 1500,
+            })
+        } catch (err) {
+            await Swal.fire({
+                icon: "error",
+                title: "Failed to Add",
+                text: err.message,
+            })
+        }
+    }
+
+    const handleQuickView = bookId => navigate(`/books/${bookId}`)
+
+    const getStatusColor = status => {
+        switch (status) {
+            case "available":
+                return "#10B981"
+            case "rented":
+                return "#F59E0B"
+            case "sold":
+                return "#EF4444"
+            default:
+                return "#6B7280"
+        }
+    }
 
     // Filtering and pagination
     const filteredBooks = books.filter(
@@ -189,30 +249,35 @@ const CategoryPage = () => {
             book.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
             (priceFilter === "" ||
                 parseFloat(book.price) <= parseFloat(priceFilter))
-    );
+    )
 
-    const indexOfLastBook = currentPage * booksPerPage;
-    const indexOfFirstBook = indexOfLastBook - booksPerPage;
-    const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook);
-    const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+    const indexOfLastBook = currentPage * booksPerPage
+    const indexOfFirstBook = indexOfLastBook - booksPerPage
+    const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook)
+    const totalPages = Math.ceil(filteredBooks.length / booksPerPage)
 
     const handleSearchChange = e => {
-        setSearchTerm(e.target.value);
-        setCurrentPage(1);
-    };
+        debouncedSearch(e.target.value)
+        setCurrentPage(1)
+    }
 
     const handlePriceChange = e => {
-        setPriceFilter(e.target.value);
-        setCurrentPage(1);
-    };
+        setPriceFilter(e.target.value)
+        setCurrentPage(1)
+    }
 
     const goToPreviousPage = () => {
-        if (currentPage > 1) setCurrentPage(currentPage - 1);
-    };
+        if (currentPage > 1) setCurrentPage(currentPage - 1)
+    }
 
     const goToNextPage = () => {
-        if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-    };
+        if (currentPage < totalPages) setCurrentPage(currentPage + 1)
+    }
+
+    const clearFilters = () => {
+        setSearchTerm("")
+        setPriceFilter("")
+    }
 
     // Loading state
     if (loading) {
@@ -220,7 +285,7 @@ const CategoryPage = () => {
             <div className="flex justify-center items-center min-h-screen">
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-[#199A8E]"></div>
             </div>
-        );
+        )
     }
 
     // Error state
@@ -263,7 +328,7 @@ const CategoryPage = () => {
                     </button>
                 </div>
             </section>
-        );
+        )
     }
 
     return (
@@ -290,10 +355,14 @@ const CategoryPage = () => {
                             <input
                                 type="text"
                                 placeholder="Search books by title..."
-                                value={searchTerm}
                                 onChange={handleSearchChange}
                                 className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
                             />
+                            {searchLoading && (
+                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#199A8E]"></div>
+                                </div>
+                            )}
                         </div>
 
                         <div className="relative w-full md:w-1/3">
@@ -312,6 +381,23 @@ const CategoryPage = () => {
                     </div>
                 </div>
 
+                {/* Results info */}
+                <div className="mb-6 flex justify-between items-center">
+                    <span className="text-gray-600">
+                        {filteredBooks.length} book
+                        {filteredBooks.length !== 1 ? "s" : ""} found
+                        {searchTerm && ` for "${searchTerm}"`}
+                    </span>
+                    {(searchTerm || priceFilter) && (
+                        <button
+                            onClick={clearFilters}
+                            className="text-[#199A8E] hover:text-[#157d74] text-sm font-medium"
+                        >
+                            Clear Filters
+                        </button>
+                    )}
+                </div>
+
                 {/* Books List */}
                 {filteredBooks.length === 0 ? (
                     <div className="text-center bg-white p-10 rounded-xl shadow-sm">
@@ -328,10 +414,7 @@ const CategoryPage = () => {
                             you're looking for.
                         </p>
                         <button
-                            onClick={() => {
-                                setSearchTerm("");
-                                setPriceFilter("");
-                            }}
+                            onClick={clearFilters}
                             className="bg-[#199A8E] hover:bg-[#157d74] text-white px-6 py-3 rounded-full shadow-lg transition"
                         >
                             Clear Filters
@@ -341,16 +424,173 @@ const CategoryPage = () => {
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                             {currentBooks.map((book, index) => (
-                                <BookCard
+                                <div
                                     key={book.id}
-                                    book={book}
-                                    index={index}
-                                    isInWishlist={isInWishlist}
-                                    isInCart={isInCart}
-                                    handleAddToWishlist={handleAddToWishlist}
-                                    handleAddToCart={handleAddToCart}
-                                    handleQuickView={handleQuickView}
-                                />
+                                    className="book-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300"
+                                    style={{
+                                        animationDelay: `${index * 0.1}s`,
+                                        opacity: 0,
+                                        animation: "fadeIn 0.5s forwards",
+                                    }}
+                                >
+                                    <div
+                                        className="book-badge absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded"
+                                        style={{
+                                            backgroundColor: getStatusColor(
+                                                book.status
+                                            ),
+                                        }}
+                                    >
+                                        {book.badge}
+                                    </div>
+
+                                    <div className="book-image-container relative">
+                                        <img
+                                            src={book.image}
+                                            alt={book.title}
+                                            className="w-full h-48 object-cover"
+                                            loading="lazy"
+                                            onError={e => {
+                                                e.currentTarget.src =
+                                                    "/placeholder.svg?height=300&width=200"
+                                            }}
+                                        />
+                                        <div className="image-overlay absolute inset-0 bg-black opacity-0 hover:opacity-10 transition duration-300"></div>
+
+                                        <div className="hover-actions absolute top-2 right-2 flex flex-col gap-2 opacity-0 hover:opacity-100 transition duration-300">
+                                            <button
+                                                className={`action-button favorite ${
+                                                    isInWishlist(book.id)
+                                                        ? "active"
+                                                        : ""
+                                                }`}
+                                                onClick={() =>
+                                                    handleAddToWishlist(book.id)
+                                                }
+                                            >
+                                                <Heart
+                                                    size={18}
+                                                    fill={
+                                                        isInWishlist(book.id)
+                                                            ? "currentColor"
+                                                            : "none"
+                                                    }
+                                                />
+                                            </button>
+                                            <button
+                                                className="action-button view"
+                                                onClick={() =>
+                                                    handleQuickView(book.id)
+                                                }
+                                            >
+                                                <Eye size={18} />
+                                            </button>
+                                            <button
+                                                className={`action-button cart ${
+                                                    isInCart(book.id)
+                                                        ? "disabled"
+                                                        : ""
+                                                }`}
+                                                onClick={
+                                                    !isInCart(book.id)
+                                                        ? () =>
+                                                              handleAddToCart(
+                                                                  book.id
+                                                              )
+                                                        : undefined
+                                                }
+                                                disabled={
+                                                    isInCart(book.id) ||
+                                                    book.status !== "available"
+                                                }
+                                            >
+                                                {isInCart(book.id) ? (
+                                                    <Check size={18} />
+                                                ) : (
+                                                    <ShoppingCart size={18} />
+                                                )}
+                                            </button>
+                                        </div>
+
+                                        <div className="category-tag absolute bottom-2 left-2 bg-white text-xs px-2 py-1 rounded text-gray-700">
+                                            {book.category}
+                                        </div>
+                                    </div>
+
+                                    <div className="p-4">
+                                        <div className="book-rating flex items-center mb-2">
+                                            <div className="stars flex">
+                                                {[...Array(5)].map((_, i) => (
+                                                    <Star
+                                                        key={i}
+                                                        size={14}
+                                                        className={
+                                                            i <
+                                                            Math.floor(
+                                                                book.rating
+                                                            )
+                                                                ? "text-yellow-400 fill-current"
+                                                                : "text-gray-300"
+                                                        }
+                                                    />
+                                                ))}
+                                            </div>
+                                            <span className="rating-text text-xs text-gray-500 ml-1">
+                                                {book.rating} ({book.reviews}{" "}
+                                                reviews)
+                                            </span>
+                                        </div>
+
+                                        <h3 className="book-title font-semibold text-lg mb-1 line-clamp-1">
+                                            {book.title}
+                                        </h3>
+                                        <p className="book-author text-sm text-gray-500 mb-3">
+                                            {book.author}
+                                        </p>
+
+                                        <div className="book-price flex items-center gap-2 mb-3">
+                                            {book.originalPrice && (
+                                                <span className="original-price text-sm text-gray-400 line-through">
+                                                    {book.originalPrice}
+                                                </span>
+                                            )}
+                                            <span className="current-price font-bold text-[#199A8E]">
+                                                {book.price}
+                                            </span>
+                                        </div>
+
+                                        <button
+                                            className={`w-full py-2 rounded-md flex items-center justify-center gap-2 ${
+                                                isInCart(book.id)
+                                                    ? "bg-gray-200 text-gray-600 cursor-not-allowed"
+                                                    : "bg-[#199A8E] hover:bg-[#157d74] text-white"
+                                            }`}
+                                            onClick={
+                                                !isInCart(book.id)
+                                                    ? () =>
+                                                          handleAddToCart(
+                                                              book.id
+                                                          )
+                                                    : undefined
+                                            }
+                                            disabled={
+                                                isInCart(book.id) ||
+                                                book.status !== "available"
+                                            }
+                                        >
+                                            {isInCart(book.id) ? (
+                                                <Check size={16} />
+                                            ) : (
+                                                <ShoppingCart size={16} />
+                                            )}
+                                            <span>
+                                                {isInCart(book.id)
+                                                    ? "In Cart"
+                                                    : "Add to Cart"}
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
                             ))}
                         </div>
 
@@ -439,7 +679,7 @@ const CategoryPage = () => {
                 )}
             </div>
         </section>
-    );
-};
+    )
+}
 
-export default CategoryPage;
+export default CategoryPage

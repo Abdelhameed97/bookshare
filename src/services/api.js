@@ -1,6 +1,6 @@
 import axios from "axios"
 
-const API_BASE_URL = "http://127.0.0.1:8000/api"
+const API_BASE_URL = "http://127.0.0.1:8001/api"
 
 const api = axios.create({
     baseURL: API_BASE_URL,
@@ -32,6 +32,12 @@ api.interceptors.response.use(
 )
 
 const apiService = {
+    // General HTTP methods
+    get: url => api.get(url),
+    post: (url, data, config = {}) => api.post(url, data, config),
+    put: (url, data) => api.put(url, data),
+    delete: url => api.delete(url),
+
     // Cart Endpoints
     getCart: () => api.get("/cart"),
 
@@ -43,8 +49,8 @@ const apiService = {
             book_id: bookId,
             type: data.type,
             quantity: 1,
-            user_id: user.id
-        };
+            user_id: user.id,
+        }
 
         console.log("Sending to cart:", payload)
         return api.post("/cart", payload)
@@ -85,8 +91,11 @@ const apiService = {
 
     // User Endpoints
     updateUser: (userId, userData) => {
-        console.log('API Service - updateUser called with:', { userId, userData });
-        return api.put(`/users/${userId}`, userData);
+        console.log("API Service - updateUser called with:", {
+            userId,
+            userData,
+        })
+        return api.put(`/users/${userId}`, userData)
     },
 
     // Auth Endpoints
@@ -96,4 +105,4 @@ const apiService = {
     getUser: () => api.get("/user"),
 }
 
-export default apiService;
+export default apiService

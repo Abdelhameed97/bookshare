@@ -1,6 +1,10 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
+
+import SearchModal from "./SearchModal";
+import "../../style/Homepagestyle.css";
 import {
   FaSearch,
   FaShoppingCart,
@@ -12,20 +16,23 @@ import {
   FaBook,
   FaUserEdit,
 } from "react-icons/fa";
-import SearchModal from "./SearchModal";
-import "../../style/Homepagestyle.css";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
+import { useOrders } from "../../hooks/useOrders";
 
 const Navbar = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [user, setUser] = useState(null);
 
-  const navigate = useNavigate();
+  const navLocation = useLocation();
   const location = useLocation();
-  const { cartCount } = useCart();
-  const { wishlistCount } = useWishlist();
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const { cartCount } = useCart(user?.id);
+  const { wishlistCount } = useWishlist(user?.id);
+  const { orders } = useOrders(user?.id);
+  const ordersCount = orders.length;
 
   const isLibraryOwner = user?.role === "owner";
 
@@ -37,23 +44,15 @@ const Navbar = () => {
     { to: "/books", label: "BOOKS" },
     { to: "/author", label: "AUTHOR" },
     { to: "/contact", label: "CONTACT" },
-    { to: "/rag-chat", label: "RAG CHAT" },
+    
   ];
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem("user");
-    try {
-      setUser(storedUser ? JSON.parse(storedUser) : null);
-    } catch {
-      setUser(null);
-    }
-  }, []);
-
   const ownerNavLinks = [
-    { to: "/", label: "HOME" },
     { to: "/dashboard", label: "DASHBOARD", icon: FaTachometerAlt },
     { to: "/edit-profile", label: "EDIT PROFILE", icon: FaUserEdit },
     { to: "/add-book", label: "ADD BOOK", icon: FaBook },
+    { to: "/libraries", label: "ALL LIBRARIES", icon: FaBook },
+    { to: "/all-orders", label: "ORDERS", icon: FaBoxOpen },
   ];
 
   const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;
@@ -62,18 +61,33 @@ const Navbar = () => {
   const closeMobileMenu = () => setIsOpen(false);
   const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
 
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
+    localStorage.removeItem("token");
     setUser(null);
     navigate("/");
   };
 
   const handleProtectedAction = (path) => {
     if (!user) {
-      navigate("/login");
-    } else {
-      navigate(path);
+      navigate("/login", { state: { from: path } });
+      return;
     }
+    navigate(path);
   };
 
   return (
@@ -81,14 +95,16 @@ const Navbar = () => {
       <header className="bookshare-navbar">
         <div className="navbar-header">
           <div className="navbar-content-wrapper">
-            <Link to="/" className="company-title-link">
-              <h1 className="company-title">
-                Book<span className="company-title-accent">Share</span>
-              </h1>
-              <p className="company-subtitle">
-                Publishing Excellence Since 2024
-              </p>
-            </Link>
+            <div className="navbar-header-container">
+              <Link to="/" className="company-title-link">
+                <h1 className="company-title">
+                  Book<span className="company-title-accent">Share</span>
+                </h1>
+                <p className="company-subtitle">
+                  Publishing Excellence Since 2024
+                </p>
+              </Link>
+            </div>
           </div>
         </div>
 
@@ -97,7 +113,7 @@ const Navbar = () => {
             <div className="navbar-content">
               <div className="nav-links-desktop">
                 {navLinks.map((link) => {
-                  const isActive = location.pathname === link.to;
+                  const isActive = navLocation.pathname === link.to;
                   const IconComponent = link.icon;
                   return (
                     <Link
@@ -134,7 +150,11 @@ const Navbar = () => {
               </div>
 
               <div className="navbar-actions">
-                <button className="icon-button" title="Search" onClick={toggleSearch}>
+                <button
+                  className="icon-button"
+                  title="Search"
+                  onClick={toggleSearch}
+                >
                   <FaSearch size={18} />
                 </button>
 
@@ -148,6 +168,17 @@ const Navbar = () => {
                       <FaHeart size={18} />
                       {wishlistCount > 0 && (
                         <span className="wishlist-count">{wishlistCount}</span>
+                      )}
+                    </button>
+
+                    <button
+                      className="icon-button order-badge"
+                      title="Orders"
+                      onClick={() => handleProtectedAction("/orders")}
+                    >
+                      <FaBoxOpen size={18} />
+                      {ordersCount > 0 && (
+                        <span className="order-count">{ordersCount}</span>
                       )}
                     </button>
 
@@ -191,7 +222,7 @@ const Navbar = () => {
                   </>
                 )}
 
-                <div className="auth-buttons-desktop" style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+                <div className="auth-buttons-desktop">
                   {!user ? (
                     <>
                       <Link to="/login" className="btn btn-outline">
@@ -235,7 +266,11 @@ const Navbar = () => {
                   )}
                 </div>
 
-                <button className="mobile-menu-toggle icon-button" onClick={toggleMobileMenu} title="Menu">
+                <button
+                  className="mobile-menu-toggle icon-button"
+                  onClick={toggleMobileMenu}
+                  title="Menu"
+                >
                   <FaBars size={20} />
                 </button>
               </div>
@@ -244,23 +279,41 @@ const Navbar = () => {
         </nav>
       </header>
 
-      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+      />
 
-      <div className={`overlay ${isOpen ? "open" : ""}`} onClick={closeMobileMenu}></div>
+      <div
+        className={`overlay ${isOpen ? "open" : ""}`}
+        onClick={closeMobileMenu}
+      ></div>
 
       <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
         <div className="mobile-menu-content">
-          <button className="icon-button mobile-close-button" onClick={closeMobileMenu} title="Close Menu">
+          <button
+            className="icon-button mobile-close-button"
+            onClick={closeMobileMenu}
+            title="Close Menu"
+          >
             <FaTimes size={20} />
           </button>
 
           <div className="mobile-auth-section">
             {!user ? (
               <>
-                <Link to="/register" className="btn btn-primary" onClick={closeMobileMenu}>
+                <Link
+                  to="/register"
+                  className="btn btn-primary"
+                  onClick={closeMobileMenu}
+                >
                   Register
                 </Link>
-                <Link to="/login" className="btn btn-outline" onClick={closeMobileMenu}>
+                <Link
+                  to="/login"
+                  className="btn btn-outline"
+                  onClick={closeMobileMenu}
+                >
                   Sign In
                 </Link>
               </>
@@ -304,7 +357,7 @@ const Navbar = () => {
 
           <div className="mobile-nav-links">
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.to;
+              const isActive = navLocation.pathname === link.to;
               const IconComponent = link.icon;
               return (
                 <Link
@@ -341,6 +394,13 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   Cart ({cartCount})
+                </Link>
+                <Link
+                  to="/order"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                >
+                  Orders ({ordersCount})
                 </Link>
               </>
             ) : (

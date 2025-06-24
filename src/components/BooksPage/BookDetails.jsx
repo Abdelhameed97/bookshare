@@ -1,569 +1,886 @@
-import React, { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
-import axios from "axios";
-import { formatDistanceToNow } from 'date-fns';
-import { FaReply, FaEdit, FaTrash, FaEllipsisH, FaTimes, FaCheck, FaBook, FaUser, FaTag, FaInfoCircle, FaDollarSign } from 'react-icons/fa';
+import React, { useEffect, useState, useCallback } from "react"
+import { useParams, Link } from "react-router-dom"
+import axios from "axios"
+import { formatDistanceToNow } from "date-fns"
+import {
+    FaReply,
+    FaEdit,
+    FaTrash,
+    FaEllipsisH,
+    FaTimes,
+    FaCheck,
+    FaBook,
+    FaTag,
+    FaInfoCircle,
+    FaDollarSign,
+    FaHeart,
+    FaRegHeart,
+    FaShoppingCart,
+} from "react-icons/fa"
+import { ToastContainer, toast } from "react-toastify"
+import "react-toastify/dist/ReactToastify.css"
+import "bootstrap/dist/css/bootstrap.min.css"
+import "animate.css"
+import Swal from "sweetalert2"
 
 const BookDetails = () => {
-    const { id } = useParams();
-    const [book, setBook] = useState(null);
-    const [authorBooks, setAuthorBooks] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [commentInput, setCommentInput] = useState("");
-    const [parentId, setParentId] = useState(null);
-    const [replyingTo, setReplyingTo] = useState(null);
-    const [editingComment, setEditingComment] = useState(null);
-    const [editCommentText, setEditCommentText] = useState("");
-    const [showOptions, setShowOptions] = useState(null);
-    const user = JSON.parse(localStorage.getItem('user'));
+    const { id } = useParams()
+    const [book, setBook] = useState(null)
+    const [authorBooks, setAuthorBooks] = useState([])
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [commentInput, setCommentInput] = useState("")
+    const [parentId, setParentId] = useState(null)
+    const [replyingTo, setReplyingTo] = useState(null)
+    const [editingComment, setEditingComment] = useState(null)
+    const [editCommentText, setEditCommentText] = useState("")
+    const [showOptions, setShowOptions] = useState(null)
+    const [isWishlisted, setIsWishlisted] = useState(false)
+    const [isInCart, setIsInCart] = useState(false)
+    const [loadingStatus, setLoadingStatus] = useState(false)
+    const user = JSON.parse(localStorage.getItem("user"))
 
-    // Helper to get status badge color
-    const getStatusBadgeStyle = (status) => {
+    // Helper functions
+    const getStatusBadgeStyle = status => {
         switch (status) {
             case "available":
-                return { background: "linear-gradient(135deg, #10B981 0%, #059669 100%)", color: "white" };
+                return "bg-success"
             case "rented":
-                return { background: "linear-gradient(135deg, #F59E0B 0%, #D97706 100%)", color: "white" };
+                return "bg-warning"
             case "sold":
-                return { background: "linear-gradient(135deg, #EF4444 0%, #B91C1C 100%)", color: "white" };
+                return "bg-danger"
             default:
-                return { background: "linear-gradient(135deg, #6B7280 0%, #4B5563 100%)", color: "white" };
+                return "bg-secondary"
         }
-    };
+    }
 
-    useEffect(() => {
-        setLoading(true);
-        axios
-            .get(`http://localhost:8000/api/books/${id}`)
-            .then(response => {
-                setBook(response.data.data);
-                setLoading(false);
-                // Fetch author's books after book is loaded
-                const userId = response.data.data.user?.id;
-                if (userId) {
-                    axios
-                        .get(`http://localhost:8000/api/books?user_id=${userId}`)
-                        .then(res => {
-                            // Exclude the current book
-                            const filtered = res.data.data.filter(
-                                b => b.id !== response.data.data.id
-                            );
-                            setAuthorBooks(filtered);
-                        })
-                        .catch(() => setAuthorBooks([]));
-                }
-            })
-            .catch(err => {
-                setError("Failed to load book details.");
-                setLoading(false);
-            });
-    }, [id]);
+    // Fetch data functions
+    const fetchBookDetails = useCallback(async () => {
+        setLoading(true)
+        try {
+            const response = await axios.get(
+                `http://localhost:8001/api/books/${id}`
+            )
+            setBook(response.data.data)
 
-    const fetchBookWithComments = () => {
-        axios
-            .get(`http://localhost:8000/api/books/${id}`)
-            .then(response => {
-                setBook(response.data.data);
-            })
-            .catch(err => {
-                console.error("Failed to refresh comments:", err);
-            });
-    };
+            const userId = response.data.data.user?.id
+            if (userId) {
+                const res = await axios.get(
+                    `http://localhost:8001/api/books?user_id=${userId}`
+                )
+                setAuthorBooks(
+                    res.data.data.filter(b => b.id !== response.data.data.id)
+                )
+            }
+        } catch (err) {
+            setError("Failed to load book details.")
+        } finally {
+            setLoading(false)
+        }
+    }, [id])
 
-    const handleCommentSubmit = async (e) => {
-        e.preventDefault();
-        if (!commentInput.trim()) return;
+    const checkWishlistStatus = useCallback(
+        async bookId => {
+            if (!user) return
+
+            setLoadingStatus(true)
+            try {
+                const response = await axios.get(
+                    `http://localhost:8001/api/wishlist`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                        },
+                    }
+                )
+                setIsWishlisted(
+                    Array.isArray(response.data?.data)
+                        ? response.data.data.some(
+                              item => item.book_id === bookId
+                          )
+                        : false
+                )
+            } catch (error) {
+                console.error("Error checking wishlist:", error)
+                setIsWishlisted(false)
+            } finally {
+                setLoadingStatus(false)
+            }
+        },
+        [user]
+    )
+
+    const checkCartStatus = useCallback(
+        async bookId => {
+            if (!user) return
+
+            setLoadingStatus(true)
+            try {
+                const response = await axios.get(
+                    `http://localhost:8001/api/cart`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                        },
+                    }
+                )
+                setIsInCart(
+                    Array.isArray(response.data?.data)
+                        ? response.data.data.some(
+                              item => item.book_id === bookId
+                          )
+                        : false
+                )
+            } catch (error) {
+                console.error("Error checking cart:", error)
+                setIsInCart(false)
+            } finally {
+                setLoadingStatus(false)
+            }
+        },
+        [user]
+    )
+
+    const fetchBookWithComments = useCallback(async () => {
+        try {
+            const response = await axios.get(
+                `http://localhost:8001/api/books/${id}`
+            )
+            setBook(response.data.data)
+        } catch (err) {
+            console.error("Failed to refresh comments:", err)
+        }
+    }, [id])
+
+    // Event handlers
+    const handleCommentSubmit = async e => {
+        e.preventDefault()
+        if (!commentInput.trim()) {
+            toast.warning("Please enter a comment")
+            return
+        }
 
         try {
-            await axios.post('http://localhost:8000/api/comment', {
-                user_id: user.id,
-                book_id: id,
-                comment: commentInput,
-                parent_id: parentId
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
+            await axios.post(
+                "http://localhost:8001/api/comment",
+                {
+                    user_id: user.id,
+                    book_id: id,
+                    comment: commentInput,
+                    parent_id: parentId,
+                },
+                {
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
                 }
-            });
+            )
 
-            setCommentInput("");
-            setParentId(null);
-            setReplyingTo(null);
-            fetchBookWithComments();
+            setCommentInput("")
+            setParentId(null)
+            setReplyingTo(null)
+            await fetchBookWithComments()
+            toast.success("Comment added successfully!")
         } catch (error) {
-            console.error("Error submitting comment:", error);
+            console.error("Error submitting comment:", error)
+            toast.error("Failed to add comment")
         }
-    };
+    }
 
     const handleReply = (commentId, username) => {
-        setParentId(commentId);
-        setReplyingTo(username);
-        setEditingComment(null);
-        document.getElementById("comment-input").focus();
-    };
+        setParentId(commentId)
+        setReplyingTo(username)
+        setEditingComment(null)
+        document.getElementById("comment-input").focus()
+    }
 
-    const handleEdit = (comment) => {
-        setEditingComment(comment.id);
-        setEditCommentText(comment.content);
-        setParentId(null);
-        setReplyingTo(null);
-    };
+    const handleEdit = comment => {
+        setEditingComment(comment.id)
+        setEditCommentText(comment.comment)
+        setParentId(null)
+        setReplyingTo(null)
+    }
 
     const handleUpdateComment = async () => {
-        if (!editCommentText.trim()) return;
+        if (!editCommentText.trim()) {
+            toast.warning("Comment cannot be empty")
+            return
+        }
 
         try {
-            await axios.put(`http://localhost:8000/api/comment/${editingComment}`, {
-                comment: editCommentText
-            }, {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('token')}`
-                }
-            });
-
-            setEditingComment(null);
-            setEditCommentText("");
-            fetchBookWithComments();
-        } catch (error) {
-            console.error("Error updating comment:", error);
-        }
-    };
-
-    const handleDeleteComment = async (commentId) => {
-        if (window.confirm("Are you sure you want to delete this comment?")) {
-            try {
-                await axios.delete(`http://localhost:8000/api/comment/${commentId}`, {
+            await axios.put(
+                `http://localhost:8001/api/comment/${editingComment}`,
+                {
+                    comment: editCommentText,
+                },
+                {
                     headers: {
-                        'Authorization': `Bearer ${localStorage.getItem('token')}`
-                    }
-                });
-                fetchBookWithComments();
-            } catch (error) {
-                console.error("Error deleting comment:", error);
-            }
-        }
-    };
+                        Authorization: `Bearer ${localStorage.getItem(
+                            "token"
+                        )}`,
+                    },
+                }
+            )
 
+            setEditingComment(null)
+            setEditCommentText("")
+            await fetchBookWithComments()
+            toast.success("Comment updated successfully!")
+        } catch (error) {
+            console.error("Error updating comment:", error)
+            toast.error("Failed to update comment")
+        }
+    }
+
+    const handleDeleteComment = async commentId => {
+        try {
+            const result = await Swal.fire({
+                title: "Are you sure?",
+                text: "You won't be able to revert this!",
+                icon: "warning",
+                showCancelButton: true,
+                confirmButtonColor: "#3085d6",
+                cancelButtonColor: "#d33",
+                confirmButtonText: "Yes, delete it!",
+            })
+
+            if (result.isConfirmed) {
+                await axios.delete(
+                    `http://localhost:8001/api/comment/${commentId}`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${localStorage.getItem(
+                                "token"
+                            )}`,
+                        },
+                    }
+                )
+                await fetchBookWithComments()
+                toast.success("Comment deleted successfully!")
+            }
+        } catch (error) {
+            console.error("Error deleting comment:", error)
+            toast.error("Failed to delete comment")
+        }
+    }
+
+    useEffect(() => {
+        fetchBookDetails()
+        if (book?.id) {
+            checkWishlistStatus(book.id)
+            checkCartStatus(book.id)
+        }
+    }, [fetchBookDetails, book?.id, checkWishlistStatus, checkCartStatus])
+
+    // Render functions
     const renderComments = (comments, depth = 0) => {
+        if (!comments || !Array.isArray(comments)) return null
+
         return comments.map(comment => (
-            <div 
-                key={comment.id} 
-                className={`mb-3 ${depth > 0 ? 'ml-4 pl-3 border-l-2 border-blue-200' : ''} transition-all duration-300 transform hover:scale-[1.01]`}
+            <div
+                key={comment.id}
+                className={`mb-3 ${
+                    depth > 0
+                        ? "ms-4 ps-3 border-start border-2 border-primary"
+                        : ""
+                } animate__animated animate__fadeIn`}
             >
-                <div className="bg-white rounded-xl p-4 shadow-md border border-gray-100">
-                    <div className="flex justify-between items-start">
-                        <div className="flex items-center mb-2">
-                            <div className="bg-blue-100 text-blue-800 w-8 h-8 rounded-full flex items-center justify-center font-bold mr-3">
-                                {comment.user?.name?.charAt(0) || "A"}
-                            </div>
-                            <div>
-                                <div className="font-semibold text-gray-800">
-                                    {comment.user?.name || "Anonymous"}
-                                </div>
-                                <span className="text-xs text-gray-500">
-                                    {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true })}
-                                </span>
-                            </div>
-                        </div>
-                        
-                        {user && (user.id === comment.user?.id || user.role === 'admin') && (
-                            <div className="relative">
-                                <button 
-                                    onClick={() => setShowOptions(showOptions === comment.id ? null : comment.id)}
-                                    className="text-gray-500 hover:text-blue-600 transition-colors"
+                <div className="card border-0 shadow-sm">
+                    <div className="card-body">
+                        <div className="d-flex justify-content-between align-items-start">
+                            <div className="d-flex align-items-center mb-2">
+                                <div
+                                    className="bg-primary text-white rounded-circle me-3"
+                                    style={{
+                                        width: "36px",
+                                        height: "36px",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                    }}
                                 >
-                                    <FaEllipsisH size={16} />
-                                </button>
-                                
-                                {showOptions === comment.id && (
-                                    <div className="absolute right-0 mt-1 w-36 bg-white rounded-lg shadow-lg z-10 border border-gray-200 overflow-hidden animate-fadeIn">
-                                        <button 
-                                            onClick={() => {
-                                                handleEdit(comment);
-                                                setShowOptions(null);
-                                            }}
-                                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-blue-50 transition-colors"
+                                    {comment.user?.name?.charAt(0) || "A"}
+                                </div>
+                                <div>
+                                    <h6 className="mb-0 fw-bold">
+                                        {comment.user?.name || "Anonymous"}
+                                    </h6>
+                                    <small className="text-muted">
+                                        {formatDistanceToNow(
+                                            new Date(comment.created_at),
+                                            { addSuffix: true }
+                                        )}
+                                    </small>
+                                </div>
+                            </div>
+
+                            {user &&
+                                (user.id === comment.user?.id ||
+                                    user.role === "admin") && (
+                                    <div className="dropdown">
+                                        <button
+                                            className="btn btn-sm btn-link text-muted"
+                                            onClick={() =>
+                                                setShowOptions(
+                                                    showOptions === comment.id
+                                                        ? null
+                                                        : comment.id
+                                                )
+                                            }
                                         >
-                                            <FaEdit className="mr-2 text-blue-500" /> Edit
+                                            <FaEllipsisH />
                                         </button>
-                                        <button 
-                                            onClick={() => {
-                                                handleDeleteComment(comment.id);
-                                                setShowOptions(null);
-                                            }}
-                                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
-                                        >
-                                            <FaTrash className="mr-2" /> Delete
-                                        </button>
+
+                                        {showOptions === comment.id && (
+                                            <div className="dropdown-menu show animate__animated animate__fadeIn">
+                                                <button
+                                                    className="dropdown-item d-flex align-items-center"
+                                                    onClick={() => {
+                                                        handleEdit(comment)
+                                                        setShowOptions(null)
+                                                    }}
+                                                >
+                                                    <FaEdit className="me-2 text-primary" />{" "}
+                                                    Edit
+                                                </button>
+                                                <button
+                                                    className="dropdown-item d-flex align-items-center text-danger"
+                                                    onClick={() => {
+                                                        handleDeleteComment(
+                                                            comment.id
+                                                        )
+                                                        setShowOptions(null)
+                                                    }}
+                                                >
+                                                    <FaTrash className="me-2" />{" "}
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
+                        </div>
+
+                        {editingComment === comment.id ? (
+                            <div className="mt-3">
+                                <textarea
+                                    value={editCommentText}
+                                    onChange={e =>
+                                        setEditCommentText(e.target.value)
+                                    }
+                                    className="form-control mb-2"
+                                    rows="3"
+                                    autoFocus
+                                />
+                                <div className="d-flex justify-content-end gap-2">
+                                    <button
+                                        onClick={() => setEditingComment(null)}
+                                        className="btn btn-outline-secondary btn-sm"
+                                    >
+                                        <FaTimes className="me-1" /> Cancel
+                                    </button>
+                                    <button
+                                        onClick={handleUpdateComment}
+                                        className="btn btn-primary btn-sm"
+                                    >
+                                        <FaCheck className="me-1" /> Update
+                                    </button>
+                                </div>
                             </div>
+                        ) : (
+                            <>
+                                <p className="mt-3 mb-3 ps-5">
+                                    {comment.comment}
+                                </p>
+                                <div className="d-flex align-items-center ps-5">
+                                    <button
+                                        onClick={() =>
+                                            handleReply(
+                                                comment.id,
+                                                comment.user?.name
+                                            )
+                                        }
+                                        className="btn btn-link btn-sm text-decoration-none"
+                                    >
+                                        <FaReply className="me-1" /> Reply
+                                    </button>
+                                </div>
+                            </>
                         )}
                     </div>
-                    
-                    {editingComment === comment.id ? (
-                        <div className="mt-3">
-                            <textarea
-                                value={editCommentText}
-                                onChange={(e) => setEditCommentText(e.target.value)}
-                                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-300 focus:border-blue-500 transition-all"
-                                rows="3"
-                                autoFocus
-                            />
-                            <div className="flex justify-end mt-2 space-x-2">
-                                <button
-                                    onClick={() => setEditingComment(null)}
-                                    className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800 bg-gray-100 rounded-lg transition-colors"
-                                >
-                                    <FaTimes className="mr-1" /> Cancel
-                                </button>
-                                <button
-                                    onClick={handleUpdateComment}
-                                    className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center"
-                                >
-                                    <FaCheck className="mr-1" /> Update
-                                </button>
-                            </div>
-                        </div>
-                    ) : (
-                        <>
-                            <div className="text-gray-700 mt-3 mb-3 pl-11">{comment.content}</div>
-                            <div className="flex items-center text-sm pl-11">
-                                <button
-                                    onClick={() => handleReply(comment.id, comment.user?.name)}
-                                    className="text-blue-500 hover:text-blue-700 flex items-center transition-colors"
-                                >
-                                    <FaReply className="mr-1" /> Reply
-                                </button>
-                            </div>
-                        </>
-                    )}
                 </div>
-                
-                {/* Render replies */}
+
                 {comment.replies && comment.replies.length > 0 && (
                     <div className="mt-3">
                         {renderComments(comment.replies, depth + 1)}
                     </div>
                 )}
             </div>
-        ));
-    };
-
-    if (loading) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="text-center">
-                <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-                <p className="text-gray-600 text-lg">Loading book details...</p>
-            </div>
-        </div>
-    );
-    
-    if (error) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg text-center">
-                <div className="text-red-500 text-5xl mb-4">⚠️</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Error Loading Book</h2>
-                <p className="text-gray-600 mb-6">{error}</p>
-                <Link 
-                    to="/" 
-                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                    Return to Home
-                </Link>
-            </div>
-        </div>
-    );
-    
-    if (!book) return (
-        <div className="min-h-screen flex items-center justify-center bg-gray-50">
-            <div className="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg text-center">
-                <div className="text-yellow-500 text-5xl mb-4">📚</div>
-                <h2 className="text-2xl font-bold text-gray-800 mb-2">Book Not Found</h2>
-                <p className="text-gray-600 mb-6">The book you're looking for doesn't exist or has been removed.</p>
-                <Link 
-                    to="/" 
-                    className="px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                >
-                    Browse Other Books
-                </Link>
-            </div>
-        </div>
-    );
-
-    // Handle image path (array or string)
-    let imagePath = "";
-    if (Array.isArray(book.images)) {
-        imagePath = book.images[0];
-    } else if (typeof book.images === "string") {
-        imagePath = book.images;
+        ))
     }
-    const imageUrl = imagePath
-        ? imagePath.startsWith("http")
-            ? imagePath
-            : `http://localhost:8000/storage/${imagePath}`
-        : "/placeholder.svg?height=300&width=200";
+
+    if (loading) {
+        return (
+            <div className="d-flex justify-content-center align-items-center vh-100">
+                <div className="spinner-border text-primary" role="status">
+                    <span className="visually-hidden">Loading...</span>
+                </div>
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="container py-5">
+                <div className="alert alert-danger text-center">
+                    {error}
+                    <Link to="/" className="ms-2">
+                        Go back to home
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    if (!book) {
+        return (
+            <div className="container py-5">
+                <div className="alert alert-warning text-center">
+                    Book not found
+                    <Link to="/" className="ms-2">
+                        Browse other books
+                    </Link>
+                </div>
+            </div>
+        )
+    }
+
+    // Get book image
+    let bookImagePath = ""
+    if (Array.isArray(book.images)) {
+        bookImagePath = book.images[0]
+    } else if (typeof book.images === "string") {
+        bookImagePath = book.images
+    }
+    const bookImageUrl = bookImagePath
+        ? bookImagePath.startsWith("http")
+            ? bookImagePath
+            : `http://localhost:8001/storage/${bookImagePath}`
+        : "/placeholder.svg?height=300&width=200"
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
-            <div className="container max-w-6xl mx-auto bg-white rounded-2xl shadow-xl overflow-hidden animate-fadeIn">
-                <div className="relative">
-                    {/* Book Cover */}
-                    <div className="h-64 bg-gradient-to-r from-blue-500 to-indigo-600 relative overflow-hidden">
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            {imageUrl ? (
-                                <img
-                                    src={imageUrl}
-                                    alt={book.title}
-                                    className="max-h-56 rounded-xl shadow-2xl border-4 border-white transform rotate-3"
-                                />
-                            ) : (
-                                <div className="bg-gray-200 text-gray-500 p-5 rounded h-56 w-40 flex items-center justify-center">
-                                    <FaBook className="text-4xl text-gray-400" />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                    
-                    {/* Book Details */}
-                    <div className="p-6 md:p-8">
-                        <div className="flex flex-col md:flex-row gap-8">
-                            <div className="md:w-1/3 flex justify-center">
-                                <div className="w-64 h-80 bg-white rounded-xl shadow-lg p-4 flex items-center justify-center">
-                                    {imageUrl ? (
+        <>
+            <ToastContainer position="top-right" autoClose={3000} />
+
+            <div className="bg-light py-5">
+                <div className="container">
+                    {/* Book Header */}
+                    <div className="row mb-5">
+                        <div className="col-md-5 mb-4 mb-md-0">
+                            <div className="bg-white rounded-3 shadow-sm overflow-hidden">
+                                <div
+                                    className="d-flex align-items-center justify-content-center"
+                                    style={{ minHeight: "400px" }}
+                                >
+                                    {bookImageUrl ? (
                                         <img
-                                            src={imageUrl}
+                                            src={bookImageUrl}
                                             alt={book.title}
-                                            className="w-full h-full object-contain"
+                                            className="img-fluid w-100 h-100 object-fit-contain p-4"
                                         />
                                     ) : (
-                                        <div className="text-gray-500 flex flex-col items-center">
-                                            <FaBook className="text-6xl mb-3" />
-                                            <span>No Cover</span>
+                                        <div className="d-flex flex-column align-items-center justify-content-center text-muted p-5">
+                                            <FaBook className="display-1 mb-3" />
+                                            <span>No image available</span>
                                         </div>
                                     )}
                                 </div>
                             </div>
-                            
-                            <div className="md:w-2/3">
-                                <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-3">{book.title}</h1>
-                                
-                                <div className="space-y-4">
-                                    <div className="flex items-center">
-                                        <div className="bg-blue-100 p-3 rounded-full mr-4">
-                                            <FaUser className="text-blue-600 text-xl" />
+                        </div>
+
+                        <div className="col-md-7">
+                            <div className="card border-0 shadow-sm">
+                                <div className="card-body">
+                                    <div className="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <span
+                                                className={`badge ${getStatusBadgeStyle(
+                                                    book.status
+                                                )} me-2`}
+                                            >
+                                                {book.status}
+                                            </span>
+                                            <span className="badge bg-info text-dark">
+                                                {book.category?.name ||
+                                                    "Uncategorized"}
+                                            </span>
+                                        </div>
+                                        <div className="d-flex gap-2">
+                                            {user && (
+                                                <>
+                                                    <button
+                                                        className="btn btn-outline-danger btn-sm"
+                                                        disabled={loadingStatus}
+                                                    >
+                                                        {isWishlisted ? (
+                                                            <FaHeart className="text-danger" />
+                                                        ) : (
+                                                            <FaRegHeart />
+                                                        )}
+                                                    </button>
+                                                    <button
+                                                        className="btn btn-outline-primary btn-sm"
+                                                        disabled={loadingStatus}
+                                                    >
+                                                        {isInCart ? (
+                                                            <FaShoppingCart className="text-primary" />
+                                                        ) : (
+                                                            <FaShoppingCart />
+                                                        )}
+                                                    </button>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <h1 className="h2 mb-3">{book.title}</h1>
+
+                                    <div className="d-flex align-items-center mb-4">
+                                        <div
+                                            className="bg-primary text-white rounded-circle me-3"
+                                            style={{
+                                                width: "40px",
+                                                height: "40px",
+                                                display: "flex",
+                                                alignItems: "center",
+                                                justifyContent: "center",
+                                            }}
+                                        >
+                                            {book.user?.name?.charAt(0) || "A"}
                                         </div>
                                         <div>
-                                            <p className="text-gray-600">Author</p>
-                                            <p className="text-lg font-semibold text-blue-600">
+                                            <h6 className="mb-0 fw-bold">
+                                                Author
+                                            </h6>
+                                            <p className="mb-0">
                                                 {book.user?.name || "Unknown"}
                                             </p>
                                         </div>
                                     </div>
-                                    
-                                    <div className="flex items-center">
-                                        <div className="bg-green-100 p-3 rounded-full mr-4">
-                                            <FaTag className="text-green-600 text-xl" />
+
+                                    <p className="text-muted mb-4">
+                                        {book.description}
+                                    </p>
+
+                                    <div className="row mb-4">
+                                        <div className="col-md-6">
+                                            <div className="d-flex align-items-center mb-3">
+                                                <FaDollarSign className="text-success me-2" />
+                                                <div>
+                                                    <h6 className="mb-0 fw-bold">
+                                                        Price
+                                                    </h6>
+                                                    <p className="mb-0">
+                                                        ${book.price}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
-                                        <div>
-                                            <p className="text-gray-600">Category</p>
-                                            <p className="text-lg font-medium text-gray-800">
-                                                {book.category?.name || "N/A"}
-                                            </p>
+                                        <div className="col-md-6">
+                                            <div className="d-flex align-items-center mb-3">
+                                                <FaTag className="text-warning me-2" />
+                                                <div>
+                                                    <h6 className="mb-0 fw-bold">
+                                                        Condition
+                                                    </h6>
+                                                    <p className="mb-0 text-capitalize">
+                                                        {book.condition ||
+                                                            "N/A"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="d-flex align-items-center mb-3">
+                                                <FaInfoCircle className="text-info me-2" />
+                                                <div>
+                                                    <h6 className="mb-0 fw-bold">
+                                                        ISBN
+                                                    </h6>
+                                                    <p className="mb-0">
+                                                        {book.isbn || "N/A"}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="col-md-6">
+                                            <div className="d-flex align-items-center mb-3">
+                                                <FaBook className="text-purple me-2" />
+                                                <div>
+                                                    <h6 className="mb-0 fw-bold">
+                                                        Pages
+                                                    </h6>
+                                                    <p className="mb-0">
+                                                        {book.pages || "N/A"}
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
                                     </div>
-                                    
-                                    <div className="flex items-center">
-                                        <div className="bg-purple-100 p-3 rounded-full mr-4">
-                                            <FaInfoCircle className="text-purple-600 text-xl" />
-                                        </div>
-                                        <div>
-                                            <p className="text-gray-600">Status</p>
-                                            <span
-                                                className="inline-block px-3 py-1 rounded-full text-sm font-semibold text-white shadow-md"
-                                                style={getStatusBadgeStyle(book.status)}
+
+                                    <div className="d-flex gap-2">
+                                        {user && user.id !== book.user?.id && (
+                                            <>
+                                                <button
+                                                    className="btn btn-primary flex-grow-1"
+                                                    disabled={loadingStatus}
+                                                >
+                                                    {isInCart
+                                                        ? "Added to Cart"
+                                                        : "Add to Cart"}
+                                                </button>
+                                                <button
+                                                    className="btn btn-outline-danger"
+                                                    disabled={loadingStatus}
+                                                >
+                                                    {isWishlisted
+                                                        ? "Wishlisted"
+                                                        : "Wishlist"}
+                                                </button>
+                                            </>
+                                        )}
+                                        {user && user.id === book.user?.id && (
+                                            <Link
+                                                to={`/edit-book/${book.id}`}
+                                                className="btn btn-warning flex-grow-1"
                                             >
-                                                {book.status.charAt(0).toUpperCase() + book.status.slice(1)}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="flex items-center">
-                                        <div className="bg-yellow-100 p-3 rounded-full mr-4">
-                                            <FaDollarSign className="text-yellow-600 text-xl" />
-                                        </div>
-                                        <div>
-                                            <p className="text-gray-600">Price</p>
-                                            <p className="text-2xl font-bold text-green-600">
-                                                {book.price} $
-                                            </p>
-                                        </div>
-                                    </div>
-                                    
-                                    <div className="bg-gray-50 rounded-xl p-5 mt-5">
-                                        <h3 className="text-xl font-semibold text-gray-800 mb-3 flex items-center">
-                                            <FaInfoCircle className="mr-2 text-blue-500" />
-                                            Description
-                                        </h3>
-                                        <p className="text-gray-700 leading-relaxed">
-                                            {book.description || "No description available."}
-                                        </p>
+                                                Edit Book
+                                            </Link>
+                                        )}
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        
-                        <hr className="my-8 border-t border-gray-200" />
-                        
-                        {/* Comments Section */}
-                        <div className="comments-section">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-200 flex items-center">
-                                <span className="bg-blue-500 w-8 h-8 rounded-full flex items-center justify-center text-white mr-3">💬</span>
-                                Comments ({book.comments?.length || 0})
+                    </div>
+
+                    {/* Comments Section */}
+                    <div className="card shadow-sm mb-5 animate__animated animate__fadeIn">
+                        <div className="card-header bg-white">
+                            <h3 className="h5 mb-0">
+                                <span className="badge bg-primary me-2">
+                                    {book.comments?.length || 0}
+                                </span>
+                                Comments
                             </h3>
-                            
+                        </div>
+                        <div className="card-body">
                             {/* Comment Form */}
-                            {user && (
-                                <div className="mb-8 bg-white rounded-xl shadow-sm p-5 border border-gray-200">
+                            {user ? (
+                                <form
+                                    onSubmit={handleCommentSubmit}
+                                    className="mb-4"
+                                >
                                     {replyingTo && (
-                                        <div className="flex items-center text-sm text-gray-600 mb-3 bg-blue-50 px-3 py-2 rounded-lg">
-                                            <span className="font-medium">Replying to {replyingTo}</span>
-                                            <button 
+                                        <div className="alert alert-info alert-dismissible fade show mb-3 py-2">
+                                            <span>
+                                                Replying to{" "}
+                                                <strong>{replyingTo}</strong>
+                                            </span>
+                                            <button
+                                                type="button"
+                                                className="btn-close"
                                                 onClick={() => {
-                                                    setParentId(null);
-                                                    setReplyingTo(null);
+                                                    setParentId(null)
+                                                    setReplyingTo(null)
                                                 }}
-                                                className="ml-2 text-gray-500 hover:text-gray-700"
-                                            >
-                                                <FaTimes size={14} />
-                                            </button>
+                                            />
                                         </div>
                                     )}
-                                    <form onSubmit={handleCommentSubmit}>
+                                    <div className="form-floating mb-3">
                                         <textarea
                                             id="comment-input"
                                             value={commentInput}
-                                            onChange={(e) => setCommentInput(e.target.value)}
+                                            onChange={e =>
+                                                setCommentInput(e.target.value)
+                                            }
                                             placeholder="Share your thoughts about this book..."
-                                            className="w-full p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
-                                            rows="4"
+                                            className="form-control"
+                                            style={{ height: "100px" }}
                                         />
-                                        <div className="flex justify-end mt-3">
-                                            <button
-                                                type="submit"
-                                                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all shadow-md flex items-center"
-                                            >
-                                                <FaReply className="mr-2" />
-                                                Post Comment
-                                            </button>
-                                        </div>
-                                    </form>
+                                        <label htmlFor="comment-input">
+                                            Your comment...
+                                        </label>
+                                    </div>
+                                    <button
+                                        type="submit"
+                                        className="btn btn-primary"
+                                        disabled={loadingStatus}
+                                    >
+                                        {loadingStatus ? (
+                                            <span
+                                                className="spinner-border spinner-border-sm me-1"
+                                                role="status"
+                                                aria-hidden="true"
+                                            ></span>
+                                        ) : (
+                                            <FaReply className="me-1" />
+                                        )}
+                                        Post Comment
+                                    </button>
+                                </form>
+                            ) : (
+                                <div className="alert alert-info">
+                                    Please{" "}
+                                    <Link to="/login" className="alert-link">
+                                        login
+                                    </Link>{" "}
+                                    to leave a comment.
                                 </div>
                             )}
-                            
+
                             {/* Comments List */}
                             {book.comments && book.comments.length > 0 ? (
-                                <div className="space-y-5">
-                                    {renderComments(book.comments.filter(c => !c.parent_id))}
+                                <div className="mt-4">
+                                    {renderComments(
+                                        book.comments.filter(c => !c.parent_id)
+                                    )}
                                 </div>
                             ) : (
-                                <div className="text-center py-10 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                    <div className="text-gray-400 text-5xl mb-4">💬</div>
-                                    <h4 className="text-xl font-medium text-gray-600 mb-2">No comments yet</h4>
-                                    <p className="text-gray-500 mb-4">Be the first to share your thoughts!</p>
-                                    {!user && (
-                                        <Link 
-                                            to="/login" 
-                                            className="inline-block px-5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                                        >
-                                            Login to Comment
-                                        </Link>
-                                    )}
+                                <div className="text-center py-4">
+                                    <div
+                                        className="text-muted mb-3"
+                                        style={{ fontSize: "3rem" }}
+                                    >
+                                        💬
+                                    </div>
+                                    <h4 className="h5 text-muted">
+                                        No comments yet
+                                    </h4>
+                                    <p className="text-muted">
+                                        Be the first to share your thoughts!
+                                    </p>
                                 </div>
                             )}
                         </div>
-                        
-                        <hr className="my-8 border-t border-gray-200" />
-                        
-                        {/* Author's other books */}
-                        <div className="mt-8">
-                            <h3 className="text-2xl font-bold text-gray-800 mb-6 pb-2 border-b border-gray-200 flex items-center">
-                                <span className="bg-purple-500 w-8 h-8 rounded-full flex items-center justify-center text-white mr-3">📚</span>
-                                More books by {book.user?.name || "this author"}
-                            </h3>
-                            {authorBooks.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                                    {authorBooks.map(book => {
-                                        let imagePath = "";
-                                        if (Array.isArray(book.images)) {
-                                            imagePath = book.images[0];
-                                        } else if (typeof book.images === "string") {
-                                            imagePath = book.images;
+                    </div>
+
+                    {/* Author's other books */}
+                    {book.user && authorBooks.length > 0 && (
+                        <div className="card shadow-sm mb-5 animate__animated animate__fadeIn">
+                            <div className="card-header bg-white">
+                                <h3 className="h5 mb-0">
+                                    <span className="badge bg-purple me-2">
+                                        {authorBooks.length}
+                                    </span>
+                                    More books by{" "}
+                                    {book.user?.name || "this author"}
+                                </h3>
+                            </div>
+                            <div className="card-body">
+                                <div className="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-4 g-4">
+                                    {authorBooks.map(authorBook => {
+                                        let authorBookImagePath = ""
+                                        if (Array.isArray(authorBook.images)) {
+                                            authorBookImagePath =
+                                                authorBook.images[0]
+                                        } else if (
+                                            typeof authorBook.images ===
+                                            "string"
+                                        ) {
+                                            authorBookImagePath =
+                                                authorBook.images
                                         }
-                                        const imageUrl = imagePath
-                                            ? imagePath.startsWith("http")
-                                                ? imagePath
-                                                : `http://localhost:8000/storage/${imagePath}`
-                                            : "/placeholder.svg?height=300&width=200";
+                                        const authorBookImageUrl =
+                                            authorBookImagePath
+                                                ? authorBookImagePath.startsWith(
+                                                      "http"
+                                                  )
+                                                    ? authorBookImagePath
+                                                    : `http://localhost:8001/storage/${authorBookImagePath}`
+                                                : "/placeholder.svg?height=300&width=200"
                                         return (
-                                            <div key={book.id} className="col-span-1">
+                                            <div
+                                                key={authorBook.id}
+                                                className="col"
+                                            >
                                                 <Link
-                                                    to={`/books/${book.id}`}
-                                                    className="block no-underline"
+                                                    to={`/books/${authorBook.id}`}
+                                                    className="text-decoration-none"
                                                 >
-                                                    <div className="card h-full bg-white rounded-xl shadow-md overflow-hidden border border-gray-200 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                                                        <div className="h-48 bg-gray-100 flex items-center justify-center">
-                                                            {imageUrl ? (
+                                                    <div className="card h-100 border-0 shadow-sm hover-shadow transition">
+                                                        <div
+                                                            className="card-img-top"
+                                                            style={{
+                                                                height: "200px",
+                                                                overflow:
+                                                                    "hidden",
+                                                            }}
+                                                        >
+                                                            {authorBookImageUrl ? (
                                                                 <img
-                                                                    src={imageUrl}
-                                                                    alt={book.title}
-                                                                    className="h-full w-full object-cover"
+                                                                    src={
+                                                                        authorBookImageUrl
+                                                                    }
+                                                                    alt={
+                                                                        authorBook.title
+                                                                    }
+                                                                    className="img-fluid h-100 w-100 object-fit-cover"
                                                                 />
                                                             ) : (
-                                                                <div className="text-gray-400">
-                                                                    <FaBook className="text-4xl" />
+                                                                <div className="h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                                                                    <FaBook className="display-4" />
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        <div className="p-4">
-                                                            <h5 className="font-bold text-gray-800 mb-1 truncate">
-                                                                {book.title}
+                                                        <div className="card-body">
+                                                            <h5 className="card-title text-truncate">
+                                                                {
+                                                                    authorBook.title
+                                                                }
                                                             </h5>
-                                                            <p className="text-sm text-gray-600 mb-2 truncate">
-                                                                {book.category?.name || "Uncategorized"}
+                                                            <p className="card-text text-muted small text-truncate">
+                                                                {authorBook
+                                                                    .category
+                                                                    ?.name ||
+                                                                    "Uncategorized"}
                                                             </p>
-                                                            <div className="flex justify-between items-center">
+                                                            <div className="d-flex justify-content-between align-items-center">
                                                                 <span
-                                                                    className="badge text-xs px-2 py-1 rounded-full"
-                                                                    style={getStatusBadgeStyle(book.status)}
+                                                                    className={`badge ${getStatusBadgeStyle(
+                                                                        authorBook.status
+                                                                    )}`}
                                                                 >
-                                                                    {book.status}
+                                                                    {
+                                                                        authorBook.status
+                                                                    }
                                                                 </span>
-                                                                <span className="text-green-600 font-bold">
-                                                                    {book.price} $
+                                                                <span className="text-success fw-bold">
+                                                                    {
+                                                                        authorBook.price
+                                                                    }{" "}
+                                                                    $
                                                                 </span>
                                                             </div>
                                                         </div>
                                                     </div>
                                                 </Link>
                                             </div>
-                                        );
+                                        )
                                     })}
                                 </div>
-                            ) : (
-                                <div className="text-center py-8 bg-gray-50 rounded-xl border border-dashed border-gray-300">
-                                    <div className="text-gray-400 text-5xl mb-4">📭</div>
-                                    <h4 className="text-xl font-medium text-gray-600 mb-2">No other books found</h4>
-                                    <p className="text-gray-500">This author hasn't published other books yet.</p>
-                                </div>
-                            )}
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </div>
-        </div>
-    );
-};
+        </>
+    )
+}
 
-export default BookDetails;
+export default BookDetails

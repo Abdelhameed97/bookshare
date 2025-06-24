@@ -25,6 +25,7 @@ import api from '../services/api';
 import Title from '../components/shared/Title';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
+import Swal from 'sweetalert2';
 
 const OrderDetailsPage = () => {
     const { id } = useParams();
@@ -32,29 +33,46 @@ const OrderDetailsPage = () => {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [processing, setProcessing] = useState(false);
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
-                const token = localStorage.getItem('token');
-                if (!token) {
-                    navigate('/login', { state: { from: `/orders/${id}` } });
-                    return;
+                const response = await api.getOrderDetails(id);
+                console.log('Order details response:', response.data);
+
+                // Handle both array and single object responses
+                let orderData = response.data;
+                if (Array.isArray(response.data)) {
+                    orderData = response.data[0]; // Take first item if array
+                } else if (response.data.data) {
+                    orderData = response.data.data; // Handle nested data property
                 }
 
-                const response = await api.getOrderDetails(id);
-                if (response.data && response.data.data) {
-                    setOrder(response.data.data);
-                } else {
-                    setError('Order not found');
+                if (!orderData) {
+                    throw new Error('Order data not found');
                 }
+
+                // Enhance order items with calculated totals
+                const enhancedOrder = {
+                    ...orderData,
+                    order_items: orderData.order_items?.map(item => ({
+                        ...item,
+                        unit_price: item.price || item.book?.price || 0,
+                        total_price: (item.price || item.book?.price || 0) * item.quantity
+                    }))
+                };
+
+                setOrder(enhancedOrder);
+                setError(null);
             } catch (err) {
+                console.error('Error fetching order:', err);
                 if (err.response?.status === 401) {
                     localStorage.removeItem('token');
                     localStorage.removeItem('user');
                     navigate('/login', { state: { from: `/orders/${id}` } });
                 }
-                setError(err.response?.data?.message || 'Failed to load order details');
+                setError(err.response?.data?.message || err.message || 'Failed to load order details');
             } finally {
                 setLoading(false);
             }
@@ -63,14 +81,54 @@ const OrderDetailsPage = () => {
         fetchOrderDetails();
     }, [id, navigate]);
 
+    const handleCancelOrder = async () => {
+        const result = await Swal.fire({
+            title: 'Cancel Order?',
+            text: 'Are you sure you want to cancel this order?',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, cancel it!'
+        });
+
+        if (!result.isConfirmed) return;
+
+        try {
+            setProcessing(true);
+            await api.cancelOrder(id);
+
+            await Swal.fire(
+                'Cancelled!',
+                'Your order has been cancelled successfully.',
+                'success'
+            );
+            navigate('/orders');
+        } catch (err) {
+            console.error('Error cancelling order:', err);
+
+            let errorMessage = err.response?.data?.message || 'Failed to cancel order';
+            if (err.response?.status === 500 && err.response?.data?.error?.includes('No query results')) {
+                errorMessage = 'This order may have already been cancelled or deleted.';
+            }
+
+            Swal.fire(
+                'Error!',
+                errorMessage,
+                'error'
+            );
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const getStatusIcon = (status) => {
         if (!status) return <Clock size={20} className="text-secondary me-2" />;
-
         switch (status.toLowerCase()) {
             case 'delivered': return <CheckCircle size={20} className="text-success me-2" />;
             case 'shipped': return <Truck size={20} className="text-primary me-2" />;
-            case 'processing': return <RefreshCw size={20} className="text-warning me-2" />;
-            case 'pending': return <Clock size={20} className="text-secondary me-2" />;
+            case 'processing':
+            case 'pending': return <RefreshCw size={20} className="text-warning me-2" />;
             case 'cancelled': return <XCircle size={20} className="text-danger me-2" />;
             default: return <Clock size={20} className="text-secondary me-2" />;
         }
@@ -78,12 +136,11 @@ const OrderDetailsPage = () => {
 
     const getStatusBadge = (status) => {
         if (!status) return 'secondary';
-
         switch (status.toLowerCase()) {
             case 'delivered': return 'success';
             case 'shipped': return 'primary';
-            case 'processing': return 'warning';
-            case 'pending': return 'secondary';
+            case 'processing':
+            case 'pending': return 'warning';
             case 'cancelled': return 'danger';
             default: return 'secondary';
         }
@@ -106,8 +163,17 @@ const OrderDetailsPage = () => {
     };
 
     const formatPrice = (price) => {
-        if (!price) return '0.00';
-        return parseFloat(price).toFixed(2);
+        const num = parseFloat(price);
+        return isNaN(num) ? '0.00' : num.toFixed(2);
+    };
+
+    const getItemPrice = (item) => {
+        // Use item price if available, otherwise use book price
+        // For rentals, use rental price
+        if (item.type === 'rent') {
+            return item.book?.rental_price || item.price || 0;
+        }
+        return item.price || item.book?.price || 0;
     };
 
     if (loading) {
@@ -123,15 +189,21 @@ const OrderDetailsPage = () => {
         return (
             <div className="text-center py-5">
                 <Alert variant="danger">
-                    {error}
+                    {error.includes('not found') ? (
+                        <>
+                            <p>Order not found or already deleted</p>
+                            <Button
+                                variant="primary"
+                                onClick={() => navigate('/orders')}
+                                className="mt-2"
+                            >
+                                Back to Orders
+                            </Button>
+                        </>
+                    ) : (
+                        error
+                    )}
                 </Alert>
-                <Button
-                    variant="primary"
-                    onClick={() => navigate(-1)}
-                    className="mt-3"
-                >
-                    Back to Orders
-                </Button>
             </div>
         );
     }
@@ -139,19 +211,17 @@ const OrderDetailsPage = () => {
     if (!order) {
         return (
             <div className="text-center py-5">
-                <Alert variant="warning">
-                    Order not found
-                </Alert>
-                <Button
-                    variant="primary"
-                    onClick={() => navigate(-1)}
-                    className="mt-3"
-                >
+                <Alert variant="warning">Order not found</Alert>
+                <Button variant="primary" onClick={() => navigate(-1)}>
                     Back to Orders
                 </Button>
             </div>
         );
     }
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isClient = user?.id === order.client_id;
+    const canCancel = ['pending', 'processing'].includes(order.status?.toLowerCase()) && isClient;
 
     return (
         <>
@@ -210,14 +280,12 @@ const OrderDetailsPage = () => {
                                             <div>{order.client?.name || 'N/A'}</div>
                                             <div>{order.client?.email || 'N/A'}</div>
                                             <div>{order.client?.phone_number || 'N/A'}</div>
-                                            <div>{order.client?.location || 'N/A'}</div>
                                         </div>
                                         <div>
                                             <h6>Owner</h6>
                                             <div>{order.owner?.name || 'N/A'}</div>
                                             <div>{order.owner?.email || 'N/A'}</div>
                                             <div>{order.owner?.phone_number || 'N/A'}</div>
-                                            <div>{order.owner?.location || 'N/A'}</div>
                                         </div>
                                     </Card.Body>
                                 </Card>
@@ -243,11 +311,16 @@ const OrderDetailsPage = () => {
                                                         <div>
                                                             <div className="fw-bold">{item.book?.title || 'N/A'}</div>
                                                             <small className="text-muted">Qty: {item.quantity || 0}</small>
+                                                            <small className="d-block text-muted">Type: {item.type || 'buy'}</small>
                                                         </div>
                                                     </div>
                                                     <div className="text-end">
-                                                        <div>{formatPrice(item.price)} EGP</div>
-                                                        <small className="text-muted">Total: {formatPrice(item.quantity * parseFloat(item.price || 0))} EGP</small>
+                                                        <div>
+                                                            {formatPrice(getItemPrice(item))} EGP
+                                                        </div>
+                                                        <small className="text-muted">
+                                                            Total: {formatPrice(getItemPrice(item) * item.quantity)} EGP
+                                                        </small>
                                                     </div>
                                                 </ListGroup.Item>
                                             ))}
@@ -256,6 +329,20 @@ const OrderDetailsPage = () => {
                                 </Card>
                             </Col>
                         </Row>
+
+                        {canCancel && (
+                            <Row className="mt-4">
+                                <Col className="text-end">
+                                    <Button
+                                        variant="danger"
+                                        onClick={handleCancelOrder}
+                                        disabled={processing}
+                                    >
+                                        {processing ? 'Cancelling...' : 'Cancel Order'}
+                                    </Button>
+                                </Col>
+                            </Row>
+                        )}
                     </Card.Body>
                 </Card>
             </Container>

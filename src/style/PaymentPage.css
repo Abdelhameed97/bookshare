@@ -1,0 +1,107 @@
+.payment-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.payment-card,
+.order-summary-card {
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    border: none;
+}
+
+.payment-card .payment-methods {
+    border: 1px solid #eee;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.payment-card .payment-method {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    border-bottom: 1px solid #eee;
+    transition: all 0.3s ease;
+}
+
+.payment-card .payment-method:last-child {
+    border-bottom: none;
+}
+
+.payment-card .payment-method:hover {
+    background-color: #f9f9f9;
+}
+
+.payment-card .payment-method.active {
+    background-color: #f0f7ff;
+    border-left: 3px solid #0d6efd;
+}
+
+.payment-card .card-details {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.payment-card .bank-details {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.payment-card .bank-details p {
+    margin-bottom: 8px;
+}
+
+.payment-card .payment-security {
+    background-color: #f0f7ff;
+    padding: 15px;
+    border-radius: 8px;
+}
+
+.payment-btn {
+    padding: 12px;
+    font-weight: 600;
+    font-size: 1.1rem;
+}
+
+.order-summary-card {
+    background-color: #f9f9f9;
+}
+
+.order-summary-card .order-item {
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.order-summary-card .order-item:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.order-summary-card .item-image {
+    width: 60px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+.order-summary-card .item-price {
+    font-weight: 600;
+    color: #0d6efd;
+}
+
+.order-summary-card .payment-logo {
+    height: 30px;
+    margin-bottom: 15px;
+}
+
+.total-summary {
+    font-size: 1.1rem;
+}
+
+.total-price {
+    color: #0d6efd;
+    font-size: 1.2rem;
+}

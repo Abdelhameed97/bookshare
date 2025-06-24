@@ -12,7 +12,7 @@ const BookCategories = () => {
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const res = await fetch("http://localhost:8000/api/categories")
+                const res = await fetch("http://localhost:8001/api/categories")
                 if (!res.ok) throw new Error("Failed to fetch categories")
                 const data = await res.json()
                 setCategories(data.categories || [])
