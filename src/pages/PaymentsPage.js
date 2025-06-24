@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Container, Row, Col, Card, Table, Spinner, Alert, Badge, Button, Dropdown } from 'react-bootstrap';
-import { CreditCard, Clock, CheckCircle, XCircle, ArrowLeft, Filter } from 'lucide-react';
+import { CreditCard, Clock, CheckCircle, XCircle, ArrowLeft, Filter, AlertCircle, LogIn } from 'lucide-react';
 import { usePayment } from '../hooks/usePayment';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
@@ -17,6 +17,8 @@ const PaymentsPage = () => {
     const [filter, setFilter] = useState('all');
     const [orderStatusFilter, setOrderStatusFilter] = useState('all');
     const { fetchUserPayments } = usePayment();
+    const user = JSON.parse(localStorage.getItem('user'));
+    const userId = user?.id;
 
     useEffect(() => {
         const loadPayments = async () => {
@@ -88,6 +90,33 @@ const PaymentsPage = () => {
         return isNaN(num) ? '0.00' : num.toFixed(2);
     };
 
+    if (!userId) {
+        return (
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="warning" className="d-flex align-items-center">
+                        <LogIn size={24} className="me-2" />
+                        <div>
+                            <h5>Authentication Required</h5>
+                            <p className="mb-0">Please login to view your payment history.</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4">
+                        <Button
+                            variant="primary"
+                            onClick={() => navigate('/login', { state: { from: '/payments' } })}
+                            className="mt-3 px-4"
+                        >
+                            Login
+                        </Button>
+                    </div>
+                </Container>
+                <Footer />
+            </>
+        );
+    }
+
     if (loading) {
         return (
             <div className="text-center py-5">
@@ -99,16 +128,30 @@ const PaymentsPage = () => {
 
     if (error) {
         return (
-            <div className="text-center py-5">
-                <Alert variant="danger">
-                    {error}
-                </Alert>
-                <Button variant="primary" onClick={() => window.location.reload()}>
-                    Try Again
-                </Button>
-            </div>
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="danger" className="d-flex align-items-center">
+                        <AlertCircle size={24} className="me-2" />
+                        <div>
+                            <h5>Payment History Error</h5>
+                            <p className="mb-0">{error}</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4 gap-3">
+                        <Button variant="primary" onClick={() => window.location.reload()}>
+                            Retry
+                        </Button>
+                        <Button variant="outline-primary" onClick={() => navigate('/books')}>
+                            Browse Books
+                        </Button>
+                    </div>
+                </Container>
+                <Footer />
+            </>
         );
     }
+
 
     return (
         <>

@@ -39,7 +39,6 @@ export const useOrders = (userId) => {
                 navigate('/login', { state: { from: window.location.pathname } });
             }
             setError(err.response?.data?.message || err.message);
-            setOrders([]);
         } finally {
             setLoading(false);
         }

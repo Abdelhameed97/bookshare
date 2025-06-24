@@ -20,7 +20,8 @@ import {
     ShoppingCart,
     Plus,
     Minus,
-    CheckCircle
+    CheckCircle,
+    AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
@@ -270,19 +271,35 @@ const CartPage = () => {
             </div>
         );
     }
-
     if (error) {
         return (
-            <div className="text-center py-5">
-                <Alert variant="danger">{error}</Alert>
-                <CustomButton
-                    variant="primary"
-                    onClick={fetchCartItems}
-                    className="mt-3"
-                >
-                    Try Again
-                </CustomButton>
-            </div>
+            <>
+                <Navbar />
+                <Container className="py-5">
+                    <Alert variant="danger" className="d-flex align-items-center">
+                        <AlertCircle size={24} className="me-2" />
+                        <div>
+                            <h5>Failed to load your cart</h5>
+                            <p className="mb-0">{error}</p>
+                        </div>
+                    </Alert>
+                    <div className="d-flex justify-content-center mt-4 gap-3">
+                        <CustomButton
+                            variant="primary"
+                            onClick={fetchCartItems}
+                        >
+                            Retry
+                        </CustomButton>
+                        <CustomButton
+                            variant="outline-primary"
+                            onClick={() => navigate('/books')}
+                        >
+                            Browse Books
+                        </CustomButton>
+                    </div>
+                </Container>
+                <Footer />
+            </>
         );
     }
 
