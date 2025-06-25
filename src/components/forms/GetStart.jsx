@@ -99,7 +99,7 @@ export default function GetStarted() {
 
   return (
     <div
-      className='p-4 rounded-3 shadow-sm vh-100 align-items-center justify-content-center d-flex flex-column'
+      className='bg-light p-4 rounded-3 shadow-sm vh-100 align-items-center justify-content-center d-flex flex-column'
       style={{ maxWidth: "60%", width: "100%" }}
     >
       <img

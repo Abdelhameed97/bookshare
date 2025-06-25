@@ -18,6 +18,8 @@ import {
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
 import { useOrders } from "../../hooks/useOrders";
+import useTranslation from '../../hooks/useTranslation';
+import LanguageSwitcher from '../shared/LanguageSwitcher';
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -35,23 +37,24 @@ const Navbar = () => {
 
   const isLibraryOwner = user?.role === "owner";
 
+  const { t, language } = useTranslation();
+
   const regularNavLinks = [
-    { to: "/", label: "HOME" },
-    { to: "/about", label: "ABOUT" },
-    { to: "/coming-soon", label: "COMING SOON" },
-    { to: "/top-seller", label: "TOP SELLER" },
-    { to: "/books", label: "BOOKS" },
-    // { to: "/author", label: "AUTHOR" },
-    { to: "/contact", label: "CONTACT" },
-    
+    { to: "/", label: "home" },
+    { to: "/about", label: "about" },
+    { to: "/coming-soon", label: "comingSoon" },
+    { to: "/top-seller", label: "topSeller" },
+    { to: "/books", label: "books" },
+    // { to: "/author", label: "author" },
+    { to: "/contact", label: "contact" },
   ];
 
   const ownerNavLinks = [
-    { to: "/dashboard", label: "DASHBOARD" },
-    { to: "/edit-profile", label: "EDIT PROFILE" },
-    { to: "/add-book", label: "ADD BOOK" },
-    { to: "/libraries", label: "ALL LIBRARIES" },
-    { to: "/all-orders", label: "ORDERS" },
+    { to: "/dashboard", label: "dashboard" },
+    { to: "/edit-profile", label: "editProfile" },
+    { to: "/add-book", label: "addBook" },
+    { to: "/libraries", label: "allLibraries" },
+    { to: "/all-orders", label: "orders" },
   ];
 
   const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;
@@ -97,10 +100,10 @@ const Navbar = () => {
             <div className="navbar-header-container">
               <Link to="/" className="company-title-link">
                 <h1 className="company-title">
-                  Book<span className="company-title-accent">Share</span>
+                  {t('book')}<span className="company-title-accent">{t('share')}</span>
                 </h1>
                 <p className="company-subtitle">
-                  Publishing Excellence Since 2024
+                  {t('publishingExcellence')}
                 </p>
               </Link>
             </div>
@@ -142,7 +145,7 @@ const Navbar = () => {
                       }}
                     >
                       {IconComponent && <IconComponent size={16} />}
-                      {link.label}
+                      {t(link.label)}
                     </Link>
                   );
                 })}
@@ -151,17 +154,19 @@ const Navbar = () => {
               <div className="navbar-actions">
                 <button
                   className="icon-button"
-                  title="Search"
+                  title={t('search')}
                   onClick={toggleSearch}
                 >
                   <FaSearch size={18} />
                 </button>
 
+                <LanguageSwitcher />
+
                 {!isLibraryOwner && (
                   <>
                     <button
                       className="icon-button wishlist-badge"
-                      title="Wishlist"
+                      title={t('wishlist')}
                       onClick={() => handleProtectedAction("/wishlist")}
                     >
                       <FaHeart size={18} />
@@ -172,7 +177,7 @@ const Navbar = () => {
 
                     <button
                       className="icon-button order-badge"
-                      title="Orders"
+                      title={t('orders')}
                       onClick={() => handleProtectedAction("/orders")}
                     >
                       <FaBoxOpen size={18} />
@@ -183,7 +188,7 @@ const Navbar = () => {
 
                     <button
                       className="icon-button cart-badge"
-                      title="Shopping Cart"
+                      title={t('cart')}
                       onClick={() => handleProtectedAction("/cart")}
                     >
                       <FaShoppingCart size={18} />
@@ -198,7 +203,7 @@ const Navbar = () => {
                   <>
                     <button
                       className="icon-button"
-                      title="Manage Books"
+                      title={t('dashboard')}
                       onClick={() => navigate("/dashboard")}
                       style={{
                         background: "#3B82F6",
@@ -209,7 +214,7 @@ const Navbar = () => {
                     </button>
                     <button
                       className="icon-button"
-                      title="Edit Profile"
+                      title={t('editProfile')}
                       onClick={() => navigate("/edit-profile")}
                       style={{
                         background: "#10B981",
@@ -225,10 +230,10 @@ const Navbar = () => {
                   {!user ? (
                     <>
                       <Link to="/login" className="btn btn-outline">
-                        Sign In
+                        {t('signIn')}
                       </Link>
                       <Link to="/register" className="btn btn-primary">
-                        Register
+                        {t('register')}
                       </Link>
                     </>
                   ) : (
@@ -240,10 +245,10 @@ const Navbar = () => {
                           fontSize: "1.1rem",
                         }}
                       >
-                        Welcome, {user.name || "User"}
+                        {t('welcome')}, {user.name || t('user')}
                         {isLibraryOwner && (
                           <span style={{ fontSize: "0.8rem", display: "block", color: "#6B7280" }}>
-                            Library Owner
+                            {t('libraryOwner')}
                           </span>
                         )}
                       </span>
@@ -259,7 +264,7 @@ const Navbar = () => {
                         }}
                         onClick={handleLogout}
                       >
-                        Logout
+                        {t('logout')}
                       </button>
                     </>
                   )}
@@ -268,7 +273,7 @@ const Navbar = () => {
                 <button
                   className="mobile-menu-toggle icon-button"
                   onClick={toggleMobileMenu}
-                  title="Menu"
+                  title={t('menu')}
                 >
                   <FaBars size={20} />
                 </button>
@@ -293,7 +298,7 @@ const Navbar = () => {
           <button
             className="icon-button mobile-close-button"
             onClick={closeMobileMenu}
-            title="Close Menu"
+            title={t('closeMenu')}
           >
             <FaTimes size={20} />
           </button>
@@ -306,14 +311,14 @@ const Navbar = () => {
                   className="btn btn-primary"
                   onClick={closeMobileMenu}
                 >
-                  Register
+                  {t('register')}
                 </Link>
                 <Link
                   to="/login"
                   className="btn btn-outline"
                   onClick={closeMobileMenu}
                 >
-                  Sign In
+                  {t('signIn')}
                 </Link>
               </>
             ) : (
@@ -326,10 +331,10 @@ const Navbar = () => {
                     textAlign: "center",
                   }}
                 >
-                  Welcome, {user.name || "User"}
+                  {t('welcome')}, {user.name || t('user')}
                   {isLibraryOwner && (
                     <span style={{ fontSize: "0.8rem", display: "block", color: "#6B7280" }}>
-                      Library Owner
+                      {t('libraryOwner')}
                     </span>
                   )}
                 </span>
@@ -348,7 +353,7 @@ const Navbar = () => {
                     closeMobileMenu();
                   }}
                 >
-                  Logout
+                  {t('logout')}
                 </button>
               </>
             )}
@@ -371,7 +376,7 @@ const Navbar = () => {
                   }}
                 >
                   {IconComponent && <IconComponent size={16} />}
-                  {link.label}
+                  {t(link.label)}
                 </Link>
               );
             })}
@@ -385,21 +390,21 @@ const Navbar = () => {
                   className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
-                  Wishlist ({wishlistCount})
+                  {t('wishlist')} ({wishlistCount})
                 </Link>
                 <Link
                   to="/cart"
                   className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
-                  Cart ({cartCount})
+                  {t('cart')} ({cartCount})
                 </Link>
                 <Link
-                  to="/order"
+                  to="/orders"
                   className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
-                  Orders ({ordersCount})
+                  {t('orders')} ({ordersCount})
                 </Link>
               </>
             ) : (
@@ -411,7 +416,7 @@ const Navbar = () => {
                   style={{ color: "#3B82F6", fontWeight: 600 }}
                 >
                   <FaTachometerAlt size={16} style={{ marginRight: "0.5rem" }} />
-                  Dashboard
+                  {t('dashboard')}
                 </Link>
                 <Link
                   to="/edit-profile"
@@ -420,7 +425,7 @@ const Navbar = () => {
                   style={{ color: "#10B981", fontWeight: 600 }}
                 >
                   <FaUserEdit size={16} style={{ marginRight: "0.5rem" }} />
-                  Edit Profile
+                  {t('editProfile')}
                 </Link>
               </>
             )}

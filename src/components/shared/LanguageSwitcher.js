@@ -26,7 +26,7 @@ const LanguageSwitcher = () => {
       title={language === 'en' ? t('arabic') : t('english')}
     >
       {language === 'en' ? '🌐' : '🌐'}
-      {language === 'en' ? t('arabic') : t('english')}
+      {language === 'en' ? t('AR') : t('EN')}
     </button>
   );
 };
