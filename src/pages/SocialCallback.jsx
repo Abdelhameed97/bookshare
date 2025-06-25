@@ -1,44 +1,43 @@
-// SocialCallback.jsx
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
 import logo from "../assets/bookshare-logo.png";
-import { getUser } from "../api/auth";
+import "../styles/SocialCallback.css"; // Import your CSS for styling
+import useAuth from "../hooks/useAuth";
+import axios from "axios";
 
 const SocialCallback = () => {
   const navigate = useNavigate();
+  const { setUser, setToken } = useAuth();
 
   useEffect(() => {
-    const fragment = window.location.hash.substring(1);
-    const params = new URLSearchParams(fragment);
+    const hash = window.location.hash.substring(1); // Remove #
+    const params = new URLSearchParams(hash);
     const token = params.get("token");
-    const role = params.get("role");
 
-    if (token && role) {
-      localStorage.setItem("token", token);
-      localStorage.setItem("role", role);
+    if (token) {
+      // Save token locally
+      setToken(token);
 
-      getUser()
-        .then((response) => {
-          console.log("User from API:", response.data);
-
-          // Navigate based on role
-          if (response.data.role === "owner") {
-            navigate("/dashboard");
-          } else if (response.data.role === "client") {
-            navigate("/");
-          } else {
-            navigate("/login");
-          }
+      // Fetch user data using token
+      axios
+        .get("http://localhost:8000/api/user", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         })
-        .catch((error) => {
-          console.error("Error fetching user:", error);
-          navigate("/login");
+        .then((res) => {
+          setUser(res.data);
+          navigate("/"); // redirect to home after login
+        })
+        .catch((err) => {
+          console.error("Error fetching user after social login", err);
+          navigate("/login"); // fallback
         });
     } else {
       navigate("/login");
     }
-  }, [navigate]);
+  }, [navigate, setUser, setToken]);
 
   return (
     <div className='callback-container d-flex flex-column align-items-center justify-content-center vh-100'>
