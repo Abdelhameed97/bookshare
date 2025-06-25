@@ -1,7 +1,7 @@
 // src/pages/SocialCallback.jsx
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Spinner } from "react-bootstrap"; // or use your own spinner
+import { Navbar, Spinner } from "react-bootstrap"; // or use your own spinner
 import "../style/SocialCallback.css"; // Ensure you have this CSS file for styling
 import logo from "../assets/bookshare-logo.png";
 const SocialCallback = () => {
