@@ -110,7 +110,7 @@ const RegisterForm = () => {
 
   const handleSocialLogin = (provider) => {
     // Redirect to backend OAuth endpoint with the selected role
-    window.location.href = `${process.env.REACT_APP_API_URL}/auth/${provider}?role=${form.role}`;
+    window.location.href = `${process.env.REACT_APP_API_URL}/auth/${provider}/redirect?role=${form.role}`;
   };
 
   const isValid = (field) => touched[field] && !errors[field] && form[field];

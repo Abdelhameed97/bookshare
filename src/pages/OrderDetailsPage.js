@@ -21,7 +21,8 @@ import {
     FileText,
     AlertCircle,
     ThumbsUp,
-    ThumbsDown
+    ThumbsDown,
+    CreditCard
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -38,6 +39,7 @@ const OrderDetailsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false);
+    const [paymentProcessing, setPaymentProcessing] = useState(false);
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -122,6 +124,39 @@ const OrderDetailsPage = () => {
             Swal.fire('Error!', errorMessage, 'error');
         } finally {
             setProcessing(false);
+        }
+    };
+
+    const handlePayment = async () => {
+        try {
+            setPaymentProcessing(true);
+            const response = await api.processPayment(id);
+            
+            await Swal.fire(
+                'Payment Successful!',
+                'Your payment has been processed successfully.',
+                'success'
+            );
+
+            const orderResponse = await api.getOrderDetails(id);
+            let orderData = orderResponse.data;
+            if (Array.isArray(orderResponse.data)) {
+                orderData = orderResponse.data[0];
+            } else if (orderResponse.data.data) {
+                orderData = orderResponse.data.data;
+            }
+
+            setOrder(orderData);
+            navigate(`/orders/${id}`);
+        } catch (err) {
+            console.error('Error processing payment:', err);
+            Swal.fire(
+                'Payment Failed',
+                err.response?.data?.message || 'There was an error processing your payment.',
+                'error'
+            );
+        } finally {
+            setPaymentProcessing(false);
         }
     };
 
@@ -296,7 +331,8 @@ const OrderDetailsPage = () => {
 
     const user = JSON.parse(localStorage.getItem('user'));
     const isClient = user?.id === order.client_id;
-    const canCancel = ['pending', 'processing'].includes(order.status?.toLowerCase()) && isClient;
+    const canCancel = ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+    const canPay = ['accepted'].includes(order.status?.toLowerCase());
 
     return (
         <>
@@ -420,22 +456,44 @@ const OrderDetailsPage = () => {
                             </Col>
                         </Row>
 
-                        {canCancel && (
+                        {(canCancel || canPay) && (
                             <Row className="mt-4">
                                 <Col className="text-end">
-                                    <Button
-                                        variant="danger"
-                                        onClick={handleCancelOrder}
-                                        disabled={processing}
-                                        className="px-4 py-2"
-                                    >
-                                        {processing ? (
-                                            <>
-                                                <Spinner animation="border" size="sm" className="me-2" />
-                                                Cancelling...
-                                            </>
-                                        ) : 'Cancel Order'}
-                                    </Button>
+                                    {canCancel && (
+                                        <Button
+                                            variant="danger"
+                                            onClick={handleCancelOrder}
+                                            disabled={processing}
+                                            className="px-4 py-2 me-3"
+                                        >
+                                            {processing ? (
+                                                <>
+                                                    <Spinner animation="border" size="sm" className="me-2" />
+                                                    Cancelling...
+                                                </>
+                                            ) : 'Cancel Order'}
+                                        </Button>
+                                    )}
+                                    {canPay && (
+                                        <Button
+                                            variant="success"
+                                            onClick={handlePayment}
+                                            disabled={paymentProcessing}
+                                            className="px-4 py-2"
+                                        >
+                                            {paymentProcessing ? (
+                                                <>
+                                                    <Spinner animation="border" size="sm" className="me-2" />
+                                                    Processing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CreditCard size={18} className="me-2" />
+                                                    Pay Now
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
                                 </Col>
                             </Row>
                         )}

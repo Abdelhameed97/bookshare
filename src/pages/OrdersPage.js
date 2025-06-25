@@ -21,7 +21,8 @@ import {
     FileText,
     ShoppingCart,
     LogIn,
-    AlertCircle
+    AlertCircle,
+    CreditCard
 } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
@@ -128,38 +129,6 @@ const OrdersPage = () => {
         );
     }
 
-    // if (error) {
-    //     return (
-    //         <>
-    //             <Navbar />
-    //             <Container className="py-5">
-    //                 <Alert variant="danger" className="d-flex align-items-center">
-    //                     <AlertCircle size={24} className="me-2" />
-    //                     <div>
-    //                         <h5>Failed to Load Orders</h5>
-    //                         <p className="mb-0">{error}</p>
-    //                     </div>
-    //                 </Alert>
-    //                 <div className="d-flex justify-content-center mt-4 gap-3">
-    //                     <CustomButton
-    //                         variant="primary"
-    //                         onClick={() => window.location.reload()}
-    //                     >
-    //                         Retry
-    //                     </CustomButton>
-    //                     <CustomButton
-    //                         variant="outline-primary"
-    //                         onClick={() => navigate('/books')}
-    //                     >
-    //                         Browse Books
-    //                     </CustomButton>
-    //                 </div>
-    //             </Container>
-    //             <Footer />
-    //         </>
-    //     );
-    // }
-
     return (
         <>
             <Navbar />
@@ -188,12 +157,44 @@ const OrdersPage = () => {
                     <Title>My Orders</Title>
                 </div>
 
+                {/* Payments Section */}
+                <Card className="mb-4">
+                    <Card.Body className="p-3">
+                        <div className="d-flex justify-content-between align-items-center">
+                            <h5 className="mb-0">
+                                <CreditCard size={20} className="me-2" />
+                                Payments
+                            </h5>
+                            <Button
+                                variant="outline-primary"
+                                size="sm"
+                                onClick={() => navigate('/payments')}
+                            >
+                                View All Payments
+                            </Button>
+                        </div>
+                    </Card.Body>
+                </Card>
+
+                {/* Orders Tabs */}
                 <Tab.Container activeKey={activeTab} onSelect={setActiveTab}>
                     <Card className="mb-4">
                         <Card.Body className="p-0">
                             <Nav variant="tabs" className="orders-tabs">
                                 <Nav.Item>
                                     <Nav.Link eventKey="all">All Orders</Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="accepted">
+                                        <CheckCircle size={16} className="me-1" />
+                                        Accepted
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
+                                    <Nav.Link eventKey="rejected">
+                                        <XCircle size={16} className="me-1" />
+                                        Rejected
+                                    </Nav.Link>
                                 </Nav.Item>
                                 <Nav.Item>
                                     <Nav.Link eventKey="processing">

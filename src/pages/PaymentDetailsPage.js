@@ -71,7 +71,7 @@ const PaymentDetailsPage = () => {
                 timer: 2000
             });
 
-            navigate(`/order-confirmation/${order.id}`);
+            navigate(`/payment/${order.id}`);
         } catch (err) {
             console.error('[PaymentPage] Payment failed:', err);
             await Swal.fire({
