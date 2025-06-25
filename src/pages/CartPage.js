@@ -201,8 +201,7 @@ const CartPage = () => {
             });
         }
     };
-
-    const handleProceedToCheckout = async () => {
+    const handleOrderNow = async () => {
         if (cartItems.length === 0) return;
         if (!user) {
             navigate('/login', { state: { from: '/cart' } });
@@ -245,7 +244,19 @@ const CartPage = () => {
                 throw new Error("Order ID not found in response");
             }
 
-            navigate(`/payment/${orderId}`);
+            // Clear the cart after successful order creation
+            try {
+                await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
+                setCartItems([]);
+                setDiscount(0);
+                setCouponCode('');
+                setAppliedCoupon(null);
+            } catch (clearError) {
+                console.error("Error clearing cart:", clearError);
+                // Don't fail the whole operation if cart clearing fails
+            }
+
+            navigate(`/orders/${orderId}`);
         } catch (err) {
             console.error("Checkout error:", err);
             await Swal.fire({
@@ -549,44 +560,12 @@ const CartPage = () => {
                                 <CustomButton
                                     variant="primary"
                                     className="w-100 checkout-btn mb-3"
-                                    onClick={handleProceedToCheckout}
+                                    onClick={handleOrderNow}
                                     disabled={cartItems.length === 0}
                                 >
-                                    Proceed to Checkout
+                                    Order Now
                                 </CustomButton>
 
-                                <div className="payment-methods text-center mb-3">
-                                    <img
-                                        src="https://cdn-icons-png.flaticon.com/512/196/196578.png"
-                                        alt="Visa"
-                                        className="payment-icon mx-1"
-                                    />
-                                    <img
-                                        src="https://cdn-icons-png.flaticon.com/512/196/196566.png"
-                                        alt="Mastercard"
-                                        className="payment-icon mx-1"
-                                    />
-                                    <img
-                                        src="https://cdn-icons-png.flaticon.com/512/196/196547.png"
-                                        alt="American Express"
-                                        className="payment-icon mx-1"
-                                    />
-                                </div>
-
-                                <div className="guarantees">
-                                    <div className="d-flex align-items-center mb-2">
-                                        <CheckCircle size={16} className="text-success me-2" />
-                                        <small>Secure payment processing</small>
-                                    </div>
-                                    <div className="d-flex align-items-center mb-2">
-                                        <CheckCircle size={16} className="text-success me-2" />
-                                        <small>Free returns within 30 days</small>
-                                    </div>
-                                    <div className="d-flex align-items-center">
-                                        <CheckCircle size={16} className="text-success me-2" />
-                                        <small>24/7 customer support</small>
-                                    </div>
-                                </div>
                             </Card.Body>
                         </Card>
                     </Col>

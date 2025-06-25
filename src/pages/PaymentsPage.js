@@ -40,7 +40,8 @@ const PaymentsPage = () => {
         const paymentStatusMatch = filter === 'all' || payment.status === filter;
 
         const orderStatusMatch = orderStatusFilter === 'all' ||
-            (payment.order && payment.order.status === orderStatusFilter);
+            (payment.order ? payment.order.status === orderStatusFilter :
+                orderStatusFilter === 'n/a');
 
         return paymentStatusMatch && orderStatusMatch;
     });
@@ -59,6 +60,7 @@ const PaymentsPage = () => {
     };
 
     const getOrderStatusBadge = (status) => {
+
         switch (status) {
             case 'accepted':
                 return <Badge bg="success">Accepted</Badge>;
@@ -215,35 +217,23 @@ const PaymentsPage = () => {
                                                 Order Status
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
-                                                <Dropdown.Item
-                                                    active={orderStatusFilter === 'all'}
-                                                    onClick={() => setOrderStatusFilter('all')}
-                                                >
+                                                <Dropdown.Item active={orderStatusFilter === 'all'} onClick={() => setOrderStatusFilter('all')}>
                                                     All Orders
                                                 </Dropdown.Item>
-                                                <Dropdown.Item
-                                                    active={orderStatusFilter === 'accepted'}
-                                                    onClick={() => setOrderStatusFilter('accepted')}
-                                                >
+                                                <Dropdown.Item active={orderStatusFilter === 'accepted'} onClick={() => setOrderStatusFilter('accepted')}>
                                                     Accepted
                                                 </Dropdown.Item>
-                                                <Dropdown.Item
-                                                    active={orderStatusFilter === 'pending'}
-                                                    onClick={() => setOrderStatusFilter('pending')}
-                                                >
+                                                <Dropdown.Item active={orderStatusFilter === 'pending'} onClick={() => setOrderStatusFilter('pending')}>
                                                     Pending
                                                 </Dropdown.Item>
-                                                <Dropdown.Item
-                                                    active={orderStatusFilter === 'rejected'}
-                                                    onClick={() => setOrderStatusFilter('rejected')}
-                                                >
+                                                <Dropdown.Item active={orderStatusFilter === 'rejected'} onClick={() => setOrderStatusFilter('rejected')}>
                                                     Rejected
                                                 </Dropdown.Item>
-                                                <Dropdown.Item
-                                                    active={orderStatusFilter === 'completed'}
-                                                    onClick={() => setOrderStatusFilter('completed')}
-                                                >
+                                                <Dropdown.Item active={orderStatusFilter === 'completed'} onClick={() => setOrderStatusFilter('completed')}>
                                                     Completed
+                                                </Dropdown.Item>
+                                                <Dropdown.Item active={orderStatusFilter === 'cancelled'} onClick={() => setOrderStatusFilter('cancelled')}>
+                                                    Cancelled
                                                 </Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
