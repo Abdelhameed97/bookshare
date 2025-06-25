@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Spinner } from "react-bootstrap";
 import logo from "../assets/bookshare-logo.png";
+import "../styles/SocialCallback.css"; // Import your CSS for styling
 import useAuth from "../hooks/useAuth";
 import axios from "axios";
 
