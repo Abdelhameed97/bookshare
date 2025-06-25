@@ -8,7 +8,12 @@ import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from '../components/HomePage/Footer';
+import { Elements } from '@stripe/react-stripe-js';
+import { loadStripe } from '@stripe/stripe-js';
+import StripePaymentForm from '../components/forms/StripePaymentForm';
 import '../style/PaymentPage.css';
+
+const stripePromise = loadStripe('pk_test_51Rdg6iQAnF4Tl5ves23LxuT0PEGKbiCrG5CMA6wutfrDwTy7Db3eOcZCGxitA3v0F7FqlRSPBeCbvwZW62IMZ4Yx00OiCUMXrc');
 
 const PaymentDetailsPage = () => {
     const { orderId } = useParams();
@@ -23,7 +28,9 @@ const PaymentDetailsPage = () => {
         error,
         processing,
         fetchData,
-        createPayment
+        createPayment,
+        createStripePayment,
+        confirmStripePayment
     } = usePayment();
 
     useEffect(() => {
@@ -55,6 +62,11 @@ const PaymentDetailsPage = () => {
         }
 
         try {
+            if (selectedMethod === 'stripe') {
+                // This will be handled by the StripePaymentForm component
+                return;
+            }
+
             const paymentData = {
                 order_id: order.id,
                 method: selectedMethod,
@@ -90,7 +102,6 @@ const PaymentDetailsPage = () => {
         const num = parseFloat(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
     };
-    
 
     if (loading && !isInitialLoad) {
         return (
@@ -209,16 +220,49 @@ const PaymentDetailsPage = () => {
                                                 <Wallet size={24} className="me-2" />
                                                 Cash on Delivery
                                             </div>
+                                            <div
+                                                className={`payment-method ${selectedMethod === 'stripe' ? 'active' : ''}`}
+                                                onClick={() => setSelectedMethod('stripe')}
+                                            >
+                                                <CreditCard size={24} className="me-2" />
+                                                Stripe Payment
+                                            </div>
                                         </div>
 
-                                        <CustomButton
-                                            variant="primary"
-                                            onClick={handlePaymentSubmit}
-                                            disabled={processing}
-                                            className="w-100"
-                                        >
-                                            {processing ? 'Processing...' : 'Pay Now'}
-                                        </CustomButton>
+                                        {selectedMethod === 'stripe' ? (
+                                            <Elements stripe={stripePromise}>
+                                                <StripePaymentForm
+                                                    order={order}
+                                                    createStripePayment={createStripePayment}
+                                                    confirmStripePayment={confirmStripePayment}
+                                                    onSuccess={() => {
+                                                        Swal.fire({
+                                                            icon: 'success',
+                                                            title: 'Payment Successful!',
+                                                            text: 'Your payment has been processed',
+                                                            timer: 2000
+                                                        });
+                                                        navigate(`/payment/${order.id}`);
+                                                    }}
+                                                    onError={(error) => {
+                                                        Swal.fire({
+                                                            icon: 'error',
+                                                            title: 'Payment Failed',
+                                                            text: error.message || 'Payment processing failed',
+                                                        });
+                                                    }}
+                                                />
+                                            </Elements>
+                                        ) : (
+                                            <CustomButton
+                                                variant="primary"
+                                                onClick={handlePaymentSubmit}
+                                                disabled={processing}
+                                                className="w-100"
+                                            >
+                                                {processing ? 'Processing...' : 'Pay Now'}
+                                            </CustomButton>
+                                        )}
                                     </>
                                 )}
                             </Card.Body>

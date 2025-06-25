@@ -31,6 +31,7 @@ import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
 import Swal from 'sweetalert2';
 import CustomButton from '../components/shared/CustomButton.js';
+import { usePayment } from '../hooks/usePayment';
 
 const OrderDetailsPage = () => {
     const { id } = useParams();
@@ -38,8 +39,20 @@ const OrderDetailsPage = () => {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [processing, setProcessing] = useState(false);
-    const [paymentProcessing, setPaymentProcessing] = useState(false);
+    const [paymentCompleted, setPaymentCompleted] = useState(() => {
+        const savedPayment = localStorage.getItem(`paymentCompleted_${id}`);
+        return savedPayment ? JSON.parse(savedPayment) : false;
+    });
+    const [paymentAttempted, setPaymentAttempted] = useState(() => {
+        const savedAttempt = localStorage.getItem(`paymentAttempted_${id}`);
+        return savedAttempt ? JSON.parse(savedAttempt) : false;
+    });
+
+    const {
+        createStripePayment,
+        processing,
+        setProcessing,
+    } = usePayment();
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -58,16 +71,20 @@ const OrderDetailsPage = () => {
                     throw new Error('Order data not found');
                 }
 
-                const enhancedOrder = {
+                if (orderData.payment_status === 'paid' || orderData.payment_id) {
+                    setPaymentCompleted(true);
+                    localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(true));
+                }
+
+                setOrder({
                     ...orderData,
                     order_items: orderData.order_items?.map(item => ({
                         ...item,
                         unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
                         total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
                     }))
-                };
+                });
 
-                setOrder(enhancedOrder);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching order:', err);
@@ -84,6 +101,11 @@ const OrderDetailsPage = () => {
 
         fetchOrderDetails();
     }, [id, navigate]);
+
+    useEffect(() => {
+        localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(paymentCompleted));
+        localStorage.setItem(`paymentAttempted_${id}`, JSON.stringify(paymentAttempted));
+    }, [paymentCompleted, paymentAttempted, id]);
 
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
@@ -102,7 +124,6 @@ const OrderDetailsPage = () => {
             setProcessing(true);
             await api.cancelOrder(id);
 
-            // Update order status locally
             setOrder(prevOrder => ({
                 ...prevOrder,
                 status: 'cancelled'
@@ -128,16 +149,24 @@ const OrderDetailsPage = () => {
     };
 
     const handlePayment = async () => {
+        if (paymentCompleted || paymentAttempted) return;
+
         try {
-            setPaymentProcessing(true);
-            const response = await api.processPayment(id);
-            
+            setPaymentAttempted(true);
+            setProcessing(true);
+
+            const paymentResponse = await createStripePayment(id);
+
+            // Mark payment as completed
+            setPaymentCompleted(true);
+
             await Swal.fire(
                 'Payment Successful!',
                 'Your payment has been processed successfully.',
                 'success'
             );
 
+            // Refresh order data
             const orderResponse = await api.getOrderDetails(id);
             let orderData = orderResponse.data;
             if (Array.isArray(orderResponse.data)) {
@@ -147,18 +176,19 @@ const OrderDetailsPage = () => {
             }
 
             setOrder(orderData);
-            navigate(`/orders/${id}`);
+            navigate(`/payment/${id}`);
         } catch (err) {
             console.error('Error processing payment:', err);
             Swal.fire(
                 'Payment Failed',
-                err.response?.data?.message || 'There was an error processing your payment.',
+                err.response?.data?.message || err.message || 'There was an error processing your payment.',
                 'error'
             );
         } finally {
-            setPaymentProcessing(false);
+            setProcessing(false);
         }
     };
+
 
     const getStatusIcon = (status) => {
         if (!status) return <Clock size={20} className="text-secondary me-2" />;
@@ -245,6 +275,11 @@ const OrderDetailsPage = () => {
         return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
     };
 
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isClient = user?.id === order?.client_id;
+    const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) && !paymentCompleted && !paymentAttempted;
+
     if (loading) {
         return (
             <div className="text-center py-5">
@@ -328,11 +363,6 @@ const OrderDetailsPage = () => {
             </>
         );
     }
-
-    const user = JSON.parse(localStorage.getItem('user'));
-    const isClient = user?.id === order.client_id;
-    const canCancel = ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
-    const canPay = ['accepted'].includes(order.status?.toLowerCase());
 
     return (
         <>
@@ -478,14 +508,18 @@ const OrderDetailsPage = () => {
                                         <Button
                                             variant="success"
                                             onClick={handlePayment}
-                                            disabled={paymentProcessing}
+                                            disabled={processing || paymentCompleted || paymentAttempted}
                                             className="px-4 py-2"
                                         >
-                                            {paymentProcessing ? (
+                                            {processing ? (
                                                 <>
                                                     <Spinner animation="border" size="sm" className="me-2" />
                                                     Processing...
                                                 </>
+                                            ) : paymentCompleted ? (
+                                                'Payment Completed'
+                                            ) : paymentAttempted ? (
+                                                'Payment in Progress'
                                             ) : (
                                                 <>
                                                     <CreditCard size={18} className="me-2" />

@@ -8,6 +8,7 @@ export const usePayment = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false);
+    
     const navigate = useNavigate();
 
     const fetchData = useCallback(async (orderId) => {
@@ -74,6 +75,32 @@ export const usePayment = () => {
         }
     };
 
+    const createStripePayment = async (orderId) => {
+        setProcessing(true);
+        try {
+            const response = await api.createStripePaymentIntent(orderId);
+            return response.data;
+        } catch (err) {
+            console.error('Stripe payment creation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const confirmStripePayment = async (paymentId) => {
+        setProcessing(true);
+        try {
+            const response = await api.confirmStripePayment(paymentId);
+            return response.data;
+        } catch (err) {
+            console.error('Stripe payment confirmation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const fetchUserPayments = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -94,9 +121,12 @@ export const usePayment = () => {
         loading,
         error,
         processing,
+        setProcessing,
         fetchData,
         createPayment,
         setPayment,
-        fetchUserPayments
+        fetchUserPayments,
+        createStripePayment,
+        confirmStripePayment,
     };
 };

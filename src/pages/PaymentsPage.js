@@ -8,6 +8,7 @@ import CustomButton from '../components/shared/CustomButton';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from '../components/HomePage/Footer';
 import '../style/PaymentPage.css';
+import { useOrders } from '../hooks/useOrders';
 
 const PaymentsPage = () => {
     const navigate = useNavigate();
@@ -19,6 +20,8 @@ const PaymentsPage = () => {
     const { fetchUserPayments } = usePayment();
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user?.id;
+
+    const { orders } = useOrders(userId);
 
     useEffect(() => {
         const loadPayments = async () => {
@@ -40,8 +43,10 @@ const PaymentsPage = () => {
         const paymentStatusMatch = filter === 'all' || payment.status === filter;
 
         const orderStatusMatch = orderStatusFilter === 'all' ||
-            (payment.order ? payment.order.status === orderStatusFilter :
-                orderStatusFilter === 'n/a');
+            (
+                orders &&
+                orders.find(o => o.id === payment.order_id)?.status === orderStatusFilter
+            );
 
         return paymentStatusMatch && orderStatusMatch;
     });
@@ -60,7 +65,6 @@ const PaymentsPage = () => {
     };
 
     const getOrderStatusBadge = (status) => {
-
         switch (status) {
             case 'accepted':
                 return <Badge bg="success">Accepted</Badge>;
@@ -90,6 +94,13 @@ const PaymentsPage = () => {
     const formatPrice = (price) => {
         const num = parseFloat(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
+    };
+
+    const getPaymentIdDisplay = (payment) => {
+        if (payment.stripe_payment_id) {
+            return `Stripe: ${payment.stripe_payment_id}`;
+        }
+        return `Local: #${payment.id}`;
     };
 
     if (!userId) {
@@ -153,7 +164,6 @@ const PaymentsPage = () => {
             </>
         );
     }
-
 
     return (
         <>
@@ -261,7 +271,9 @@ const PaymentsPage = () => {
                                         <tbody>
                                             {filteredPayments.map(payment => (
                                                 <tr key={payment.id}>
-                                                    <td>#{payment.id}</td>
+                                                    <td>
+                                                        {getPaymentIdDisplay(payment)}
+                                                    </td>
                                                     <td>{formatDate(payment.created_at)}</td>
                                                     <td>
                                                         <div>
