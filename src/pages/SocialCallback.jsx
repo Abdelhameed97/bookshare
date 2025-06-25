@@ -1,5 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { Spinner } from "react-bootstrap";
+import logo from "../assets/bookshare-logo.png";
 import useAuth from "../hooks/useAuth";
 import axios from "axios";
 
@@ -34,11 +36,16 @@ const SocialCallback = () => {
     } else {
       navigate("/login");
     }
-  }, []);
+  }, [navigate, setUser, setToken]);
 
   return (
-    <div className='text-center mt-5'>
-      Logging you in with social account...
+    <div className='callback-container d-flex flex-column align-items-center justify-content-center vh-100'>
+      <div className='callback-box text-center p-4 shadow-sm rounded'>
+        <Spinner animation='border' variant='primary' className='mb-3' />
+        <img src={logo} alt='BookShare Logo' width={200} />
+        <h5>Welcome to BookShare</h5>
+        <p className='text-muted'>Redirecting to your dashboard...</p>
+      </div>
     </div>
   );
 };
