@@ -19,7 +19,10 @@ import {
     RefreshCw,
     Package,
     FileText,
-    AlertCircle
+    AlertCircle,
+    ThumbsUp,
+    ThumbsDown,
+    CreditCard
 } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
@@ -36,6 +39,7 @@ const OrderDetailsPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [processing, setProcessing] = useState(false);
+    const [paymentProcessing, setPaymentProcessing] = useState(false);
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -47,7 +51,7 @@ const OrderDetailsPage = () => {
                 if (Array.isArray(response.data)) {
                     orderData = response.data[0];
                 } else if (response.data.data) {
-                    orderData = response.data.data; 
+                    orderData = response.data.data;
                 }
 
                 if (!orderData) {
@@ -58,8 +62,8 @@ const OrderDetailsPage = () => {
                     ...orderData,
                     order_items: orderData.order_items?.map(item => ({
                         ...item,
-                        unit_price: item.price || item.book?.price || 0,
-                        total_price: (item.price || item.book?.price || 0) * item.quantity
+                        unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
+                        total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
                     }))
                 };
 
@@ -98,7 +102,7 @@ const OrderDetailsPage = () => {
             setProcessing(true);
             await api.cancelOrder(id);
 
-            // تحديث حالة الطلب محليًا
+            // Update order status locally
             setOrder(prevOrder => ({
                 ...prevOrder,
                 status: 'cancelled'
@@ -110,38 +114,109 @@ const OrderDetailsPage = () => {
                 'success'
             );
 
-            // إعادة التوجيه إلى صفحة الطلبات مع تفعيل تبويب "CANCELLED"
             navigate('/orders', { state: { activeTab: 'cancelled' } });
         } catch (err) {
             console.error('Error cancelling order:', err);
             let errorMessage = err.response?.data?.message || 'Failed to cancel order';
+            if (err.response?.status === 500 && err.response?.data?.error?.includes('No query results')) {
+                errorMessage = 'This order may have already been cancelled or deleted.';
+            }
             Swal.fire('Error!', errorMessage, 'error');
         } finally {
             setProcessing(false);
         }
     };
 
+    const handlePayment = async () => {
+        try {
+            setPaymentProcessing(true);
+            const response = await api.processPayment(id);
+            
+            await Swal.fire(
+                'Payment Successful!',
+                'Your payment has been processed successfully.',
+                'success'
+            );
+
+            const orderResponse = await api.getOrderDetails(id);
+            let orderData = orderResponse.data;
+            if (Array.isArray(orderResponse.data)) {
+                orderData = orderResponse.data[0];
+            } else if (orderResponse.data.data) {
+                orderData = orderResponse.data.data;
+            }
+
+            setOrder(orderData);
+            navigate(`/orders/${id}`);
+        } catch (err) {
+            console.error('Error processing payment:', err);
+            Swal.fire(
+                'Payment Failed',
+                err.response?.data?.message || 'There was an error processing your payment.',
+                'error'
+            );
+        } finally {
+            setPaymentProcessing(false);
+        }
+    };
+
     const getStatusIcon = (status) => {
         if (!status) return <Clock size={20} className="text-secondary me-2" />;
         switch (status.toLowerCase()) {
-            case 'delivered': return <CheckCircle size={20} className="text-success me-2" />;
-            case 'shipped': return <Truck size={20} className="text-primary me-2" />;
+            case 'accepted':
+            case 'completed':
+            case 'delivered':
+                return <ThumbsUp size={20} className="text-success me-2" />;
+            case 'rejected':
+            case 'cancelled':
+                return <ThumbsDown size={20} className="text-danger me-2" />;
+            case 'shipped':
+                return <Truck size={20} className="text-primary me-2" />;
             case 'processing':
-            case 'pending': return <RefreshCw size={20} className="text-warning me-2" />;
-            case 'cancelled': return <XCircle size={20} className="text-danger me-2" />;
-            default: return <Clock size={20} className="text-secondary me-2" />;
+            case 'pending':
+                return <RefreshCw size={20} className="text-warning me-2" />;
+            default:
+                return <AlertCircle size={20} className="text-secondary me-2" />;
         }
     };
 
     const getStatusBadge = (status) => {
         if (!status) return 'secondary';
         switch (status.toLowerCase()) {
-            case 'delivered': return 'success';
-            case 'shipped': return 'primary';
+            case 'accepted':
+            case 'completed':
+            case 'delivered':
+                return 'success';
+            case 'rejected':
+            case 'cancelled':
+                return 'danger';
+            case 'shipped':
+                return 'primary';
             case 'processing':
-            case 'pending': return 'warning';
-            case 'cancelled': return 'danger';
-            default: return 'secondary';
+            case 'pending':
+                return 'warning';
+            default:
+                return 'secondary';
+        }
+    };
+
+    const getStatusCardVariant = (status) => {
+        if (!status) return 'light';
+        switch (status.toLowerCase()) {
+            case 'accepted':
+            case 'completed':
+            case 'delivered':
+                return 'success';
+            case 'rejected':
+            case 'cancelled':
+                return 'danger';
+            case 'shipped':
+                return 'primary';
+            case 'processing':
+            case 'pending':
+                return 'warning';
+            default:
+                return 'light';
         }
     };
 
@@ -167,10 +242,7 @@ const OrderDetailsPage = () => {
     };
 
     const getItemPrice = (item) => {
-        if (item.type === 'rent') {
-            return item.book?.rental_price || item.price || 0;
-        }
-        return item.price || item.book?.price || 0;
+        return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
     };
 
     if (loading) {
@@ -259,7 +331,8 @@ const OrderDetailsPage = () => {
 
     const user = JSON.parse(localStorage.getItem('user'));
     const isClient = user?.id === order.client_id;
-    const canCancel = ['pending', 'processing'].includes(order.status?.toLowerCase()) && isClient;
+    const canCancel = ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+    const canPay = ['accepted'].includes(order.status?.toLowerCase());
 
     return (
         <>
@@ -278,27 +351,36 @@ const OrderDetailsPage = () => {
                     <Title>Order Details</Title>
                 </div>
 
-                <Card className="mb-4">
+                <Card className="mb-4 border-0 shadow-sm">
+                    <Card.Header className={`bg-${getStatusCardVariant(order.status)} text-white`}>
+                        <h5 className="mb-0 d-flex align-items-center">
+                            {getStatusIcon(order.status)}
+                            <span>Order #{order.id}</span>
+                        </h5>
+                    </Card.Header>
                     <Card.Body>
                         <Row className="mb-4">
                             <Col md={6}>
-                                <h5 className="d-flex align-items-center">
-                                    {getStatusIcon(order.status)}
-                                    <span>Order #{order.id}</span>
-                                    <Badge bg={getStatusBadge(order.status)} className="ms-3">
+                                <div className="d-flex align-items-center mb-3">
+                                    <Badge bg={getStatusBadge(order.status)} className="fs-6">
                                         {order.status}
                                     </Badge>
-                                </h5>
-                                <div className="text-muted">
-                                    <small>Placed on {formatDate(order.created_at)}</small>
+                                    <small className="text-muted ms-3">
+                                        Placed on {formatDate(order.created_at)}
+                                    </small>
                                 </div>
+                                {order.updated_at && order.status !== 'pending' && (
+                                    <div className="text-muted small">
+                                        Last updated: {formatDate(order.updated_at)}
+                                    </div>
+                                )}
                             </Col>
                             <Col md={6} className="text-md-end">
                                 <div className="d-flex flex-column">
                                     <div className="mb-2">
                                         <strong>Payment Method:</strong> {order.payment_method || 'N/A'}
                                     </div>
-                                    <div>
+                                    <div className="fs-5 fw-bold">
                                         <strong>Total:</strong> {formatPrice(order.total_price)} EGP
                                     </div>
                                 </div>
@@ -307,8 +389,8 @@ const OrderDetailsPage = () => {
 
                         <Row>
                             <Col md={6} className="mb-4">
-                                <Card>
-                                    <Card.Header className="d-flex align-items-center">
+                                <Card className="h-100">
+                                    <Card.Header className="d-flex align-items-center bg-light">
                                         <Package size={18} className="me-2" />
                                         <span>Shipping Information</span>
                                     </Card.Header>
@@ -330,30 +412,36 @@ const OrderDetailsPage = () => {
                             </Col>
 
                             <Col md={6}>
-                                <Card>
-                                    <Card.Header className="d-flex align-items-center">
+                                <Card className="h-100">
+                                    <Card.Header className="d-flex align-items-center bg-light">
                                         <FileText size={18} className="me-2" />
                                         <span>Order Items ({order.order_items?.length || 0})</span>
                                     </Card.Header>
-                                    <Card.Body>
+                                    <Card.Body className="p-0">
                                         <ListGroup variant="flush">
                                             {order.order_items?.map(item => (
-                                                <ListGroup.Item key={item.id} className="d-flex justify-content-between align-items-center">
+                                                <ListGroup.Item
+                                                    key={item.id}
+                                                    className="d-flex justify-content-between align-items-center py-3"
+                                                >
                                                     <div className="d-flex align-items-center">
                                                         <img
                                                             src={item.book?.images?.[0] || 'https://via.placeholder.com/80'}
                                                             alt={item.book?.title}
                                                             width="60"
-                                                            className="me-3"
+                                                            height="80"
+                                                            className="me-3 object-fit-cover rounded"
                                                         />
                                                         <div>
                                                             <div className="fw-bold">{item.book?.title || 'N/A'}</div>
                                                             <small className="text-muted">Qty: {item.quantity || 0}</small>
-                                                            <small className="d-block text-muted">Type: {item.type || 'buy'}</small>
+                                                            <small className="d-block text-muted text-capitalize">
+                                                                Type: {item.type || 'buy'}
+                                                            </small>
                                                         </div>
                                                     </div>
                                                     <div className="text-end">
-                                                        <div>
+                                                        <div className="fw-bold">
                                                             {formatPrice(getItemPrice(item))} EGP
                                                         </div>
                                                         <small className="text-muted">
@@ -368,16 +456,44 @@ const OrderDetailsPage = () => {
                             </Col>
                         </Row>
 
-                        {canCancel && (
+                        {(canCancel || canPay) && (
                             <Row className="mt-4">
                                 <Col className="text-end">
-                                    <Button
-                                        variant="danger"
-                                        onClick={handleCancelOrder}
-                                        disabled={processing}
-                                    >
-                                        {processing ? 'Cancelling...' : 'Cancel Order'}
-                                    </Button>
+                                    {canCancel && (
+                                        <Button
+                                            variant="danger"
+                                            onClick={handleCancelOrder}
+                                            disabled={processing}
+                                            className="px-4 py-2 me-3"
+                                        >
+                                            {processing ? (
+                                                <>
+                                                    <Spinner animation="border" size="sm" className="me-2" />
+                                                    Cancelling...
+                                                </>
+                                            ) : 'Cancel Order'}
+                                        </Button>
+                                    )}
+                                    {canPay && (
+                                        <Button
+                                            variant="success"
+                                            onClick={handlePayment}
+                                            disabled={paymentProcessing}
+                                            className="px-4 py-2"
+                                        >
+                                            {paymentProcessing ? (
+                                                <>
+                                                    <Spinner animation="border" size="sm" className="me-2" />
+                                                    Processing...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CreditCard size={18} className="me-2" />
+                                                    Pay Now
+                                                </>
+                                            )}
+                                        </Button>
+                                    )}
                                 </Col>
                             </Row>
                         )}
