@@ -3,7 +3,7 @@ import { BookOpen, Users, ShoppingCart, TrendingUp, ClipboardList, User, Refresh
 import Navbar from '../HomePage/Navbar';
 import Footer from '../HomePage/Footer';
 import api from '../../api/auth';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import '../../style/AdminDashboard.css';
 
@@ -19,6 +19,7 @@ const AdminDashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const navigate = useNavigate();
 
   const fetchDashboardData = async () => {
     setLoading(true);
@@ -73,23 +74,38 @@ const AdminDashboard = () => {
                 )}
               </button>
               {showNotifications && (
-                <div className="admin-notification-dropdown">
+                <div className="notifications-dropdown">
                   <h4>New Book Requests</h4>
                   {pendingOrders.length === 0 ? (
-                    <div className="admin-notification-empty">No new requests</div>
+                    <div className="no-notifications">No new requests</div>
                   ) : (
-                    pendingOrders.slice(0, 8).map(order => (
-                      <div key={order.id} className="admin-notification-item">
-                        <span>
-                          <b>{order.user?.name || order.client?.name || 'Someone'}</b> requested
-                          {order.order_items?.length > 0 && (
-                            <> <b>{order.order_items[0].book?.title || 'a book'}</b>{order.order_items.length > 1 ? ` and ${order.order_items.length - 1} more` : ''}</>
-                          )}
-                        </span>
-                        <small>{new Date(order.created_at).toLocaleString()}</small>
-                        <Link to="/admin/orders" className="admin-notification-link">View</Link>
-                      </div>
-                    ))
+                    pendingOrders.slice(0, 8).map(order => {
+                      const userName = order.user?.name || order.client?.name || 'Someone';
+                      const firstBook = order.order_items?.[0]?.book?.title || 'a book';
+                      const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
+                      return (
+                        <div key={order.id} className="notification-item">
+                          <div className="notification-row">
+                            <span className="notif-icon">📚</span>
+                            <span className="notification-message">
+                              <span className="notif-user">{userName}</span>
+                              <span> requested </span>
+                              <span className="notif-book">“{firstBook}”</span>
+                              {moreCount > 0 && (
+                                <span> and <span className="notif-more">{moreCount} more</span></span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="notification-meta">
+                            <small>{new Date(order.created_at).toLocaleString()}</small>
+                            <button
+                              className="notification-link-btn"
+                              onClick={() => navigate('/admin/orders')}
+                            >View</button>
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               )}
