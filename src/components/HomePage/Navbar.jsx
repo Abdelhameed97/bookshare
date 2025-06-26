@@ -33,7 +33,7 @@ const Navbar = () => {
 
   const { cartCount } = useCart(user?.id);
   const { wishlistCount } = useWishlist(user?.id);
-  const { orders } = useOrders(user?.id);
+  const { orders, fetchOrders, ...restOrders } = useOrders(user?.id);
   const ordersCount = orders.length;
 
   const isLibraryOwner = user?.role === "owner";
@@ -41,6 +41,11 @@ const Navbar = () => {
   const { t, language } = useTranslation();
 
   const [showClientNotifications, setShowClientNotifications] = useState(false);
+
+  const [readNotifications, setReadNotifications] = useState(() => {
+    const stored = localStorage.getItem('readNotifications');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const regularNavLinks = [
     { to: "/", label: "home" },
@@ -116,6 +121,24 @@ const Navbar = () => {
       .filter(order => order.status === 'accepted' || order.status === 'rejected')
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }, [user, orders]);
+
+  const unreadNotifications = useMemo(() => {
+    if (!user || user.role !== 'client' || !orders) return [];
+    return clientOrderNotifications.filter(n => !readNotifications.includes(n.id));
+  }, [user, orders, clientOrderNotifications, readNotifications]);
+
+  const handleShowNotifications = async () => {
+    if (!showClientNotifications) {
+      await fetchOrders(); // fetch latest orders before showing notifications
+    }
+    setShowClientNotifications(v => !v);
+  };
+
+  const handleNotificationView = (orderId) => {
+    const updated = [...readNotifications, orderId];
+    setReadNotifications(updated);
+    localStorage.setItem('readNotifications', JSON.stringify(updated));
+  };
 
   return (
     <>
@@ -193,20 +216,20 @@ const Navbar = () => {
                     <button
                       className="icon-button client-notification-btn"
                       title={t('notifications')}
-                      onClick={() => setShowClientNotifications(v => !v)}
+                      onClick={handleShowNotifications}
                     >
                       <FaBell size={20} />
-                      {clientOrderNotifications.length > 0 && (
-                        <span className="client-notification-badge">{clientOrderNotifications.length}</span>
+                      {unreadNotifications.length > 0 && (
+                        <span className="client-notification-badge">{unreadNotifications.length}</span>
                       )}
                     </button>
                     {showClientNotifications && (
                       <div className="client-notification-dropdown">
                         <h4>Order Updates</h4>
-                        {clientOrderNotifications.length === 0 ? (
+                        {unreadNotifications.length === 0 ? (
                           <div className="no-notifications">No notifications</div>
                         ) : (
-                          clientOrderNotifications.slice(0, 8).map(order => (
+                          unreadNotifications.slice(0, 8).map(order => (
                             <div key={order.id} className="client-notification-item">
                               <span className="client-notification-message">
                                 Your order for <b>"{order.order_items?.[0]?.book?.title || 'a book'}"</b> was
@@ -216,7 +239,13 @@ const Navbar = () => {
                               </span>
                               <div className="client-notification-meta">
                                 <small>{new Date(order.updated_at).toLocaleString()}</small>
-                                <Link to={`/orders/${order.id}`} className="client-notification-link-btn">View</Link>
+                                <Link
+                                  to={`/orders/${order.id}`}
+                                  className="client-notification-link-btn"
+                                  onClick={() => handleNotificationView(order.id)}
+                                >
+                                  View
+                                </Link>
                               </div>
                             </div>
                           ))
