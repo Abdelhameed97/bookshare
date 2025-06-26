@@ -36,3 +36,24 @@
     transform: rotate(360deg);
   }
 }
+
+.floating-chat-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 50%;
+  width: 55px;
+  height: 55px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 9999;
+  transition: background-color 0.3s ease;
+}
+.floating-chat-btn:hover {
+  background-color: #0b5ed7;
+}
