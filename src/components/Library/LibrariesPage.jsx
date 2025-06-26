@@ -1,21 +1,25 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { 
   BookOpen, 
   MapPin, 
   Star, 
   Search,
-  Building2
+  Building2,
+  Eye
 } from 'lucide-react';
 import apiService from '../../services/api';
 import Navbar from '../HomePage/Navbar';
 import Footer from '../HomePage/Footer';
+import useAuth from '../../hooks/useAuth';
 import '../../style/LibrariesPage.css';
 
 const LibrariesPage = () => {
   const [libraries, setLibraries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchLibraries();
@@ -25,15 +29,12 @@ const LibrariesPage = () => {
     try {
       setLoading(true);
       
-      // Fetch all library owners using the new API
       const librariesResponse = await apiService.get('/libraries');
       const owners = librariesResponse.data.data;
       
-      // Fetch books for each owner
       const booksResponse = await apiService.get('/books');
       const allBooks = booksResponse.data.data;
       
-      // Group books by owner and calculate stats
       const librariesData = owners.map(owner => {
         const ownerBooks = allBooks.filter(book => book.user_id === owner.id);
         const totalBooks = ownerBooks.length;
@@ -55,7 +56,7 @@ const LibrariesPage = () => {
           totalBooks,
           avgRating,
           totalReviews,
-          books: ownerBooks.slice(0, 3), // Show only first 3 books
+          books: ownerBooks.slice(0, 3),
           image: ownerBooks[0]?.images?.[0] 
             ? ownerBooks[0].images[0].startsWith('http') 
               ? ownerBooks[0].images[0] 
@@ -70,6 +71,10 @@ const LibrariesPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleAdminViewBooks = (libraryId) => {
+    navigate(`/admin/books?user_id=${libraryId}`);
   };
 
   const filteredLibraries = libraries.filter(library => {
@@ -103,7 +108,6 @@ const LibrariesPage = () => {
         </div>
 
         <div className="libraries-container">
-          {/* Search and Filter */}
           <div className="search-filter-section">
             <div className="search-box">
               <Search size={20} />
@@ -116,7 +120,6 @@ const LibrariesPage = () => {
             </div>
           </div>
 
-          {/* Libraries Grid */}
           <div className="libraries-grid">
             {filteredLibraries.length > 0 ? (
               filteredLibraries.map((library) => (
@@ -126,9 +129,7 @@ const LibrariesPage = () => {
                       <img 
                         src={library.image} 
                         alt={library.name}
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
+                        onError={(e) => { e.currentTarget.src = '/placeholder.svg'; }}
                       />
                     </div>
                     <div className="library-info">
@@ -152,11 +153,7 @@ const LibrariesPage = () => {
                     </div>
                   </div>
 
-                  {library.bio && (
-                    <div className="library-bio">
-                      <p>{library.bio}</p>
-                    </div>
-                  )}
+                  {library.bio && <div className="library-bio"><p>{library.bio}</p></div>}
 
                   {library.books.length > 0 && (
                     <div className="library-books">
@@ -172,6 +169,16 @@ const LibrariesPage = () => {
                     <Link to={`/library/${library.id}`} className="btn-view-library">
                       View Library
                     </Link>
+                    {user?.role === 'admin' && (
+                      <button 
+                        onClick={() => handleAdminViewBooks(library.id)} 
+                        className="btn-view-library admin"
+                        title="Admin: View all books"
+                      >
+                        <Eye size={16} />
+                        Admin View Books
+                      </button>
+                    )}
                   </div>
                 </div>
               ))

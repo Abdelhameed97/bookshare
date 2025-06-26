@@ -32,6 +32,13 @@ import CategoryPage from "./pages/CategoryPage";
 import FloatingChatButton from "./components/FloatingChatButton";
 import './App.css';
 
+import AdminDashboard from './components/Admin/Dashboard';
+import CategoryList from './components/Admin/CategoryList';
+import UserList from './components/Admin/UserList';
+import BookList from './components/Admin/BookList';
+import AdminOrders from './components/Admin/AdminOrders';
+// import Users from './components/admin/Users';
+// import Categories from './components/admin/Categories';
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -85,6 +92,15 @@ function App() {
         <Route path="/rag-chat" element={<RagChat />} />
         <Route path="/category/:category" element={<CategoryPage />} />
         
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/categories" element={<CategoryList />} />
+        <Route path="/admin/users" element={<UserList />} />
+        <Route path="/admin/books" element={<BookList />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
+
         <Route path='*' element={<NotFound />} />
 
       </Routes>

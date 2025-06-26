@@ -160,6 +160,12 @@ const Dashboard = () => {
     return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [allOrders, allBooks, currentUser, selectedTimeRange]);
 
+  // Get only pending orders for this library's books
+  const pendingOrders = useMemo(() =>
+    allOrders.filter(order => order.status === 'pending'),
+    [allOrders]
+  );
+
   const fetchDashboardData = useCallback(async () => {
     if (!currentUser) return;
     
@@ -412,50 +418,56 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="dashboard-actions">
-            <div className="action-group">
-            <button 
-              className="btn-refresh"
-              onClick={handleRefresh}
-              disabled={refreshing}
-              title="Refresh Data"
-            >
-              <RefreshCw size={20} className={refreshing ? 'spinning' : ''} />
-              {refreshing ? 'Refreshing...' : 'Refresh'}
-            </button>
-            </div>
-            
+            {/* Notification Bell */}
             <div className="notification-section">
               <button 
                 className="btn-notification"
                 onClick={() => setShowNotifications(!showNotifications)}
                 title="Notifications"
               >
-                <Bell size={20} />
-                {notifications.length > 0 && (
-                  <span className="notification-badge">{notifications.length}</span>
+                <Bell size={24} />
+                {pendingOrders.length > 0 && (
+                  <span className="notification-badge">{pendingOrders.length}</span>
                 )}
               </button>
-              
               {showNotifications && (
                 <div className="notifications-dropdown">
-                  {notifications.map(notification => (
-                    <div key={notification.id} className="notification-item">
-                      <p>{notification.message}</p>
-                      <small>{new Date(notification.created_at).toLocaleDateString()}</small>
-                    </div>
-                  ))}
-                  {notifications.length === 0 && (
-                    <p className="no-notifications">No new notifications</p>
+                  <h4>New Book Requests</h4>
+                  {pendingOrders.length === 0 ? (
+                    <div className="no-notifications">No new requests</div>
+                  ) : (
+                    pendingOrders.slice(0, 8).map(order => {
+                      const userName = order.user?.name || order.client?.name || 'Someone';
+                      const firstBook = order.order_items?.[0]?.book?.title || 'a book';
+                      const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
+                      return (
+                        <div key={order.id} className="notification-item">
+                          <div className="notification-row">
+                            <span className="notif-icon">📚</span>
+                            <span className="notification-message">
+                              <span className="notif-user">{userName}</span>
+                              <span> requested </span>
+                              <span className="notif-book">“{firstBook}”</span>
+                              {moreCount > 0 && (
+                                <span> and <span className="notif-more">{moreCount} more</span></span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="notification-meta">
+                            <small>{new Date(order.created_at).toLocaleString()}</small>
+                            <Link to="/all-orders" className="notification-link-btn">View</Link>
+                          </div>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               )}
             </div>
-            
             <Link to="/edit-profile" className="btn-secondary">
               <User size={20} />
               Edit Profile
             </Link>
-            
             <Link to="/add-book" className="btn-primary">
               <Plus size={20} />
               Add New Book
@@ -589,26 +601,6 @@ const Dashboard = () => {
           <div className="section-header">
             <h2>Books ({filteredBooks.length})</h2>
             <div className="section-actions">
-              <button 
-                className="btn-refresh-small"
-                onClick={handleRefresh}
-                disabled={refreshing}
-                title="Refresh Books"
-              >
-                <RefreshCw size={16} className={refreshing ? 'spinning' : ''} />
-                {refreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
-              <select 
-                value={selectedTimeRange} 
-                onChange={(e) => setSelectedTimeRange(e.target.value)}
-                className="time-filter"
-              >
-                <option value="all">All Time</option>
-                <option value="today">Today</option>
-                <option value="week">This Week</option>
-                <option value="month">This Month</option>
-                <option value="year">This Year</option>
-              </select>
               <Link to="/books" className="view-all-link">
                 View All Books
               </Link>
