@@ -1,7 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Container, Row, Col, Card, Alert, Spinner } from 'react-bootstrap';
-import { CheckCircle, CreditCard, Landmark, Wallet, ArrowLeft, AlertCircle } from 'lucide-react';
+import {
+    Container,
+    Row,
+    Col,
+    Card,
+    Alert,
+    Spinner,
+    ListGroup,
+    Badge
+} from 'react-bootstrap';
+import {
+    CheckCircle,
+    CreditCard,
+    Wallet,
+    ArrowLeft,
+    AlertCircle,
+    ShoppingBag,
+    Clock,
+    XCircle
+} from 'lucide-react';
 import Swal from 'sweetalert2';
 import { usePayment } from '../hooks/usePayment';
 import Title from '../components/shared/Title';
@@ -12,13 +30,14 @@ import { Elements } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
 import StripePaymentForm from '../components/forms/StripePaymentForm';
 import '../style/PaymentPage.css';
+import StripeWrapper from '../components/StripeWrapper';
 
-const stripePromise = loadStripe('pk_test_51Rdg6iQAnF4Tl5ves23LxuT0PEGKbiCrG5CMA6wutfrDwTy7Db3eOcZCGxitA3v0F7FqlRSPBeCbvwZW62IMZ4Yx00OiCUMXrc');
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_51Rdg6iQAnF4Tl5ves23LxuT0PEGKbiCrG5CMA6wutfrDwTy7Db3eOcZCGxitA3v0F7FqlRSPBeCbvwZW62IMZ4Yx00OiCUMXrc');
 
 const PaymentDetailsPage = () => {
     const { orderId } = useParams();
     const navigate = useNavigate();
-    const [selectedMethod, setSelectedMethod] = useState('card');
+    const [selectedMethod, setSelectedMethod] = useState('stripe');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
 
     const {
@@ -30,7 +49,9 @@ const PaymentDetailsPage = () => {
         fetchData,
         createPayment,
         createStripePayment,
-        confirmStripePayment
+        confirmStripePayment,
+        createPayPalPayment,
+        setProcessing
     } = usePayment();
 
     useEffect(() => {
@@ -40,15 +61,37 @@ const PaymentDetailsPage = () => {
         }
 
         if (isInitialLoad) {
+            fetchData(orderId)
+                .catch(err => console.error('[PaymentPage] Initial fetch error:', err));
             setIsInitialLoad(false);
             return;
         }
-
-        console.log('[PaymentPage] Calling fetchData for order:', orderId);
-        fetchData(orderId)
-            .then(() => console.log('[PaymentPage] fetchData completed successfully'))
-            .catch(err => console.error('[PaymentPage] fetchData error:', err));
     }, [orderId, fetchData, isInitialLoad]);
+
+    const paymentMethods = [
+        { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
+        { id: 'cash', label: 'Cash on Delivery', icon: <Wallet size={20} className="me-2" /> },
+        { id: 'paypal', label: 'PayPal', icon: <CreditCard size={20} className="me-2" /> },
+    ];
+
+    const handlePaymentSuccess = () => {
+        fetchData(orderId);
+        Swal.fire({
+            icon: 'success',
+            title: 'Payment Successful!',
+            text: 'Your payment has been processed',
+            timer: 2000,
+            showConfirmButton: false
+        });
+    };
+
+    const handlePaymentError = (error) => {
+        Swal.fire({
+            icon: 'error',
+            title: 'Payment Failed',
+            text: error.message || 'Payment processing failed',
+        });
+    };
 
     const handlePaymentSubmit = async () => {
         if (!order) {
@@ -62,15 +105,10 @@ const PaymentDetailsPage = () => {
         }
 
         try {
-            if (selectedMethod === 'stripe') {
-                // This will be handled by the StripePaymentForm component
-                return;
-            }
-
             const paymentData = {
                 order_id: order.id,
                 method: selectedMethod,
-                amount: order.total_price || order.total,
+                amount: order.total_price,
                 status: 'pending'
             };
 
@@ -80,10 +118,11 @@ const PaymentDetailsPage = () => {
                 icon: 'success',
                 title: 'Payment Successful!',
                 text: 'Your payment has been processed',
-                timer: 2000
+                timer: 2000,
+                showConfirmButton: false
             });
 
-            navigate(`/payment/${order.id}`);
+            navigate(`/orders/${order.id}`);
         } catch (err) {
             console.error('[PaymentPage] Payment failed:', err);
             await Swal.fire({
@@ -94,13 +133,82 @@ const PaymentDetailsPage = () => {
         }
     };
 
-    const getItemPrice = (item) => {
-        return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
+    const handlePayPalPayment = async () => {
+        try {
+            setProcessing(true);
+            const result = await createPayPalPayment(order.id);
+
+            if (result.success && result.approval_url) {
+                window.location.href = result.approval_url;
+            } else {
+                throw new Error(result.message || 'Failed to create PayPal payment');
+            }
+        } catch (err) {
+            console.error('PayPal payment error:', err);
+            let errorMessage = 'Payment failed';
+
+            if (err.response) {
+                errorMessage = err.response.data?.message ||
+                    err.response.data?.error?.message ||
+                    errorMessage;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+
+            await Swal.fire({
+                icon: 'error',
+                title: 'Payment Failed',
+                text: errorMessage,
+            });
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const getPaymentStatusBadge = () => {
+        if (!payment) return null;
+
+        switch (payment.status) {
+            case 'paid':
+                return (
+                    <Badge bg="success" className="d-flex align-items-center">
+                        <CheckCircle size={16} className="me-1" /> Paid
+                    </Badge>
+                );
+            case 'pending':
+                return (
+                    <Badge bg="warning" text="dark" className="d-flex align-items-center">
+                        <Clock size={16} className="me-1" /> Pending
+                    </Badge>
+                );
+            case 'failed':
+                return (
+                    <Badge bg="danger" className="d-flex align-items-center">
+                        <XCircle size={16} className="me-1" /> Failed
+                    </Badge>
+                );
+            default:
+                return <Badge bg="secondary">{payment.status}</Badge>;
+        }
+    };
+
+    const formatDate = (dateString) => {
+        return new Date(dateString).toLocaleString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
     };
 
     const formatPrice = (price) => {
         const num = parseFloat(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
+    };
+
+    const getItemPrice = (item) => {
+        return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.book?.price || 0);
     };
 
     if (loading && !isInitialLoad) {
@@ -164,21 +272,24 @@ const PaymentDetailsPage = () => {
                     <Col lg={8}>
                         <Card className="mb-4 payment-card">
                             <Card.Body>
-                                <h5 className="mb-4">Order #{order.id} Summary</h5>
+                                <h5 className="mb-4 d-flex align-items-center">
+                                    <ShoppingBag size={24} className="me-2" />
+                                    Order #{order.id} Summary
+                                </h5>
 
                                 <div className="order-summary mb-4">
                                     <div className="d-flex justify-content-between mb-2">
                                         <span>Order Date:</span>
-                                        <strong>{new Date(order.created_at).toLocaleString()}</strong>
+                                        <strong>{formatDate(order.created_at)}</strong>
                                     </div>
                                     <div className="d-flex justify-content-between mb-2">
                                         <span>Subtotal:</span>
-                                        <strong>{formatPrice(order.total_price || order.subtotal || 0)} EGP</strong>
+                                        <strong>{formatPrice(order.total_price)} EGP</strong>
                                     </div>
                                     {order.discount > 0 && (
                                         <div className="d-flex justify-content-between mb-2 text-success">
                                             <span>Discount:</span>
-                                            <strong>-{formatPrice(order.discount || 0)} EGP</strong>
+                                            <strong>-{formatPrice(order.discount)} EGP</strong>
                                         </div>
                                     )}
                                     <div className="d-flex justify-content-between mb-2">
@@ -189,73 +300,55 @@ const PaymentDetailsPage = () => {
                                     <div className="d-flex justify-content-between mb-2 total-summary">
                                         <span>Total Amount:</span>
                                         <strong className="total-price">
-                                            {formatPrice(order.total_price || order.total || 0)} EGP
+                                            {formatPrice(order.total_price)} EGP
                                         </strong>
                                     </div>
                                 </div>
 
-                                {payment?.status ? (
-                                    <Alert variant={
-                                        payment.status === 'paid' ? 'success' :
-                                            payment.status === 'failed' ? 'danger' : 'warning'
-                                    } className="text-center">
+                                {order.payment_status === 'paid' || payment?.status === 'paid' ? (
+                                    <Alert variant="success" className="text-center d-flex align-items-center">
                                         <CheckCircle size={24} className="me-2" />
-                                        Payment {payment.status?.toUpperCase?.() || 'PROCESSING'} for this order
+                                        Payment completed successfully
                                     </Alert>
                                 ) : (
                                     <>
                                         <h5 className="mb-4">Select Payment Method</h5>
                                         <div className="payment-methods mb-4">
-                                            <div
-                                                className={`payment-method ${selectedMethod === 'card' ? 'active' : ''}`}
-                                                onClick={() => setSelectedMethod('card')}
-                                            >
-                                                <CreditCard size={24} className="me-2" />
-                                                Credit/Debit Card
-                                            </div>
-                                            <div
-                                                className={`payment-method ${selectedMethod === 'cash' ? 'active' : ''}`}
-                                                onClick={() => setSelectedMethod('cash')}
-                                            >
-                                                <Wallet size={24} className="me-2" />
-                                                Cash on Delivery
-                                            </div>
-                                            <div
-                                                className={`payment-method ${selectedMethod === 'stripe' ? 'active' : ''}`}
-                                                onClick={() => setSelectedMethod('stripe')}
-                                            >
-                                                <CreditCard size={24} className="me-2" />
-                                                Stripe Payment
-                                            </div>
+                                            {paymentMethods.map(method => (
+                                                <div
+                                                    key={method.id}
+                                                    className={`payment-method ${selectedMethod === method.id ? 'active' : ''}`}
+                                                    onClick={() => setSelectedMethod(method.id)}
+                                                >
+                                                    {method.icon}
+                                                    {method.label}
+                                                </div>
+                                            ))}
                                         </div>
 
                                         {selectedMethod === 'stripe' ? (
                                             <Elements stripe={stripePromise}>
-                                                <StripePaymentForm
+                                                <StripeWrapper
+
                                                     order={order}
                                                     createStripePayment={createStripePayment}
                                                     confirmStripePayment={confirmStripePayment}
-                                                    onSuccess={() => {
-                                                        Swal.fire({
-                                                            icon: 'success',
-                                                            title: 'Payment Successful!',
-                                                            text: 'Your payment has been processed',
-                                                            timer: 2000
-                                                        });
-                                                        navigate(`/payment/${order.id}`);
-                                                    }}
-                                                    onError={(error) => {
-                                                        Swal.fire({
-                                                            icon: 'error',
-                                                            title: 'Payment Failed',
-                                                            text: error.message || 'Payment processing failed',
-                                                        });
-                                                    }}
+                                                    onSuccess={handlePaymentSuccess}
+                                                    onError={handlePaymentError}
                                                 />
                                             </Elements>
+                                        ) : selectedMethod === 'paypal' ? (
+                                            <CustomButton
+                                                variant="success"
+                                                onClick={handlePayPalPayment}
+                                                disabled={processing}
+                                                className="w-100"
+                                            >
+                                                {processing ? 'Processing...' : 'Pay with PayPal'}
+                                            </CustomButton>
                                         ) : (
                                             <CustomButton
-                                                variant="primary"
+                                                variant="success"
                                                 onClick={handlePaymentSubmit}
                                                 disabled={processing}
                                                 className="w-100"
@@ -273,15 +366,17 @@ const PaymentDetailsPage = () => {
                         <Card className="order-summary-card sticky-top">
                             <Card.Body>
                                 <h5 className="summary-title mb-3">Order Items</h5>
-                                <div className="order-items mb-3">
+                                <ListGroup variant="flush" className="mb-3">
                                     {order.items?.length > 0 ? (
                                         order.items.map(item => (
-                                            <div key={item.id} className="order-item mb-3">
+                                            <ListGroup.Item key={item.id} className="px-0">
                                                 <div className="d-flex">
                                                     <img
                                                         src={item.book?.images?.[0] || 'https://via.placeholder.com/60x90'}
                                                         alt={item.book?.title || 'Book'}
                                                         className="item-image me-3"
+                                                        width="60"
+                                                        height="90"
                                                     />
                                                     <div>
                                                         <h6 className="mb-1">{item.book?.title || 'Unknown Book'}</h6>
@@ -297,12 +392,18 @@ const PaymentDetailsPage = () => {
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
+                                            </ListGroup.Item>
                                         ))
                                     ) : (
                                         <Alert variant="info">No items in this order</Alert>
                                     )}
-                                </div>
+                                </ListGroup>
+                                {payment && (
+                                    <div className="mt-3">
+                                        <h6 className="mb-2">Payment Status:</h6>
+                                        {getPaymentStatusBadge()}
+                                    </div>
+                                )}
                             </Card.Body>
                         </Card>
                     </Col>

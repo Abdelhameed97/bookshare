@@ -10,7 +10,6 @@ export const usePayment = () => {
     const [processing, setProcessing] = useState(false);
     
     const navigate = useNavigate();
-
     const fetchData = useCallback(async (orderId) => {
         setLoading(true);
         setError(null);
@@ -78,7 +77,10 @@ export const usePayment = () => {
     const createStripePayment = async (orderId) => {
         setProcessing(true);
         try {
-            const response = await api.createStripePaymentIntent(orderId);
+            const response = await api.createStripePaymentIntent({ order_id: orderId });
+            if (!response.data?.success) {
+                throw new Error(response.data?.message || 'Failed to create payment intent');
+            }
             return response.data;
         } catch (err) {
             console.error('Stripe payment creation failed:', err);
@@ -88,10 +90,12 @@ export const usePayment = () => {
         }
     };
 
-    const confirmStripePayment = async (paymentId) => {
+    const confirmStripePayment = async (paymentIntentId) => {
         setProcessing(true);
         try {
-            const response = await api.confirmStripePayment(paymentId);
+            const response = await api.post('/stripe/confirm-payment', {
+                payment_intent_id: paymentIntentId
+            });
             return response.data;
         } catch (err) {
             console.error('Stripe payment confirmation failed:', err);
@@ -100,6 +104,20 @@ export const usePayment = () => {
             setProcessing(false);
         }
     };
+
+    const createPayPalPayment = async (orderId) => {
+        setProcessing(true);
+        try {
+            console.log('Sending PayPal payment for orderId:', orderId);
+            const response = await api.createPayPalPayment(orderId);
+            return response.data;
+        } catch (err) {
+            console.error('PayPal payment creation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };    
 
     const fetchUserPayments = useCallback(async () => {
         setLoading(true);
@@ -128,5 +146,6 @@ export const usePayment = () => {
         fetchUserPayments,
         createStripePayment,
         confirmStripePayment,
+        createPayPalPayment
     };
 };

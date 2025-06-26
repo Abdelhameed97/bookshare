@@ -97,10 +97,24 @@ const PaymentsPage = () => {
     };
 
     const getPaymentIdDisplay = (payment) => {
+        if (payment.paypal_payment_id) {
+            return `PayPal: ${payment.paypal_payment_id}`;
+        }
         if (payment.stripe_payment_id) {
             return `Stripe: ${payment.stripe_payment_id}`;
         }
         return `Local: #${payment.id}`;
+    };
+
+    const getPaymentMethodIcon = (method) => {
+        switch (method) {
+            case 'paypal':
+                return <img src="/paypal-icon.png" alt="PayPal" style={{ width: '16px', height: '16px', marginRight: '4px' }} />;
+            case 'stripe':
+                return <img src="/stripe-icon.png" alt="Stripe" style={{ width: '16px', height: '16px', marginRight: '4px' }} />;
+            default:
+                return <CreditCard size={16} className="me-1" />;
+        }
     };
 
     if (!userId) {
@@ -286,7 +300,7 @@ const PaymentsPage = () => {
                                                         </div>
                                                     </td>
                                                     <td className="text-capitalize">
-                                                        <CreditCard size={16} className="me-1" />
+                                                        {getPaymentMethodIcon(payment.method)}
                                                         {payment.method}
                                                     </td>
                                                     <td>{formatPrice(payment.amount)} EGP</td>

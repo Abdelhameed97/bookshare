@@ -148,47 +148,50 @@ const OrderDetailsPage = () => {
         }
     };
 
+    // const handlePayment = async () => {
+    //     if (paymentCompleted || paymentAttempted) return;
+
+    //     try {
+    //         setPaymentAttempted(true);
+    //         setProcessing(true);
+
+    //         const paymentResponse = await createStripePayment(id);
+
+    //         // Mark payment as completed
+    //         setPaymentCompleted(true);
+
+    //         await Swal.fire(
+    //             'Payment Successful!',
+    //             'Your payment has been processed successfully.',
+    //             'success'
+    //         );
+
+    //         // Refresh order data
+    //         const orderResponse = await api.getOrderDetails(id);
+    //         let orderData = orderResponse.data;
+    //         if (Array.isArray(orderResponse.data)) {
+    //             orderData = orderResponse.data[0];
+    //         } else if (orderResponse.data.data) {
+    //             orderData = orderResponse.data.data;
+    //         }
+
+    //         setOrder(orderData);
+    //         navigate(`/payment/${id}`);
+    //     } catch (err) {
+    //         console.error('Error processing payment:', err);
+    //         Swal.fire(
+    //             'Payment Failed',
+    //             err.response?.data?.message || err.message || 'There was an error processing your payment.',
+    //             'error'
+    //         );
+    //     } finally {
+    //         setProcessing(false);
+    //     }
+    // };
+
     const handlePayment = async () => {
-        if (paymentCompleted || paymentAttempted) return;
-
-        try {
-            setPaymentAttempted(true);
-            setProcessing(true);
-
-            const paymentResponse = await createStripePayment(id);
-
-            // Mark payment as completed
-            setPaymentCompleted(true);
-
-            await Swal.fire(
-                'Payment Successful!',
-                'Your payment has been processed successfully.',
-                'success'
-            );
-
-            // Refresh order data
-            const orderResponse = await api.getOrderDetails(id);
-            let orderData = orderResponse.data;
-            if (Array.isArray(orderResponse.data)) {
-                orderData = orderResponse.data[0];
-            } else if (orderResponse.data.data) {
-                orderData = orderResponse.data.data;
-            }
-
-            setOrder(orderData);
-            navigate(`/payment/${id}`);
-        } catch (err) {
-            console.error('Error processing payment:', err);
-            Swal.fire(
-                'Payment Failed',
-                err.response?.data?.message || err.message || 'There was an error processing your payment.',
-                'error'
-            );
-        } finally {
-            setProcessing(false);
-        }
+        navigate(`/payment/${id}`);
     };
-
 
     const getStatusIcon = (status) => {
         if (!status) return <Clock size={20} className="text-secondary me-2" />;
@@ -278,8 +281,10 @@ const OrderDetailsPage = () => {
     const user = JSON.parse(localStorage.getItem('user'));
     const isClient = user?.id === order?.client_id;
     const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
-    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) && !paymentCompleted && !paymentAttempted;
-
+    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
+        (!order.payment_status || order.payment_status !== 'paid') &&
+        isClient;
+    
     if (loading) {
         return (
             <div className="text-center py-5">
@@ -408,8 +413,23 @@ const OrderDetailsPage = () => {
                             <Col md={6} className="text-md-end">
                                 <div className="d-flex flex-column">
                                     <div className="mb-2">
-                                        <strong>Payment Method:</strong> {order.payment_method || 'N/A'}
+                                        <strong>Payment Status:</strong>
+                                        {order.payment_status === 'paid' ? (
+                                            <Badge bg="success" className="ms-2">
+                                                <CheckCircle size={14} className="me-1" />
+                                                Paid
+                                            </Badge>
+                                        ) : (
+                                            <Badge bg="warning" text="dark" className="ms-2">
+                                                <Clock size={14} className="me-1" />
+                                                Pending
+                                            </Badge>
+                                        )}
                                     </div>
+                                    <div className="mb-2">
+                                        <strong>Payment Method:</strong> {order.payment_method || 'Not Specified'}
+                                    </div>
+
                                     <div className="fs-5 fw-bold">
                                         <strong>Total:</strong> {formatPrice(order.total_price)} EGP
                                     </div>
@@ -505,29 +525,35 @@ const OrderDetailsPage = () => {
                                         </Button>
                                     )}
                                     {canPay && (
-                                        <Button
-                                            variant="success"
-                                            onClick={handlePayment}
-                                            disabled={processing || paymentCompleted || paymentAttempted}
-                                            className="px-4 py-2"
-                                        >
-                                            {processing ? (
-                                                <>
-                                                    <Spinner animation="border" size="sm" className="me-2" />
-                                                    Processing...
-                                                </>
-                                            ) : paymentCompleted ? (
-                                                'Payment Completed'
-                                            ) : paymentAttempted ? (
-                                                'Payment in Progress'
-                                            ) : (
-                                                <>
-                                                    <CreditCard size={18} className="me-2" />
-                                                    Pay Now
-                                                </>
-                                            )}
-                                        </Button>
+                                        paymentCompleted ? (
+                                            <Button variant="success" className="px-4 py-2" disabled>
+                                                <CheckCircle size={18} className="me-2" />
+                                                Payment Completed
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="success"
+                                                onClick={handlePayment}
+                                                disabled={processing || paymentAttempted}
+                                                className="px-4 py-2"
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <Spinner animation="border" size="sm" className="me-2" />
+                                                        Processing...
+                                                    </>
+                                                ) : paymentAttempted ? (
+                                                    'Payment in progress'
+                                                ) : (
+                                                    <>
+                                                        <CreditCard size={18} className="me-2" />
+                                                        Pay Now
+                                                    </>
+                                                )}
+                                            </Button>
+                                        )
                                     )}
+
                                 </Col>
                             </Row>
                         )}

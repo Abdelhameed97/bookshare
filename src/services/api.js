@@ -109,6 +109,8 @@ const apiService = {
     // Stripe Payment
     createStripePaymentIntent: (orderId) => api.post('/stripe/create-payment-intent', { order_id: orderId }),
     confirmStripePayment: (paymentId) => api.post('/stripe/confirm-payment', { payment_id: paymentId }),
+    // PayPal Payment
+    createPayPalPayment: (orderId) => api.post('/paypal/create-payment', { order_id: orderId }),
 
     // Coupon Endpoints
     applyCoupon: (couponCode) => api.post('/coupons/apply', { code: couponCode }),
