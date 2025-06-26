@@ -30,6 +30,7 @@ import SocialCallback from "./pages/SocialCallback";
 import AdminDashboard from './components/Admin/Dashboard';
 import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
+import BookList from './components/Admin/BookList';
 // import Users from './components/admin/Users';
 // import Categories from './components/admin/Categories';
 
@@ -88,6 +89,7 @@ function App() {
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
         <Route path="/admin/categories" element={<CategoryList />} />
         <Route path="/admin/users" element={<UserList />} />
+        <Route path="/admin/books" element={<BookList />} />
 
         <Route path='*' element={<NotFound />} />
       </Routes>

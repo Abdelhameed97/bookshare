@@ -12,7 +12,15 @@ const UserList = () => {
   const [filter, setFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ name: '', email: '', password: '', password_confirmation: '', role: 'client' });
+  const [form, setForm] = useState({ 
+    name: '', 
+    email: '', 
+    password: '', 
+    password_confirmation: '', 
+    role: 'client',
+    phone_number: '',
+    national_id: ''
+  });
   const [formError, setFormError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -50,10 +58,26 @@ const UserList = () => {
 
   const openModal = (user = null) => {
     if (user) {
-      setForm({ name: user.name, email: user.email, password: '', password_confirmation: '', role: user.role });
+      setForm({ 
+        name: user.name, 
+        email: user.email, 
+        password: '', 
+        password_confirmation: '', 
+        role: user.role,
+        phone_number: user.phone_number || '',
+        national_id: user.national_id || ''
+      });
       setEditId(user.id);
     } else {
-      setForm({ name: '', email: '', password: '', password_confirmation: '', role: 'client' });
+      setForm({ 
+        name: '', 
+        email: '', 
+        password: '', 
+        password_confirmation: '', 
+        role: 'client',
+        phone_number: '',
+        national_id: ''
+      });
       setEditId(null);
     }
     setFormError('');
@@ -73,8 +97,9 @@ const UserList = () => {
     setFormError('');
     setSubmitting(true);
     
-    if (!form.name || !form.email) {
-        setFormError("Name and email are required.");
+    // Frontend validation
+    if (!form.name || !form.email || !form.phone_number || !form.national_id ) {
+        setFormError("Please fill all required fields.");
         setSubmitting(false);
         return;
     }
@@ -206,25 +231,37 @@ const UserList = () => {
       </div>
       {showModal && (
           <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.18)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: 'white', borderRadius: 12, padding: '2rem', minWidth: 380, boxShadow: '0 4px 24px rgba(0,0,0,0.13)', position: 'relative' }}>
+            <div style={{ background: 'white', borderRadius: 12, padding: '2rem', minWidth: 480, boxShadow: '0 4px 24px rgba(0,0,0,0.13)', position: 'relative' }}>
               <button onClick={closeModal} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}><FaTimes /></button>
               <h2 style={{ marginBottom: 20, color: '#1e293b', fontWeight: 700 }}>{editId ? 'Edit User' : 'Create User'}</h2>
               <form onSubmit={handleSubmit}>
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Name</label>
+                  <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Full Name</label>
                   <input type="text" name="name" value={form.name} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
                 </div>
                 <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Email</label>
+                  <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Email Address</label>
                   <input type="email" name="email" value={form.email} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
                 </div>
-                <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Password</label>
-                  <input type="password" name="password" value={form.password} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} placeholder={editId ? "Leave blank to keep current" : ""}/>
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: 18 }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Phone Number</label>
+                        <input type="text" name="phone_number" value={form.phone_number} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>National ID</label>
+                        <input type="text" name="national_id" value={form.national_id} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                    </div>
                 </div>
-                <div style={{ marginBottom: 18 }}>
-                  <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Confirm Password</label>
-                  <input type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} placeholder="Confirm new password" />
+                <div style={{ display: 'flex', gap: '1rem', marginBottom: 18 }}>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Password</label>
+                        <input type="password" name="password" value={form.password} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} placeholder={editId ? "Leave blank to keep current" : ""}/>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Confirm Password</label>
+                        <input type="password" name="password_confirmation" value={form.password_confirmation} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} placeholder="Confirm new password" />
+                    </div>
                 </div>
                 <div style={{ marginBottom: 18 }}>
                   <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Role</label>

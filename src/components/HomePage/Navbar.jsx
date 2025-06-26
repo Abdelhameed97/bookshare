@@ -58,9 +58,10 @@ const Navbar = () => {
 
   const adminNavLinks = [
     { to: "/admin/dashboard", label: "adminDashboard" },
-    
+
     { to: "/admin/users", label: "users" },
     { to: "/admin/categories", label: "categories" },
+    { to: "/admin/books", label: "books" },
   ];
 
   const navLinks = user?.role === "admin"
