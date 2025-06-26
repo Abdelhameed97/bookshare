@@ -209,13 +209,13 @@ const CartPage = () => {
         }
 
         const result = await Swal.fire({
-            title: 'Proceed to Checkout?',
-            text: 'You will be redirected to complete your purchase',
+            title: 'Would Buy Now?',
+            text: 'You will be redirected to order Books',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#28a745',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Continue to Payment'
+            confirmButtonText: 'Continue to Order'
         });
 
         if (!result.isConfirmed) return;
