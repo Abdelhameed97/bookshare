@@ -31,6 +31,7 @@ import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
 import Swal from 'sweetalert2';
 import CustomButton from '../components/shared/CustomButton.js';
+import { usePayment } from '../hooks/usePayment';
 
 const OrderDetailsPage = () => {
     const { id } = useParams();
@@ -38,8 +39,20 @@ const OrderDetailsPage = () => {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [processing, setProcessing] = useState(false);
-    const [paymentProcessing, setPaymentProcessing] = useState(false);
+    const [paymentCompleted, setPaymentCompleted] = useState(() => {
+        const savedPayment = localStorage.getItem(`paymentCompleted_${id}`);
+        return savedPayment ? JSON.parse(savedPayment) : false;
+    });
+    const [paymentAttempted, setPaymentAttempted] = useState(() => {
+        const savedAttempt = localStorage.getItem(`paymentAttempted_${id}`);
+        return savedAttempt ? JSON.parse(savedAttempt) : false;
+    });
+
+    const {
+        createStripePayment,
+        processing,
+        setProcessing,
+    } = usePayment();
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -58,16 +71,20 @@ const OrderDetailsPage = () => {
                     throw new Error('Order data not found');
                 }
 
-                const enhancedOrder = {
+                if (orderData.payment_status === 'paid' || orderData.payment_id) {
+                    setPaymentCompleted(true);
+                    localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(true));
+                }
+
+                setOrder({
                     ...orderData,
                     order_items: orderData.order_items?.map(item => ({
                         ...item,
                         unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
                         total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
                     }))
-                };
+                });
 
-                setOrder(enhancedOrder);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching order:', err);
@@ -84,6 +101,11 @@ const OrderDetailsPage = () => {
 
         fetchOrderDetails();
     }, [id, navigate]);
+
+    useEffect(() => {
+        localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(paymentCompleted));
+        localStorage.setItem(`paymentAttempted_${id}`, JSON.stringify(paymentAttempted));
+    }, [paymentCompleted, paymentAttempted, id]);
 
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
@@ -102,7 +124,6 @@ const OrderDetailsPage = () => {
             setProcessing(true);
             await api.cancelOrder(id);
 
-            // Update order status locally
             setOrder(prevOrder => ({
                 ...prevOrder,
                 status: 'cancelled'
@@ -128,36 +149,7 @@ const OrderDetailsPage = () => {
     };
 
     const handlePayment = async () => {
-        try {
-            setPaymentProcessing(true);
-            const response = await api.processPayment(id);
-            
-            await Swal.fire(
-                'Payment Successful!',
-                'Your payment has been processed successfully.',
-                'success'
-            );
-
-            const orderResponse = await api.getOrderDetails(id);
-            let orderData = orderResponse.data;
-            if (Array.isArray(orderResponse.data)) {
-                orderData = orderResponse.data[0];
-            } else if (orderResponse.data.data) {
-                orderData = orderResponse.data.data;
-            }
-
-            setOrder(orderData);
-            navigate(`/orders/${id}`);
-        } catch (err) {
-            console.error('Error processing payment:', err);
-            Swal.fire(
-                'Payment Failed',
-                err.response?.data?.message || 'There was an error processing your payment.',
-                'error'
-            );
-        } finally {
-            setPaymentProcessing(false);
-        }
+        navigate(`/payment/${id}`);
     };
 
     const getStatusIcon = (status) => {
@@ -245,6 +237,13 @@ const OrderDetailsPage = () => {
         return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
     };
 
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isClient = user?.id === order?.client_id;
+    const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
+        (!order.payment_status || order.payment_status !== 'paid') &&
+        isClient;
+
     if (loading) {
         return (
             <div className="text-center py-5">
@@ -329,11 +328,6 @@ const OrderDetailsPage = () => {
         );
     }
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    const isClient = user?.id === order.client_id;
-    const canCancel = ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
-    const canPay = ['accepted'].includes(order.status?.toLowerCase());
-
     return (
         <>
             <Navbar />
@@ -378,8 +372,23 @@ const OrderDetailsPage = () => {
                             <Col md={6} className="text-md-end">
                                 <div className="d-flex flex-column">
                                     <div className="mb-2">
-                                        <strong>Payment Method:</strong> {order.payment_method || 'N/A'}
+                                        <strong>Payment Status:</strong>
+                                        {order.payment_status === 'paid' ? (
+                                            <Badge bg="success" className="ms-2">
+                                                <CheckCircle size={14} className="me-1" />
+                                                Paid
+                                            </Badge>
+                                        ) : (
+                                            <Badge bg="warning" text="dark" className="ms-2">
+                                                <Clock size={14} className="me-1" />
+                                                Pending
+                                            </Badge>
+                                        )}
                                     </div>
+                                    <div className="mb-2">
+                                        <strong>Payment Method:</strong> {order.payment_method || 'Not Specified'}
+                                    </div>
+
                                     <div className="fs-5 fw-bold">
                                         <strong>Total:</strong> {formatPrice(order.total_price)} EGP
                                     </div>
@@ -412,44 +421,50 @@ const OrderDetailsPage = () => {
                             </Col>
 
                             <Col md={6}>
-                                <Card className="h-100">
-                                    <Card.Header className="d-flex align-items-center bg-light">
-                                        <FileText size={18} className="me-2" />
-                                        <span>Order Items ({order.order_items?.length || 0})</span>
-                                    </Card.Header>
-                                    <Card.Body className="p-0">
-                                        <ListGroup variant="flush">
-                                            {order.order_items?.map(item => (
-                                                <ListGroup.Item
-                                                    key={item.id}
-                                                    className="d-flex justify-content-between align-items-center py-3"
-                                                >
-                                                    <div className="d-flex align-items-center">
-                                                        <img
-                                                            src={item.book?.images?.[0] || 'https://via.placeholder.com/80'}
-                                                            alt={item.book?.title}
-                                                            width="60"
-                                                            height="80"
-                                                            className="me-3 object-fit-cover rounded"
-                                                        />
-                                                        <div>
-                                                            <div className="fw-bold">{item.book?.title || 'N/A'}</div>
-                                                            <small className="text-muted">Qty: {item.quantity || 0}</small>
-                                                            <small className="d-block text-muted text-capitalize">
-                                                                Type: {item.type || 'buy'}
-                                                            </small>
+                                <Card>
+                                    <Card.Body>
+                                        <h5 className="summary-title mb-3">Order Items ({order.order_items?.length || 0})</h5>
+                                        <ListGroup variant="flush" className="mb-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                                            {order.order_items?.length > 0 ? (
+                                                order.order_items.map(item => (
+                                                    <ListGroup.Item key={item.id} className="px-0">
+                                                        <div className="d-flex align-items-center">
+                                                            <img
+                                                                src={item.book?.images?.[0] || 'https://via.placeholder.com/60x90'}
+                                                                alt={item.book?.title || 'Book'}
+                                                                className="item-image me-3 rounded"
+                                                                width="60"
+                                                                height="90"
+                                                                style={{ objectFit: 'cover' }}
+                                                            />
+                                                            <div className="flex-grow-1">
+                                                                <div className="d-flex justify-content-between">
+                                                                    <div>
+                                                                        <h6 className="mb-1 fw-bold">{item.book?.title || 'Unknown Book'}</h6>
+                                                                        <small className="text-muted">Qty: {item.quantity || 1}</small>
+                                                                        {item.type === 'rent' && (
+                                                                            <small className="d-block text-muted">(Rental)</small>
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-end">
+                                                                        <div className="fw-bold">
+                                                                            {formatPrice(getItemPrice(item))} EGP
+                                                                        </div>
+                                                                        <small className="text-muted">
+                                                                            Total: {formatPrice(getItemPrice(item) * item.quantity)} EGP
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                                {item.type === 'rent' && (
+                                                                    <small className="d-block text-muted mt-1">per rental</small>
+                                                                )}
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                    <div className="text-end">
-                                                        <div className="fw-bold">
-                                                            {formatPrice(getItemPrice(item))} EGP
-                                                        </div>
-                                                        <small className="text-muted">
-                                                            Total: {formatPrice(getItemPrice(item) * item.quantity)} EGP
-                                                        </small>
-                                                    </div>
-                                                </ListGroup.Item>
-                                            ))}
+                                                    </ListGroup.Item>
+                                                ))
+                                            ) : (
+                                                <Alert variant="info">No items in this order</Alert>
+                                            )}
                                         </ListGroup>
                                     </Card.Body>
                                 </Card>
@@ -475,24 +490,33 @@ const OrderDetailsPage = () => {
                                         </Button>
                                     )}
                                     {canPay && (
-                                        <Button
-                                            variant="success"
-                                            onClick={handlePayment}
-                                            disabled={paymentProcessing}
-                                            className="px-4 py-2"
-                                        >
-                                            {paymentProcessing ? (
-                                                <>
-                                                    <Spinner animation="border" size="sm" className="me-2" />
-                                                    Processing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CreditCard size={18} className="me-2" />
-                                                    Pay Now
-                                                </>
-                                            )}
-                                        </Button>
+                                        paymentCompleted ? (
+                                            <Button variant="success" className="px-4 py-2" disabled>
+                                                <CheckCircle size={18} className="me-2" />
+                                                Payment Completed
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="success"
+                                                onClick={handlePayment}
+                                                disabled={processing || paymentAttempted}
+                                                className="px-4 py-2"
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <Spinner animation="border" size="sm" className="me-2" />
+                                                        Processing...
+                                                    </>
+                                                ) : paymentAttempted ? (
+                                                    'Payment in progress'
+                                                ) : (
+                                                    <>
+                                                        <CreditCard size={18} className="me-2" />
+                                                        Pay Now
+                                                    </>
+                                                )}
+                                            </Button>
+                                        )
                                     )}
                                 </Col>
                             </Row>
