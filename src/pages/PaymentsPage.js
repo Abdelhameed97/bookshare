@@ -38,9 +38,10 @@ const PaymentsPage = () => {
 
     const filteredPayments = payments.filter(payment => {
         const paymentStatusMatch = filter === 'all' || payment.status === filter;
-        const orderStatus = payment?.order?.status?.toLowerCase();
-        const selectedStatus = orderStatusFilter.toLowerCase();
-        const orderStatusMatch = selectedStatus === 'all' || orderStatus === selectedStatus;
+
+        const orderStatusMatch = orderStatusFilter === 'all' ||
+            (payment.order ? payment.order.status === orderStatusFilter :
+                orderStatusFilter === 'n/a');
 
         return paymentStatusMatch && orderStatusMatch;
     });
@@ -59,7 +60,8 @@ const PaymentsPage = () => {
     };
 
     const getOrderStatusBadge = (status) => {
-        switch (status?.toLowerCase()) {
+
+        switch (status) {
             case 'accepted':
                 return <Badge bg="success">Accepted</Badge>;
             case 'pending':
@@ -88,27 +90,6 @@ const PaymentsPage = () => {
     const formatPrice = (price) => {
         const num = parseFloat(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
-    };
-
-    const getPaymentIdDisplay = (payment) => {
-        if (payment.paypal_payment_id) {
-            return `PayPal: ${payment.paypal_payment_id}`;
-        }
-        if (payment.stripe_payment_id) {
-            return `Stripe: ${payment.stripe_payment_id}`;
-        }
-        return `Local: #${payment.id}`;
-    };
-
-    const getPaymentMethodIcon = (method) => {
-        switch (method) {
-            case 'paypal':
-                return <img src="/paypal-icon.png" alt="PayPal" style={{ width: '16px', height: '16px', marginRight: '4px' }} />;
-            case 'stripe':
-                return <img src="/stripe-icon.png" alt="Stripe" style={{ width: '16px', height: '16px', marginRight: '4px' }} />;
-            default:
-                return <CreditCard size={16} className="me-1" />;
-        }
     };
 
     if (!userId) {
@@ -173,6 +154,7 @@ const PaymentsPage = () => {
         );
     }
 
+
     return (
         <>
             <Navbar />
@@ -202,10 +184,30 @@ const PaymentsPage = () => {
                                                 Payment Status
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
-                                                <Dropdown.Item active={filter === 'all'} onClick={() => setFilter('all')}>All</Dropdown.Item>
-                                                <Dropdown.Item active={filter === 'paid'} onClick={() => setFilter('paid')}>Paid</Dropdown.Item>
-                                                <Dropdown.Item active={filter === 'pending'} onClick={() => setFilter('pending')}>Pending</Dropdown.Item>
-                                                <Dropdown.Item active={filter === 'failed'} onClick={() => setFilter('failed')}>Failed</Dropdown.Item>
+                                                <Dropdown.Item
+                                                    active={filter === 'all'}
+                                                    onClick={() => setFilter('all')}
+                                                >
+                                                    All Payments
+                                                </Dropdown.Item>
+                                                <Dropdown.Item
+                                                    active={filter === 'paid'}
+                                                    onClick={() => setFilter('paid')}
+                                                >
+                                                    Paid
+                                                </Dropdown.Item>
+                                                <Dropdown.Item
+                                                    active={filter === 'pending'}
+                                                    onClick={() => setFilter('pending')}
+                                                >
+                                                    Pending
+                                                </Dropdown.Item>
+                                                <Dropdown.Item
+                                                    active={filter === 'failed'}
+                                                    onClick={() => setFilter('failed')}
+                                                >
+                                                    Failed
+                                                </Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
 
@@ -215,15 +217,24 @@ const PaymentsPage = () => {
                                                 Order Status
                                             </Dropdown.Toggle>
                                             <Dropdown.Menu>
-                                                {['all', 'accepted', 'pending', 'rejected', 'completed', 'cancelled'].map(status => (
-                                                    <Dropdown.Item
-                                                        key={status}
-                                                        active={orderStatusFilter === status}
-                                                        onClick={() => setOrderStatusFilter(status)}
-                                                    >
-                                                        {status.charAt(0).toUpperCase() + status.slice(1)}
-                                                    </Dropdown.Item>
-                                                ))}
+                                                <Dropdown.Item active={orderStatusFilter === 'all'} onClick={() => setOrderStatusFilter('all')}>
+                                                    All Orders
+                                                </Dropdown.Item>
+                                                <Dropdown.Item active={orderStatusFilter === 'accepted'} onClick={() => setOrderStatusFilter('accepted')}>
+                                                    Accepted
+                                                </Dropdown.Item>
+                                                <Dropdown.Item active={orderStatusFilter === 'pending'} onClick={() => setOrderStatusFilter('pending')}>
+                                                    Pending
+                                                </Dropdown.Item>
+                                                <Dropdown.Item active={orderStatusFilter === 'rejected'} onClick={() => setOrderStatusFilter('rejected')}>
+                                                    Rejected
+                                                </Dropdown.Item>
+                                                <Dropdown.Item active={orderStatusFilter === 'completed'} onClick={() => setOrderStatusFilter('completed')}>
+                                                    Completed
+                                                </Dropdown.Item>
+                                                <Dropdown.Item active={orderStatusFilter === 'cancelled'} onClick={() => setOrderStatusFilter('cancelled')}>
+                                                    Cancelled
+                                                </Dropdown.Item>
                                             </Dropdown.Menu>
                                         </Dropdown>
                                     </div>
@@ -231,7 +242,7 @@ const PaymentsPage = () => {
 
                                 {filteredPayments.length === 0 ? (
                                     <Alert variant="info" className="text-center">
-                                        No payments found with the current filters.
+                                        No payments found with the current filters
                                     </Alert>
                                 ) : (
                                     <Table striped bordered hover responsive className="align-middle">
@@ -250,23 +261,30 @@ const PaymentsPage = () => {
                                         <tbody>
                                             {filteredPayments.map(payment => (
                                                 <tr key={payment.id}>
-                                                    <td>{getPaymentIdDisplay(payment)}</td>
+                                                    <td>#{payment.id}</td>
                                                     <td>{formatDate(payment.created_at)}</td>
                                                     <td>
                                                         <div>
                                                             <strong>Order #{payment.order_id}</strong>
                                                             {payment.order && (
-                                                                <div className="text-muted small">Items: {payment.order.quantity}</div>
+                                                                <div className="text-muted small">
+                                                                    Items: {payment.order.quantity}
+                                                                </div>
                                                             )}
                                                         </div>
                                                     </td>
                                                     <td className="text-capitalize">
-                                                        {getPaymentMethodIcon(payment.method)}
+                                                        <CreditCard size={16} className="me-1" />
                                                         {payment.method}
                                                     </td>
                                                     <td>{formatPrice(payment.amount)} EGP</td>
                                                     <td>{getStatusBadge(payment.status)}</td>
-                                                    <td>{payment.order ? getOrderStatusBadge(payment.order.status) : <Badge bg="secondary">N/A</Badge>}</td>
+                                                    <td>
+                                                        {payment.order ?
+                                                            getOrderStatusBadge(payment.order.status) :
+                                                            <Badge bg="secondary">N/A</Badge>
+                                                        }
+                                                    </td>
                                                     <td>
                                                         <Button
                                                             variant="outline-primary"
