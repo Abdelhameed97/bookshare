@@ -245,7 +245,7 @@ const LoginForm = () => {
                 >
                   <FaFacebook />
                 </button>
-
+{/* 
                 <button
                   className='btn rounded-circle d-flex justify-content-center align-items-center text-white'
                   style={{
@@ -258,7 +258,7 @@ const LoginForm = () => {
                   onClick={() => handleSocialLogin("linkedin")}
                 >
                   <FaLinkedin />
-                </button>
+                </button> */}
               </div>
             </div>
             <p className='text-center mb-0 text-muted small'>
