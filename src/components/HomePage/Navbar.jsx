@@ -42,10 +42,9 @@ const Navbar = () => {
   const regularNavLinks = [
     { to: "/", label: "home" },
     { to: "/about", label: "about" },
-    { to: "/coming-soon", label: "comingSoon" },
+    // { to: "/coming-soon", label: "comingSoon" },
     { to: "/top-seller", label: "topSeller" },
     { to: "/books", label: "books" },
-    // { to: "/author", label: "author" },
     { to: "/contact", label: "contact" },
   ];
 
@@ -57,7 +56,19 @@ const Navbar = () => {
     { to: "/all-orders", label: "orders" },
   ];
 
-  const navLinks = isLibraryOwner ? ownerNavLinks : regularNavLinks;
+  const adminNavLinks = [
+    { to: "/admin/dashboard", label: "adminDashboard" },
+    
+    { to: "/admin/users", label: "users" },
+    { to: "/admin/categories", label: "categories" },
+  ];
+
+  const navLinks = user?.role === "admin"
+    ? adminNavLinks
+    : isLibraryOwner
+      ? ownerNavLinks
+      : regularNavLinks;
+      
 
   const toggleMobileMenu = () => setIsOpen(!isOpen);
   const closeMobileMenu = () => setIsOpen(false);
@@ -162,7 +173,7 @@ const Navbar = () => {
 
                 <LanguageSwitcher />
 
-                {!isLibraryOwner && (
+                {user?.role !== "admin" && !isLibraryOwner && (
                   <>
                     <button
                       className="icon-button wishlist-badge"

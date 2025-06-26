@@ -27,6 +27,11 @@ import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
+import AdminDashboard from './components/Admin/Dashboard';
+import CategoryList from './components/Admin/CategoryList';
+import UserList from './components/Admin/UserList';
+// import Users from './components/admin/Users';
+// import Categories from './components/admin/Categories';
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -77,6 +82,13 @@ function App() {
         <Route path="/libraries" element={<LibrariesPage />} />
         <Route path="/library/:id" element={<LibraryDetails />} />
         <Route path="/all-orders" element={<AllOrdersPage />} />
+
+        {/* Admin Routes */}
+        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+        <Route path="/admin/dashboard" element={<AdminDashboard />} />
+        <Route path="/admin/categories" element={<CategoryList />} />
+        <Route path="/admin/users" element={<UserList />} />
+
         <Route path='*' element={<NotFound />} />
       </Routes>
     </Router>
