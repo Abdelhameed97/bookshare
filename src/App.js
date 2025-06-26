@@ -27,6 +27,11 @@ import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
+import CategoryPage from "./pages/CategoryPage";
+ import RagChat from "./pages/RagChat";
+import FloatingChatButton from "./components/FloatingChatButton";
+import './App.css';
+
 import AdminDashboard from './components/Admin/Dashboard';
 import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
@@ -84,6 +89,9 @@ function App() {
         <Route path="/libraries" element={<LibrariesPage />} />
         <Route path="/library/:id" element={<LibraryDetails />} />
         <Route path="/all-orders" element={<AllOrdersPage />} />
+        <Route path="/rag-chat" element={<RagChat />} />
+        <Route path="/category/:category" element={<CategoryPage />} />
+        
 
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -94,7 +102,10 @@ function App() {
         <Route path="/admin/orders" element={<AdminOrders />} />
 
         <Route path='*' element={<NotFound />} />
+
       </Routes>
+       <FloatingChatButton />
+
     </Router>
   );
 }
