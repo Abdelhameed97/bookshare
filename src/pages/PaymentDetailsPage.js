@@ -329,7 +329,6 @@ const PaymentDetailsPage = () => {
                                         {selectedMethod === 'stripe' ? (
                                             <Elements stripe={stripePromise}>
                                                 <StripeWrapper
-
                                                     order={order}
                                                     createStripePayment={createStripePayment}
                                                     confirmStripePayment={confirmStripePayment}
@@ -363,33 +362,43 @@ const PaymentDetailsPage = () => {
                     </Col>
 
                     <Col lg={4}>
-                        <Card className="order-summary-card sticky-top">
+                        <Card className="order-summary-card" style={{ zIndex: 1 }}>
                             <Card.Body>
-                                <h5 className="summary-title mb-3">Order Items</h5>
-                                <ListGroup variant="flush" className="mb-3">
+                                <h5 className="summary-title mb-3">Order Items ({order.items?.length || 0})</h5>
+                                <ListGroup variant="flush" className="mb-3" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                                     {order.items?.length > 0 ? (
                                         order.items.map(item => (
                                             <ListGroup.Item key={item.id} className="px-0">
-                                                <div className="d-flex">
+                                                <div className="d-flex align-items-center">
                                                     <img
                                                         src={item.book?.images?.[0] || 'https://via.placeholder.com/60x90'}
                                                         alt={item.book?.title || 'Book'}
-                                                        className="item-image me-3"
+                                                        className="item-image me-3 rounded"
                                                         width="60"
                                                         height="90"
+                                                        style={{ objectFit: 'cover' }}
                                                     />
-                                                    <div>
-                                                        <h6 className="mb-1">{item.book?.title || 'Unknown Book'}</h6>
-                                                        <small className="text-muted">Qty: {item.quantity || 1}</small>
-                                                        {item.type === 'rent' && (
-                                                            <small className="d-block text-muted">(Rental)</small>
-                                                        )}
-                                                        <div className="item-price mt-1">
-                                                            {formatPrice(getItemPrice(item))} EGP
-                                                            {item.type === 'rent' && (
-                                                                <small className="d-block text-muted">per rental</small>
-                                                            )}
+                                                    <div className="flex-grow-1">
+                                                        <div className="d-flex justify-content-between">
+                                                            <div>
+                                                                <h6 className="mb-1 fw-bold">{item.book?.title || 'Unknown Book'}</h6>
+                                                                <small className="text-muted">Qty: {item.quantity || 1}</small>
+                                                                {item.type === 'rent' && (
+                                                                    <small className="d-block text-muted">(Rental)</small>
+                                                                )}
+                                                            </div>
+                                                            <div className="text-end">
+                                                                <div className="fw-bold">
+                                                                    {formatPrice(getItemPrice(item))} EGP
+                                                                </div>
+                                                                <small className="text-muted">
+                                                                    Total: {formatPrice(getItemPrice(item) * item.quantity)} EGP
+                                                                </small>
+                                                            </div>
                                                         </div>
+                                                        {item.type === 'rent' && (
+                                                            <small className="d-block text-muted mt-1">per rental</small>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </ListGroup.Item>
