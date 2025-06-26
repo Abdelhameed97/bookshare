@@ -1,14 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import { FaCheck, FaTimes, FaGoogle, FaGithub } from "react-icons/fa";
+import {
+  FaCheck,
+  FaTimes,
+  FaGoogle,
+  FaGithub,
+  FaFacebook,
+  FaLinkedin,
+} from "react-icons/fa";
 import logo from "../../assets/bookshare-logo.png";
 import { register } from "../../api/auth";
 import useAuth from "../../hooks/useAuth";
 
 const RegisterForm = () => {
-  // Get role from location state if coming from GetStarted page
   const location = useLocation();
-  const role = location.state?.role; // 'client' or 'owner'
+  const navigate = useNavigate();
+  const { setUser, setToken } = useAuth();
+
+  const role = location.state?.role;
+  const validRoles = ["client", "owner"];
 
   const [form, setForm] = useState({
     name: "",
@@ -17,23 +27,19 @@ const RegisterForm = () => {
     password_confirmation: "",
     phone_number: "",
     national_id: "",
-    role: role,
+    role: validRoles.includes(role) ? role : "",
   });
-
-  // If user navigates directly to this page without selecting a role,
-  // redirect them to the Get Started page
-  useEffect(() => {
-    if (!form.role) {
-      navigate("/get-started");
-    }
-  }, [form.role]);
 
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { setUser, setToken } = useAuth();
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!form.role) {
+      navigate("/get-started", { replace: true });
+    }
+  }, [form.role, navigate]);
 
   const validateField = (name, value) => {
     switch (name) {
@@ -46,13 +52,27 @@ const RegisterForm = () => {
       case "password_confirmation":
         return value === form.password ? "" : "Passwords don't match";
       case "phone_number":
-        return value.match(/^01[0-9]{9}$/) ? "" : "Invalid Egyptian number";
+        return /^01[0-9]{9}$/.test(value)
+          ? ""
+          : "Invalid Egyptian number (01XXXXXXXXX)";
       case "national_id":
-        return value.match(/^[0-9]{14}$/) ? "" : "Must be 14 digits";
+        return /^[0-9]{14}$/.test(value) ? "" : "Must be 14 digits";
       default:
         return "";
     }
   };
+
+  const validateForm = () => {
+    const newErrors = {};
+    Object.keys(form).forEach((key) => {
+      const error = validateField(key, form[key]);
+      if (error) newErrors[key] = error;
+    });
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const isValid = (field) => touched[field] && !errors[field] && form[field];
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -66,16 +86,6 @@ const RegisterForm = () => {
     const { name } = e.target;
     setTouched((prev) => ({ ...prev, [name]: true }));
     setErrors((prev) => ({ ...prev, [name]: validateField(name, form[name]) }));
-  };
-
-  const validateForm = () => {
-    const newErrors = {};
-    Object.keys(form).forEach((key) => {
-      const error = validateField(key, form[key]);
-      if (error) newErrors[key] = error;
-    });
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
@@ -94,12 +104,15 @@ const RegisterForm = () => {
         const res = await register(form);
         setUser(res.data.data);
         setToken(res.data.access_token);
-        navigate("/");
+        navigate("/", { replace: true });
       } catch (err) {
         setServerError(
           err.response?.data?.message ||
             "Something went wrong. Please try again."
         );
+        if (err.response?.data?.errors) {
+          setErrors(err.response.data.errors);
+        }
       } finally {
         setIsSubmitting(false);
       }
@@ -109,24 +122,22 @@ const RegisterForm = () => {
   };
 
   const handleSocialLogin = (provider) => {
-    // Redirect to backend OAuth endpoint with the selected role
     window.location.href = `${process.env.REACT_APP_API_URL}/auth/${provider}/redirect?role=${form.role}`;
   };
 
-  const isValid = (field) => touched[field] && !errors[field] && form[field];
-
   return (
-    <div className='position-absolute top-50 start-50 translate-middle w-100'>
+    <div className='d-flex justify-content-center align-items-center min-vh-100'>
       <div className='container'>
         <div className='row justify-content-center'>
-          <div className='col-lg-7 col-xl-6 p-4 border rounded-4 shadow bg-white'>
-            <div className='text-center mb-3'>
+          <div className='col-12 col-md-10 col-lg-7 col-xl-6 p-3 border rounded-4 shadow bg-white'>
+            <div className='text-center mb-1'>
               <img
                 src={logo}
                 alt='BookShare Logo'
-                className='mb-2'
+                className='mb-2 img-fluid'
                 style={{
-                  width: "90px",
+                  maxWidth: "100px",
+                  height: "auto",
                   filter: "drop-shadow(2px 2px 4px rgba(0,0,0,0.1))",
                 }}
               />
@@ -140,7 +151,7 @@ const RegisterForm = () => {
 
             <form noValidate onSubmit={handleSubmit}>
               {serverError && (
-                <div className='alert alert-danger alert-dismissible fade show mb-2 py-2'>
+                <div className='alert alert-danger alert-dismissible fade show mb-1 py-2'>
                   {serverError}
                   <button
                     type='button'
@@ -150,189 +161,122 @@ const RegisterForm = () => {
                 </div>
               )}
 
-              <div className='row g-2 mb-2'>
-                <div className='col-md-6'>
-                  <div className='form-floating'>
-                    <input
-                      type='text'
-                      name='name'
-                      id='name'
-                      className={`form-control ${
-                        errors.name ? "is-invalid" : ""
-                      } ${isValid("name") ? "is-valid" : ""}`}
-                      value={form.name}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      placeholder='Your Name'
-                    />
-                    <label htmlFor='name'>Full Name</label>
-                    {errors.name && (
-                      <div className='invalid-feedback d-flex align-items-center'>
-                        <FaTimes className='me-1' /> {errors.name}
-                      </div>
-                    )}
-                    {isValid("name") && (
-                      <div className='valid-feedback d-flex align-items-center'>
-                        <FaCheck className='me-1' /> Looks good!
-                      </div>
-                    )}
+              {/* NAME + EMAIL */}
+              <div className='row g-2 mb-1'>
+                {["name", "email"].map((field, idx) => (
+                  <div className='col-md-6' key={idx}>
+                    <div className='form-floating'>
+                      <input
+                        type={field === "email" ? "email" : "text"}
+                        name={field}
+                        id={field}
+                        className={`form-control ${
+                          errors[field] ? "is-invalid" : ""
+                        } ${isValid(field) ? "is-valid" : ""}`}
+                        value={form[field]}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        placeholder={field}
+                        autoComplete={field}
+                      />
+                      <label htmlFor={field}>
+                        {field === "name" ? "Full Name" : "Email Address"}
+                      </label>
+                      {errors[field] && (
+                        <div className='invalid-feedback d-flex align-items-center'>
+                          <FaTimes className='me-1' /> {errors[field]}
+                        </div>
+                      )}
+                      {isValid(field) && (
+                        <div className='valid-feedback d-flex align-items-center'>
+                          <FaCheck className='me-1' /> Looks good!
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                <div className='col-md-6'>
-                  <div className='form-floating'>
-                    <input
-                      type='email'
-                      name='email'
-                      id='email'
-                      className={`form-control ${
-                        errors.email ? "is-invalid" : ""
-                      } ${isValid("email") ? "is-valid" : ""}`}
-                      value={form.email}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      placeholder='Email Address'
-                    />
-                    <label htmlFor='email'>Email Address</label>
-                    {errors.email && (
-                      <div className='invalid-feedback d-flex align-items-center'>
-                        <FaTimes className='me-1' /> {errors.email}
-                      </div>
-                    )}
-                    {isValid("email") && (
-                      <div className='valid-feedback d-flex align-items-center'>
-                        <FaCheck className='me-1' /> Looks good!
-                      </div>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <div className='row g-2 mb-2'>
-                <div className='col-md-6'>
-                  <div className='form-floating'>
-                    <input
-                      type='tel'
-                      name='phone_number'
-                      id='phone_number'
-                      className={`form-control ${
-                        errors.phone_number ? "is-invalid" : ""
-                      } ${isValid("phone_number") ? "is-valid" : ""}`}
-                      value={form.phone_number}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      placeholder='Phone Number'
-                    />
-                    <label htmlFor='phone_number'>Phone Number</label>
-                    {errors.phone_number && (
-                      <div className='invalid-feedback d-flex align-items-center'>
-                        <FaTimes className='me-1' /> {errors.phone_number}
-                      </div>
-                    )}
-                    {isValid("phone_number") && (
-                      <div className='valid-feedback d-flex align-items-center'>
-                        <FaCheck className='me-1' /> Looks good!
-                      </div>
-                    )}
-                    <small className='text-muted'>
-                      Egyptian numbers only (01XXXXXXXXX)
-                    </small>
+              {/* PHONE + NATIONAL ID */}
+              <div className='row g-2 mb-1'>
+                {["phone_number", "national_id"].map((field, idx) => (
+                  <div className='col-md-6' key={idx}>
+                    <div className='form-floating'>
+                      <input
+                        type='text'
+                        name={field}
+                        id={field}
+                        className={`form-control ${
+                          errors[field] ? "is-invalid" : ""
+                        } ${isValid(field) ? "is-valid" : ""}`}
+                        value={form[field]}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        placeholder={field}
+                      />
+                      <label htmlFor={field}>
+                        {field === "phone_number"
+                          ? "Phone Number"
+                          : "National ID"}
+                      </label>
+                      {errors[field] && (
+                        <div className='invalid-feedback d-flex align-items-center'>
+                          <FaTimes className='me-1' /> {errors[field]}
+                        </div>
+                      )}
+                      {isValid(field) && (
+                        <div className='valid-feedback d-flex align-items-center'>
+                          <FaCheck className='me-1' /> Looks good!
+                        </div>
+                      )}
+                      <small className='text-muted'>
+                        {field === "phone_number"
+                          ? "Egyptian number (01XXXXXXXXX)"
+                          : "14 digits only"}
+                      </small>
+                    </div>
                   </div>
-                </div>
-
-                <div className='col-md-6'>
-                  <div className='form-floating'>
-                    <input
-                      type='text'
-                      name='national_id'
-                      id='national_id'
-                      className={`form-control ${
-                        errors.national_id ? "is-invalid" : ""
-                      } ${isValid("national_id") ? "is-valid" : ""}`}
-                      value={form.national_id}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      placeholder='National ID'
-                    />
-                    <label htmlFor='national_id'>National ID</label>
-                    {errors.national_id && (
-                      <div className='invalid-feedback d-flex align-items-center'>
-                        <FaTimes className='me-1' /> {errors.national_id}
-                      </div>
-                    )}
-                    {isValid("national_id") && (
-                      <div className='valid-feedback d-flex align-items-center'>
-                        <FaCheck className='me-1' /> Looks good!
-                      </div>
-                    )}
-                    <small className='text-muted'>14 digits only</small>
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <div className='row g-2 mb-3'>
-                <div className='col-md-6'>
-                  <div className='form-floating'>
-                    <input
-                      type='password'
-                      name='password'
-                      id='password'
-                      className={`form-control ${
-                        errors.password ? "is-invalid" : ""
-                      } ${isValid("password") ? "is-valid" : ""}`}
-                      value={form.password}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      placeholder='Password'
-                    />
-                    <label htmlFor='password'>Password</label>
-                    {errors.password && (
-                      <div className='invalid-feedback d-flex align-items-center'>
-                        <FaTimes className='me-1' /> {errors.password}
-                      </div>
-                    )}
-                    {isValid("password") && (
-                      <div className='valid-feedback d-flex align-items-center'>
-                        <FaCheck className='me-1' /> Secure password!
-                      </div>
-                    )}
-                    <small className='text-muted'>At least 6 characters</small>
+              {/* PASSWORD + CONFIRMATION */}
+              <div className='row g-2 mb-1'>
+                {["password", "password_confirmation"].map((field, idx) => (
+                  <div className='col-md-6' key={idx}>
+                    <div className='form-floating'>
+                      <input
+                        type='password'
+                        name={field}
+                        id={field}
+                        className={`form-control ${
+                          errors[field] ? "is-invalid" : ""
+                        } ${isValid(field) ? "is-valid" : ""}`}
+                        value={form[field]}
+                        onChange={handleChange}
+                        onBlur={handleBlur}
+                        placeholder={field}
+                        autoComplete='new-password'
+                      />
+                      <label htmlFor={field}>
+                        {field === "password" ? "Password" : "Confirm Password"}
+                      </label>
+                      {errors[field] && (
+                        <div className='invalid-feedback d-flex align-items-center'>
+                          <FaTimes className='me-1' /> {errors[field]}
+                        </div>
+                      )}
+                      {isValid(field) && (
+                        <div className='valid-feedback d-flex align-items-center'>
+                          <FaCheck className='me-1' /> Password OK
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-
-                <div className='col-md-6'>
-                  <div className='form-floating'>
-                    <input
-                      type='password'
-                      name='password_confirmation'
-                      id='password_confirmation'
-                      className={`form-control ${
-                        errors.password_confirmation ? "is-invalid" : ""
-                      } ${isValid("password_confirmation") ? "is-valid" : ""}`}
-                      value={form.password_confirmation}
-                      onChange={handleChange}
-                      onBlur={handleBlur}
-                      placeholder='Confirm Password'
-                    />
-                    <label htmlFor='password_confirmation'>
-                      Confirm Password
-                    </label>
-                    {errors.password_confirmation && (
-                      <div className='invalid-feedback d-flex align-items-center'>
-                        <FaTimes className='me-1' />{" "}
-                        {errors.password_confirmation}
-                      </div>
-                    )}
-                    {isValid("password_confirmation") && (
-                      <div className='valid-feedback d-flex align-items-center'>
-                        <FaCheck className='me-1' /> Passwords match!
-                      </div>
-                    )}
-                  </div>
-                </div>
+                ))}
               </div>
 
-              <div className='text-center my-2'>
+              {/* Change role link */}
+              <div className='text-center'>
                 <small className='text-muted'>
                   Want to change your role?{" "}
                   <Link to='/get-started' className='text-primary'>
@@ -341,51 +285,77 @@ const RegisterForm = () => {
                 </small>
               </div>
 
+              {/* Submit Button */}
               <button
                 type='submit'
-                className='btn btn-primary w-100 py-2 fw-bold mt-2'
+                className='btn btn-primary w-100 py-2 fw-bold mt-3'
                 disabled={isSubmitting}
               >
                 {isSubmitting ? (
                   <>
-                    <span
-                      className='spinner-border spinner-border-sm me-2'
-                      role='status'
-                      aria-hidden='true'
-                    ></span>
+                    <span className='spinner-border spinner-border-sm me-2'></span>
                     Creating Account...
                   </>
                 ) : (
                   "Register Now"
                 )}
               </button>
+              <div className='d-flex align-items-center justify-content-center mt-3'>
+                <hr className='flex-grow-1' />
+                <span className='px-2 text-muted small'>OR</span>
+                <hr className='flex-grow-1' />
+              </div>
+              {/* Social Media Login */}
+              <div className='text-center'>
+                <p className='fw-semibold text-muted'>
+                  🔐 Register quickly using your social accounts
+                </p>
 
-              {/* Social Login Buttons */}
-              <div className='text-center my-3'>
-                <div className='d-flex align-items-center justify-content-center mb-2'>
-                  <hr className='flex-grow-1' />
-                  <span className='px-2 text-muted small'>OR</span>
-                  <hr className='flex-grow-1' />
-                </div>
-                <div className='d-flex gap-2'>
+                <div className='d-flex flex-wrap justify-content-center gap-3'>
                   <button
+                    className='btn btn-outline-danger rounded-circle d-flex justify-content-center align-items-center'
+                    style={{ width: "45px", height: "45px" }}
                     type='button'
-                    className='btn btn-outline-danger flex-grow-1 d-flex align-items-center justify-content-center py-2'
                     onClick={() => handleSocialLogin("google")}
                   >
-                    <FaGoogle className='me-2' /> Sign Up with Google
+                    <FaGoogle />
                   </button>
+
                   <button
+                    className='btn btn-outline-dark rounded-circle d-flex justify-content-center align-items-center'
+                    style={{ width: "45px", height: "45px" }}
                     type='button'
-                    className='btn btn-outline-dark flex-grow-1 d-flex align-items-center justify-content-center py-2'
                     onClick={() => handleSocialLogin("github")}
                   >
-                    <FaGithub className='me-2' /> Sign Up with GitHub
+                    <FaGithub />
+                  </button>
+
+                  <button
+                    className='btn btn-outline-primary rounded-circle d-flex justify-content-center align-items-center'
+                    style={{ width: "45px", height: "45px" }}
+                    type='button'
+                    onClick={() => handleSocialLogin("facebook")}
+                  >
+                    <FaFacebook />
+                  </button>
+
+                  <button
+                    className='btn rounded-circle d-flex justify-content-center align-items-center text-white'
+                    style={{
+                      width: "45px",
+                      height: "45px",
+                      backgroundColor: "#0A66C2",
+                      border: "1px solid #0A66C2",
+                    }}
+                    type='button'
+                    onClick={() => handleSocialLogin("linkedin")}
+                  >
+                    <FaLinkedin />
                   </button>
                 </div>
               </div>
 
-              <p className='text-center mt-2 mb-0 text-muted small'>
+              <p className='text-center text-muted small mb-0'>
                 Already have an account?{" "}
                 <Link to='/login' className='text-primary fw-bold'>
                   Sign In
