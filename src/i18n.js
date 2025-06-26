@@ -13,22 +13,24 @@ const translations = {
     menu: "Menu",
     closeMenu: "Close Menu",
     publishingExcellence: "Publishing Excellence Since 2024",
-    book: "Book",
-    share: "Share",
+   
     comingSoon: "Coming Soon",
     topSeller: "Top Seller",
     author: "Author",
     user: "User",
     libraryOwner: "Library Owner",
     search: "Search",
-    // orders: "Orders",
-    // wishlist: "Wishlist",
-    // ... باقي النصوص
+    adminDashboard: "Admin Dashboard",
+    users: "Users",
+    categories: "Categories",
+  
+
+
     welcome: "Welcome",
     logout: "Logout",
     signIn: "Sign In",
     register: "Register",
-    // ... إلخ
+
     AR: "AR",
     EN: "EN",
     arabic: "Arabic",
@@ -50,14 +52,16 @@ const translations = {
     closeMenu: "إغلاق القائمة",
     allLibraries: "جميع المكتبات",
     publishingExcellence: "التميز في النشر منذ 2024",
-    book: "كتاب",
-    share: "شارك",
+   
     comingSoon: "قريباً",
     topSeller: "الأكثر مبيعاً",
     author: "المؤلف",
     user: "مستخدم",
     libraryOwner: "مالك المكتبة",
     search: "بحث",
+    adminDashboard: "لوحة التحكم الإدارية",
+    users: "المستخدمين",
+    categories: "الفئات",
     // ... باقي النصوص
     welcome: "مرحباً",
     logout: "تسجيل الخروج",
