@@ -31,6 +31,7 @@ import AdminDashboard from './components/Admin/Dashboard';
 import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
 import BookList from './components/Admin/BookList';
+import AdminOrders from './components/Admin/AdminOrders';
 // import Users from './components/admin/Users';
 // import Categories from './components/admin/Categories';
 
@@ -90,6 +91,7 @@ function App() {
         <Route path="/admin/categories" element={<CategoryList />} />
         <Route path="/admin/users" element={<UserList />} />
         <Route path="/admin/books" element={<BookList />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
 
         <Route path='*' element={<NotFound />} />
       </Routes>

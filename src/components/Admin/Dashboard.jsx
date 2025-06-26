@@ -1,23 +1,48 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
+import React, { useEffect, useState } from 'react';
+import { BookOpen, Users, ShoppingCart, TrendingUp, ClipboardList, User, RefreshCw, Building2, Bell } from 'lucide-react';
 import Navbar from '../HomePage/Navbar';
 import Footer from '../HomePage/Footer';
-import './Dashboard.css';
-// استيراد أيقونات FontAwesome
-import { FaBook, FaUsers, FaLayerGroup, FaUniversity, FaSyncAlt } from 'react-icons/fa';
+import api from '../../api/auth';
+import { Link } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import '../../style/AdminDashboard.css';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState(null);
+  const [stats, setStats] = useState({
+    totalBooks: 0,
+    totalOrders: 0,
+    totalUsers: 0,
+    totalLibraries: 0,
+  });
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [pendingOrders, setPendingOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
-  const fetchStats = async () => {
-    setRefreshing(true);
+  const fetchDashboardData = async () => {
+    setLoading(true);
     try {
-      const res = await axios.get("http://localhost:8000/api/admin/stats");
-      setStats(res.data);
-    } catch (err) {
-      setStats(null);
+      const [booksRes, ordersRes, usersRes, librariesRes] = await Promise.all([
+        api.get('/books'),
+        api.get('/orders'),
+        api.get('/users'),
+        api.get('/users?role=owner'),
+      ]);
+      setStats({
+        totalBooks: booksRes.data.data?.length || 0,
+        totalOrders: ordersRes.data.data?.length || 0,
+        totalUsers: usersRes.data.data?.length || 0,
+        totalLibraries: librariesRes.data.data?.length || 0,
+      });
+      // Only show last 3 pending orders
+      const pending = (ordersRes.data.data || [])
+        .filter(order => order.status === 'pending')
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+      setPendingOrders(pending);
+      setRecentOrders(pending.slice(0, 3));
+    } catch (error) {
+      Swal.fire('Error', 'Failed to load dashboard data', 'error');
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -25,85 +50,131 @@ const AdminDashboard = () => {
   };
 
   useEffect(() => {
-    fetchStats();
+    fetchDashboardData();
   }, []);
 
-  if (loading) {
-    return (
-      <div className="dashboard-loading">
-        <div className="loading-spinner"></div>
-        <p>Loading admin dashboard...</p>
-      </div>
-    );
-  }
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+  };
 
   return (
     <>
       <Navbar />
-      <div className="dashboard-container">
-        <div className="dashboard-header">
-          <div className="dashboard-title">
-            <h1>Admin Dashboard</h1>
-            <p>Welcome, Admin!</p>
-            <div className="dashboard-subtitle">
-              <FaUniversity size={16} />
-              <span>Last updated: {new Date().toLocaleTimeString()}</span>
-              {refreshing && <span className="updating-indicator"> • Updating...</span>}
+      <div className="admin-dashboard-container">
+        <div className="admin-dashboard-header">
+          <h1>Admin Dashboard</h1>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 24 }}>
+            <div className="admin-notification-section">
+              <button className="admin-notification-btn" onClick={() => setShowNotifications(v => !v)}>
+                <Bell size={32} />
+                {pendingOrders.length > 0 && (
+                  <span className="admin-notification-badge">{pendingOrders.length}</span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="admin-notification-dropdown">
+                  <h4>New Book Requests</h4>
+                  {pendingOrders.length === 0 ? (
+                    <div className="admin-notification-empty">No new requests</div>
+                  ) : (
+                    pendingOrders.slice(0, 8).map(order => (
+                      <div key={order.id} className="admin-notification-item">
+                        <span>
+                          <b>{order.user?.name || order.client?.name || 'Someone'}</b> requested
+                          {order.order_items?.length > 0 && (
+                            <> <b>{order.order_items[0].book?.title || 'a book'}</b>{order.order_items.length > 1 ? ` and ${order.order_items.length - 1} more` : ''}</>
+                          )}
+                        </span>
+                        <small>{new Date(order.created_at).toLocaleString()}</small>
+                        <Link to="/admin/orders" className="admin-notification-link">View</Link>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
             </div>
-          </div>
-          <div className="dashboard-actions">
-            <button 
-              className="btn-refresh"
-              onClick={fetchStats}
-              disabled={refreshing}
-              title="Refresh Data"
-            >
-              <FaSyncAlt size={20} className={refreshing ? 'spinning' : ''} />
+            <button className="admin-refresh-btn" onClick={handleRefresh} disabled={refreshing}>
+              <RefreshCw size={28} className={refreshing ? 'spinning' : ''} />
               {refreshing ? 'Refreshing...' : 'Refresh'}
             </button>
           </div>
         </div>
-
-        {/* Stats Cards */}
-        <div className="stats-grid">
-          <div className="stat-card">
-            <div className="stat-icon libraries">
-              <FaUniversity size={24} />
-            </div>
-            <div className="stat-content">
-              <h3>{stats.libraries}</h3>
-              <p>Total Libraries</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon clients">
-              <FaUsers size={24} />
-            </div>
-            <div className="stat-content">
-              <h3>{stats.clients}</h3>
-              <p>Total Clients</p>
-            </div>
-          </div>
-          <div className="stat-card">
-            <div className="stat-icon books">
-              <FaBook size={24} />
-            </div>
-            <div className="stat-content">
-              <h3>{stats.books}</h3>
+        <div className="admin-stats-grid">
+          <div className="admin-stat-card books">
+            <BookOpen size={48} />
+            <div>
+              <h3>{stats.totalBooks}</h3>
               <p>Total Books</p>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon categories">
-              <FaLayerGroup size={24} />
+          <div className="admin-stat-card orders">
+            <ClipboardList size={48} />
+            <div>
+              <h3>{stats.totalOrders}</h3>
+              <p>Total Orders</p>
             </div>
-            <div className="stat-content">
-              <h3>{stats.categories}</h3>
-              <p>Total Categories</p>
+          </div>
+          <div className="admin-stat-card users">
+            <Users size={48} />
+            <div>
+              <h3>{stats.totalUsers}</h3>
+              <p>Total Users</p>
+            </div>
+          </div>
+          <div className="admin-stat-card libraries">
+            <Building2 size={48} />
+            <div>
+              <h3>{stats.totalLibraries}</h3>
+              <p>Total Libraries</p>
             </div>
           </div>
         </div>
-    </div>
+        <div className="admin-section">
+          <div className="admin-section-header">
+            <h2>Recent Pending Orders</h2>
+            <Link to="/admin/orders" className="view-all-link">View All Orders</Link>
+          </div>
+          <div className="admin-orders-table-wrapper">
+            <table className="admin-orders-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>User</th>
+                  <th>Books</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loading ? (
+                  <tr><td colSpan="5" style={{ textAlign: 'center' }}>Loading...</td></tr>
+                ) : recentOrders.length === 0 ? (
+                  <tr><td colSpan="5" style={{ textAlign: 'center' }}>No recent pending orders.</td></tr>
+                ) : (
+                  recentOrders.map(order => (
+                    <tr key={order.id}>
+                      <td>#{order.id}</td>
+                      <td>{order.user?.name || order.client?.name || 'Unknown'}</td>
+                      <td>
+                        <ul className="admin-orders-books-list">
+                          {order.order_items?.map(item => (
+                            <li key={item.id}>{item.book?.title || 'Book'} x{item.quantity}</li>
+                          ))}
+                        </ul>
+                      </td>
+                      <td>
+                        <span className={`status-badge status-${order.status}`}>{order.status}</span>
+                      </td>
+                      <td>{new Date(order.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
       <Footer />
     </>
   );

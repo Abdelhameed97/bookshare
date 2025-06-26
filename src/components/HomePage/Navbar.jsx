@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
@@ -14,6 +14,7 @@ import {
   FaTachometerAlt,
   FaBook,
   FaUserEdit,
+  FaBell,
 } from "react-icons/fa";
 import { useCart } from "../../hooks/useCart";
 import { useWishlist } from "../../hooks/useWishlist";
@@ -39,6 +40,8 @@ const Navbar = () => {
 
   const { t, language } = useTranslation();
 
+  const [showClientNotifications, setShowClientNotifications] = useState(false);
+
   const regularNavLinks = [
     { to: "/", label: "home" },
     { to: "/about", label: "about" },
@@ -62,6 +65,7 @@ const Navbar = () => {
     { to: "/admin/users", label: "users" },
     { to: "/admin/categories", label: "categories" },
     { to: "/admin/books", label: "books" },
+    { to: "/admin/orders", label: "orders" },
   ];
 
   const navLinks = user?.role === "admin"
@@ -103,6 +107,15 @@ const Navbar = () => {
     }
     navigate(path);
   };
+
+  // Notifications for client
+  const clientOrderNotifications = useMemo(() => {
+    if (!user || user.role !== 'client' || !orders) return [];
+    // Only show notifications for orders that are not pending
+    return orders
+      .filter(order => order.status === 'accepted' || order.status === 'rejected')
+      .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+  }, [user, orders]);
 
   return (
     <>
@@ -173,6 +186,45 @@ const Navbar = () => {
                 </button>
 
                 <LanguageSwitcher />
+
+                {/* Client Notifications Bell */}
+                {user?.role === 'client' && (
+                  <div className="client-notification-section">
+                    <button
+                      className="icon-button client-notification-btn"
+                      title={t('notifications')}
+                      onClick={() => setShowClientNotifications(v => !v)}
+                    >
+                      <FaBell size={20} />
+                      {clientOrderNotifications.length > 0 && (
+                        <span className="client-notification-badge">{clientOrderNotifications.length}</span>
+                      )}
+                    </button>
+                    {showClientNotifications && (
+                      <div className="client-notification-dropdown">
+                        <h4>Order Updates</h4>
+                        {clientOrderNotifications.length === 0 ? (
+                          <div className="no-notifications">No notifications</div>
+                        ) : (
+                          clientOrderNotifications.slice(0, 8).map(order => (
+                            <div key={order.id} className="client-notification-item">
+                              <span className="client-notification-message">
+                                Your order for <b>"{order.order_items?.[0]?.book?.title || 'a book'}"</b> was
+                                <span className={order.status === 'accepted' ? 'notif-accepted' : 'notif-rejected'}>
+                                  {order.status === 'accepted' ? ' accepted' : ' rejected'}
+                                </span>
+                              </span>
+                              <div className="client-notification-meta">
+                                <small>{new Date(order.updated_at).toLocaleString()}</small>
+                                <Link to={`/orders/${order.id}`} className="client-notification-link-btn">View</Link>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )}
 
                 {user?.role !== "admin" && !isLibraryOwner && (
                   <>
