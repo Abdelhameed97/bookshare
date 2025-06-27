@@ -17,13 +17,15 @@ import {
   FaRegHeart,
   FaShoppingCart,
   FaUserEdit,
-  FaUserSlash
+  FaUserSlash,
 } from "react-icons/fa";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "animate.css";
 import Swal from "sweetalert2";
+import { useCart } from "../../hooks/useCart";
+import StarRating from "./StarRating";
 
 const BookDetails = () => {
   const { id } = useParams();
@@ -41,8 +43,14 @@ const BookDetails = () => {
   const [isInCart, setIsInCart] = useState(false);
   const [loadingStatus, setLoadingStatus] = useState(false);
   const [mounted, setMounted] = useState(true);
-  
+  const [rating, setRating] = useState(0);
+  const [userRating, setUserRating] = useState(null);
+  const [avgRating, setAvgRating] = useState(0);
+  const [ratingCount, setRatingCount] = useState(0);
+  const [ratingLoading, setRatingLoading] = useState(false);
+
   const user = JSON.parse(localStorage.getItem("user"));
+  const { addToCart, removeFromCart, checkCartStatus } = useCart(user?.id);
 
   useEffect(() => {
     return () => {
@@ -63,24 +71,53 @@ const BookDetails = () => {
     }
   };
 
+  const checkWishlistStatus = useCallback(
+    async (bookId) => {
+      if (!user || !mounted) return;
+
+      setLoadingStatus(true);
+      try {
+        const response = await axios.get(
+          `http://localhost:8000/api/wishlist/check/${bookId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+
+        if (!mounted) return;
+        setIsWishlisted(response.data.isWishlisted || false);
+      } catch (error) {
+        if (!mounted) return;
+        console.error("Error checking wishlist:", error);
+        setIsWishlisted(false);
+      } finally {
+        if (mounted) {
+          setLoadingStatus(false);
+        }
+      }
+    },
+    [user, mounted]
+  );
+
   const fetchBookDetails = useCallback(async () => {
     if (!mounted) return;
-    
+
     setLoading(true);
     try {
-      const response = await axios.get(
-        `http://localhost:8000/api/books/${id}`
-      );
+      const response = await axios.get(`http://localhost:8000/api/books/${id}`);
       const bookData = response.data.data;
-      
+
       if (!mounted) return;
       setBook(bookData);
 
       if (user) {
         await Promise.all([
           checkWishlistStatus(bookData.id),
-          checkCartStatus(bookData.id)
+          checkCartStatus(bookData.id),
         ]);
+        await fetchRatings(bookData.id);
       }
 
       const userId = bookData.user?.id;
@@ -88,11 +125,9 @@ const BookDetails = () => {
         const res = await axios.get(
           `http://localhost:8000/api/books?user_id=${userId}`
         );
-        
+
         if (!mounted) return;
-        setAuthorBooks(
-          res.data.data.filter(b => b.id !== bookData.id)
-        );
+        setAuthorBooks(res.data.data.filter((b) => b.id !== bookData.id));
       }
     } catch (err) {
       if (!mounted) return;
@@ -102,68 +137,12 @@ const BookDetails = () => {
         setLoading(false);
       }
     }
-  }, [id, user, mounted]);
-
-  const checkWishlistStatus = useCallback(async (bookId) => {
-    if (!user || !mounted) return;
-
-    setLoadingStatus(true);
-    try {
-      const response = await axios.get(
-        `http://localhost:8000/api/wishlist/check/${bookId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      
-      if (!mounted) return;
-      setIsWishlisted(response.data.isWishlisted || false);
-    } catch (error) {
-      if (!mounted) return;
-      console.error("Error checking wishlist:", error);
-      setIsWishlisted(false);
-    } finally {
-      if (mounted) {
-        setLoadingStatus(false);
-      }
-    }
-  }, [user, mounted]);
-
-  const checkCartStatus = useCallback(async (bookId) => {
-    if (!user || !mounted) return;
-
-    setLoadingStatus(true);
-    try {
-      const response = await axios.get(
-        `http://localhost:8000/api/cart/check/${bookId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        }
-      );
-      
-      if (!mounted) return;
-      setIsInCart(response.data.isInCart || false);
-    } catch (error) {
-      if (!mounted) return;
-      console.error("Error checking cart:", error);
-      setIsInCart(false);
-    } finally {
-      if (mounted) {
-        setLoadingStatus(false);
-      }
-    }
-  }, [user, mounted]);
+  }, [id, user, mounted, checkWishlistStatus, checkCartStatus]);
 
   const fetchBookWithComments = useCallback(async () => {
     try {
-      const response = await axios.get(
-        `http://localhost:8000/api/books/${id}`
-      );
-      
+      const response = await axios.get(`http://localhost:8000/api/books/${id}`);
+
       if (!mounted) return;
       setBook(response.data.data);
     } catch (err) {
@@ -266,14 +245,11 @@ const BookDetails = () => {
       });
 
       if (result.isConfirmed) {
-        await axios.delete(
-          `http://localhost:8000/api/comment/${commentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await axios.delete(`http://localhost:8000/api/comment/${commentId}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         await fetchBookWithComments();
         toast.success("Comment deleted successfully!");
       }
@@ -292,14 +268,11 @@ const BookDetails = () => {
     setLoadingStatus(true);
     try {
       if (isWishlisted) {
-        await axios.delete(
-          `http://localhost:8000/api/wishlist/${book.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await axios.delete(`http://localhost:8000/api/wishlist/${book.id}`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+        });
         setIsWishlisted(false);
         toast.success("Removed from wishlist");
       } else {
@@ -323,6 +296,76 @@ const BookDetails = () => {
     }
   };
 
+  const fetchRatings = async (bookId) => {
+    try {
+      const response = await axios.get(
+        `http://localhost:8000/api/ratings?book_id=${bookId}`
+      );
+      const ratings = response.data.data || [];
+
+      if (ratings.length > 0) {
+        const sum = ratings.reduce((acc, curr) => acc + curr.rating, 0);
+        const avg = sum / ratings.length;
+        setAvgRating(avg);
+        setRatingCount(ratings.length);
+
+        if (user) {
+          const userRatingObj = ratings.find((r) => r.reviewer_id === user.id);
+          if (userRatingObj) {
+            setUserRating(userRatingObj);
+            setRating(userRatingObj.rating);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+    }
+  };
+
+  const handleRatingSubmit = async (newRating) => {
+    if (!user) {
+      toast.info("Please login to rate this book");
+      return;
+    }
+
+    setRatingLoading(true);
+    try {
+      if (userRating) {
+        await axios.put(
+          `http://localhost:8000/api/ratings/${userRating.id}`,
+          { rating: newRating },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        toast.success("Rating updated successfully!");
+      } else {
+        await axios.post(
+          `http://localhost:8000/api/ratings`,
+          {
+            book_id: book.id,
+            rating: newRating,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+          }
+        );
+        toast.success("Rating submitted successfully!");
+      }
+      setRating(newRating);
+      fetchRatings(book.id);
+    } catch (error) {
+      console.error("Error submitting rating:", error);
+      toast.error(error.response?.data?.message || "Failed to submit rating");
+    } finally {
+      setRatingLoading(false);
+    }
+  };
+
   const handleCart = async () => {
     if (!user) {
       toast.info("Please login to add to cart");
@@ -332,26 +375,11 @@ const BookDetails = () => {
     setLoadingStatus(true);
     try {
       if (isInCart) {
-        await axios.delete(
-          `http://localhost:8000/api/cart/${book.id}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await removeFromCart(book.id);
         setIsInCart(false);
         toast.success("Removed from cart");
       } else {
-        await axios.post(
-          `http://localhost:8000/api/cart`,
-          { book_id: book.id },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await addToCart(book.id, { type: "buy" });
         setIsInCart(true);
         toast.success("Added to cart");
       }
@@ -370,9 +398,7 @@ const BookDetails = () => {
       <div
         key={comment.id}
         className={`mb-3 ${
-          depth > 0
-            ? "ms-4 ps-3 border-start border-2 border-primary"
-            : ""
+          depth > 0 ? "ms-4 ps-3 border-start border-2 border-primary" : ""
         } animate__animated animate__fadeIn`}
       >
         <div className="card border-0 shadow-sm">
@@ -399,24 +425,20 @@ const BookDetails = () => {
                     )}
                   </h6>
                   <small className="text-muted">
-                    {formatDistanceToNow(
-                      new Date(comment.created_at),
-                      { addSuffix: true }
-                    )}
+                    {formatDistanceToNow(new Date(comment.created_at), {
+                      addSuffix: true,
+                    })}
                   </small>
                 </div>
               </div>
 
-              {/* زر التحكم بالتعليقات - يظهر للمالك أو المدير فقط */}
               {(user?.id === comment.user?.id || user?.role === "admin") && (
                 <div className="dropdown">
                   <button
                     className="btn btn-sm btn-link text-muted"
                     onClick={() =>
                       setShowOptions(
-                        showOptions === comment.id
-                          ? null
-                          : comment.id
+                        showOptions === comment.id ? null : comment.id
                       )
                     }
                   >
@@ -443,31 +465,30 @@ const BookDetails = () => {
                       >
                         <FaTrash className="me-2" /> Delete
                       </button>
-                      {user?.role === "admin" && user?.id !== comment.user?.id && (
-                        <>
-                          <div className="dropdown-divider"></div>
-                          <button
-                            className="dropdown-item d-flex align-items-center text-warning"
-                            onClick={() => {
-                              // إضافة وظيفة تعديل المستخدم هنا
-                              toast.info("User edit feature coming soon");
-                              setShowOptions(null);
-                            }}
-                          >
-                            <FaUserEdit className="me-2" /> Edit User
-                          </button>
-                          <button
-                            className="dropdown-item d-flex align-items-center text-danger"
-                            onClick={() => {
-                              // إضافة وظيفة حذف المستخدم هنا
-                              toast.info("User delete feature coming soon");
-                              setShowOptions(null);
-                            }}
-                          >
-                            <FaUserSlash className="me-2" /> Delete User
-                          </button>
-                        </>
-                      )}
+                      {user?.role === "admin" &&
+                        user?.id !== comment.user?.id && (
+                          <>
+                            <div className="dropdown-divider"></div>
+                            <button
+                              className="dropdown-item d-flex align-items-center text-warning"
+                              onClick={() => {
+                                toast.info("User edit feature coming soon");
+                                setShowOptions(null);
+                              }}
+                            >
+                              <FaUserEdit className="me-2" /> Edit User
+                            </button>
+                            <button
+                              className="dropdown-item d-flex align-items-center text-danger"
+                              onClick={() => {
+                                toast.info("User delete feature coming soon");
+                                setShowOptions(null);
+                              }}
+                            >
+                              <FaUserSlash className="me-2" /> Delete User
+                            </button>
+                          </>
+                        )}
                     </div>
                   )}
                 </div>
@@ -478,9 +499,7 @@ const BookDetails = () => {
               <div className="mt-3">
                 <textarea
                   value={editCommentText}
-                  onChange={(e) =>
-                    setEditCommentText(e.target.value)
-                  }
+                  onChange={(e) => setEditCommentText(e.target.value)}
                   className="form-control mb-2"
                   rows="3"
                   autoFocus
@@ -502,23 +521,15 @@ const BookDetails = () => {
               </div>
             ) : (
               <>
-                <p className="mt-3 mb-3 ps-5">
-                  {comment.comment}
-                </p>
+                <p className="mt-3 mb-3 ps-5">{comment.comment}</p>
                 <div className="d-flex align-items-center ps-5 gap-2">
                   <button
-                    onClick={() =>
-                      handleReply(
-                        comment.id,
-                        comment.user?.name
-                      )
-                    }
+                    onClick={() => handleReply(comment.id, comment.user?.name)}
                     className="btn btn-link btn-sm text-decoration-none"
                   >
                     <FaReply className="me-1" /> Reply
                   </button>
-                  
-                  {/* أزرار سريعة للتعديل والحذف تظهر للمالك فقط */}
+
                   {user?.id === comment.user?.id && (
                     <>
                       <button
@@ -586,7 +597,6 @@ const BookDetails = () => {
     );
   }
 
-  // Get book image
   let bookImagePath = "";
   if (Array.isArray(book.images)) {
     bookImagePath = book.images[0];
@@ -605,7 +615,6 @@ const BookDetails = () => {
 
       <div className="bg-light py-5">
         <div className="container">
-          {/* Book Header */}
           <div className="row mb-5">
             <div className="col-md-5 mb-4 mb-md-0">
               <div className="bg-white rounded-3 shadow-sm overflow-hidden">
@@ -638,6 +647,27 @@ const BookDetails = () => {
               <div className="card border-0 shadow-sm">
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-start mb-3">
+                    <div className="mb-3">
+                      <div className="d-flex align-items-center mb-2">
+                        <StarRating rating={avgRating} size={24} />
+                        <span className="ms-2 text-muted">
+                          ({ratingCount}{" "}
+                          {ratingCount === 1 ? "rating" : "ratings"})
+                        </span>
+                      </div>
+
+                      {user && (
+                        <div className="rating-section">
+                          <p className="mb-2">Your Rating:</p>
+                          <StarRating
+                            rating={rating}
+                            editable={true}
+                            onRatingChange={handleRatingSubmit}
+                            size={24}
+                          />
+                        </div>
+                      )}
+                    </div>
                     <div>
                       <span
                         className={`badge ${getStatusBadgeStyle(
@@ -647,26 +677,25 @@ const BookDetails = () => {
                         {book.status}
                       </span>
                       <span className="badge bg-info text-dark">
-                        {book.category?.name ||
-                          "Uncategorized"}
+                        {book.category?.name || "Uncategorized"}
                       </span>
                     </div>
                     <div className="d-flex gap-2">
                       {user && (
                         <>
                           <button
-                            className={`btn btn-sm ${isWishlisted ? "btn-danger" : "btn-outline-danger"}`}
+                            className={`btn btn-sm ${
+                              isWishlisted ? "btn-danger" : "btn-outline-danger"
+                            }`}
                             onClick={handleWishlist}
                             disabled={loadingStatus}
                           >
-                            {isWishlisted ? (
-                              <FaHeart />
-                            ) : (
-                              <FaRegHeart />
-                            )}
+                            {isWishlisted ? <FaHeart /> : <FaRegHeart />}
                           </button>
                           <button
-                            className={`btn btn-sm ${isInCart ? "btn-primary" : "btn-outline-primary"}`}
+                            className={`btn btn-sm ${
+                              isInCart ? "btn-primary" : "btn-outline-primary"
+                            }`}
                             onClick={handleCart}
                             disabled={loadingStatus}
                           >
@@ -693,30 +722,27 @@ const BookDetails = () => {
                       {book.user?.name?.charAt(0) || "A"}
                     </div>
                     <div>
-                      <h6 className="mb-0 fw-bold">
-                        Author
-                      </h6>
-                      <p className="mb-0">
-                        {book.user?.name || "Unknown"}
-                      </p>
+                      <h6 className="mb-0 fw-bold">Author</h6>
+                      <p className="mb-0">{book.user?.name || "Unknown"}</p>
                     </div>
                   </div>
 
-                  <p className="text-muted mb-4">
-                    {book.description}
-                  </p>
+                  <p className="text-muted mb-4">{book.description}</p>
 
                   <div className="row mb-4">
                     <div className="col-md-6">
                       <div className="d-flex align-items-center mb-3">
                         <FaDollarSign className="text-success me-2" />
                         <div>
-                          <h6 className="mb-0 fw-bold">
-                            Price
-                          </h6>
-                          <p className="mb-0">
-                            ${book.price}
-                          </p>
+                          <h6 className="mb-0 fw-bold">Price</h6>
+                          <p className="mb-0">${book.price}</p>
+                        </div>
+                      </div>
+                      <div className="d-flex align-items-center mb-3">
+                        <FaDollarSign className="text-success me-2" />
+                        <div>
+                          <h6 className="mb-0 fw-bold">Rental Price</h6>
+                          <p className="mb-0">${book.rental_price}</p>
                         </div>
                       </div>
                     </div>
@@ -724,12 +750,9 @@ const BookDetails = () => {
                       <div className="d-flex align-items-center mb-3">
                         <FaTag className="text-warning me-2" />
                         <div>
-                          <h6 className="mb-0 fw-bold">
-                            Condition
-                          </h6>
+                          <h6 className="mb-0 fw-bold">Condition</h6>
                           <p className="mb-0 text-capitalize">
-                            {book.condition ||
-                              "N/A"}
+                            {book.condition || "N/A"}
                           </p>
                         </div>
                       </div>
@@ -738,12 +761,8 @@ const BookDetails = () => {
                       <div className="d-flex align-items-center mb-3">
                         <FaInfoCircle className="text-info me-2" />
                         <div>
-                          <h6 className="mb-0 fw-bold">
-                            ISBN
-                          </h6>
-                          <p className="mb-0">
-                            {book.isbn || "N/A"}
-                          </p>
+                          <h6 className="mb-0 fw-bold">ISBN</h6>
+                          <p className="mb-0">{book.isbn || "N/A"}</p>
                         </div>
                       </div>
                     </div>
@@ -751,12 +770,8 @@ const BookDetails = () => {
                       <div className="d-flex align-items-center mb-3">
                         <FaBook className="text-purple me-2" />
                         <div>
-                          <h6 className="mb-0 fw-bold">
-                            Pages
-                          </h6>
-                          <p className="mb-0">
-                            {book.pages || "N/A"}
-                          </p>
+                          <h6 className="mb-0 fw-bold">Pages</h6>
+                          <p className="mb-0">{book.pages || "N/A"}</p>
                         </div>
                       </div>
                     </div>
@@ -766,22 +781,22 @@ const BookDetails = () => {
                     {user && user.id !== book.user?.id && (
                       <>
                         <button
-                          className={`btn flex-grow-1 ${isInCart ? "btn-success" : "btn-primary"}`}
+                          className={`btn flex-grow-1 ${
+                            isInCart ? "btn-success" : "btn-primary"
+                          }`}
                           onClick={handleCart}
                           disabled={loadingStatus}
                         >
-                          {isInCart
-                            ? "Added to Cart"
-                            : "Add to Cart"}
+                          {isInCart ? "Added to Cart" : "Add to Cart"}
                         </button>
                         <button
-                          className={`btn ${isWishlisted ? "btn-danger" : "btn-outline-danger"}`}
+                          className={`btn ${
+                            isWishlisted ? "btn-danger" : "btn-outline-danger"
+                          }`}
                           onClick={handleWishlist}
                           disabled={loadingStatus}
                         >
-                          {isWishlisted
-                            ? "Wishlisted"
-                            : "Wishlist"}
+                          {isWishlisted ? "Wishlisted" : "Wishlist"}
                         </button>
                       </>
                     )}
@@ -799,7 +814,6 @@ const BookDetails = () => {
             </div>
           </div>
 
-          {/* Comments Section */}
           <div className="card shadow-sm mb-5 animate__animated animate__fadeIn">
             <div className="card-header bg-white">
               <h3 className="h5 mb-0">
@@ -810,17 +824,12 @@ const BookDetails = () => {
               </h3>
             </div>
             <div className="card-body">
-              {/* Comment Form */}
               {user ? (
-                <form
-                  onSubmit={handleCommentSubmit}
-                  className="mb-4"
-                >
+                <form onSubmit={handleCommentSubmit} className="mb-4">
                   {replyingTo && (
                     <div className="alert alert-info alert-dismissible fade show mb-3 py-2">
                       <span>
-                        Replying to{" "}
-                        <strong>{replyingTo}</strong>
+                        Replying to <strong>{replyingTo}</strong>
                       </span>
                       <button
                         type="button"
@@ -836,16 +845,12 @@ const BookDetails = () => {
                     <textarea
                       id="comment-input"
                       value={commentInput}
-                      onChange={(e) =>
-                        setCommentInput(e.target.value)
-                      }
+                      onChange={(e) => setCommentInput(e.target.value)}
                       placeholder="Share your thoughts about this book..."
                       className="form-control"
                       style={{ height: "100px" }}
                     />
-                    <label htmlFor="comment-input">
-                      Your comment...
-                    </label>
+                    <label htmlFor="comment-input">Your comment...</label>
                   </div>
                   <button
                     type="submit"
@@ -874,24 +879,16 @@ const BookDetails = () => {
                 </div>
               )}
 
-              {/* Comments List */}
               {book.comments && book.comments.length > 0 ? (
                 <div className="mt-4">
-                  {renderComments(
-                    book.comments.filter((c) => !c.parent_id)
-                  )}
+                  {renderComments(book.comments.filter((c) => !c.parent_id))}
                 </div>
               ) : (
                 <div className="text-center py-4">
-                  <div
-                    className="text-muted mb-3"
-                    style={{ fontSize: "3rem" }}
-                  >
+                  <div className="text-muted mb-3" style={{ fontSize: "3rem" }}>
                     💬
                   </div>
-                  <h4 className="h5 text-muted">
-                    No comments yet
-                  </h4>
+                  <h4 className="h5 text-muted">No comments yet</h4>
                   <p className="text-muted">
                     Be the first to share your thoughts!
                   </p>
@@ -900,7 +897,6 @@ const BookDetails = () => {
             </div>
           </div>
 
-          {/* Author's other books */}
           {book.user && authorBooks.length > 0 && (
             <div className="card shadow-sm mb-5 animate__animated animate__fadeIn">
               <div className="card-header bg-white">
@@ -908,8 +904,7 @@ const BookDetails = () => {
                   <span className="badge bg-purple me-2">
                     {authorBooks.length}
                   </span>
-                  More books by{" "}
-                  {book.user?.name || "this author"}
+                  More books by {book.user?.name || "this author"}
                 </h3>
               </div>
               <div className="card-body">
@@ -917,28 +912,17 @@ const BookDetails = () => {
                   {authorBooks.map((authorBook) => {
                     let authorBookImagePath = "";
                     if (Array.isArray(authorBook.images)) {
-                      authorBookImagePath =
-                        authorBook.images[0];
-                    } else if (
-                      typeof authorBook.images ===
-                      "string"
-                    ) {
-                      authorBookImagePath =
-                        authorBook.images;
+                      authorBookImagePath = authorBook.images[0];
+                    } else if (typeof authorBook.images === "string") {
+                      authorBookImagePath = authorBook.images;
                     }
-                    const authorBookImageUrl =
-                      authorBookImagePath
-                        ? authorBookImagePath.startsWith(
-                            "http"
-                          )
-                          ? authorBookImagePath
-                          : `http://localhost:8000/storage/${authorBookImagePath}`
-                        : "/placeholder.svg?height=300&width=200";
+                    const authorBookImageUrl = authorBookImagePath
+                      ? authorBookImagePath.startsWith("http")
+                        ? authorBookImagePath
+                        : `http://localhost:8000/storage/${authorBookImagePath}`
+                      : "/placeholder.svg?height=300&width=200";
                     return (
-                      <div
-                        key={authorBook.id}
-                        className="col"
-                      >
+                      <div key={authorBook.id} className="col">
                         <Link
                           to={`/books/${authorBook.id}`}
                           className="text-decoration-none"
@@ -948,18 +932,13 @@ const BookDetails = () => {
                               className="card-img-top"
                               style={{
                                 height: "200px",
-                                overflow:
-                                  "hidden",
+                                overflow: "hidden",
                               }}
                             >
                               {authorBookImageUrl ? (
                                 <img
-                                  src={
-                                    authorBookImageUrl
-                                  }
-                                  alt={
-                                    authorBook.title
-                                  }
+                                  src={authorBookImageUrl}
+                                  alt={authorBook.title}
                                   className="img-fluid h-100 w-100 object-fit-cover"
                                   loading="lazy"
                                 />
@@ -971,15 +950,10 @@ const BookDetails = () => {
                             </div>
                             <div className="card-body">
                               <h5 className="card-title text-truncate">
-                                {
-                                  authorBook.title
-                                }
+                                {authorBook.title}
                               </h5>
                               <p className="card-text text-muted small text-truncate">
-                                {authorBook
-                                  .category
-                                  ?.name ||
-                                  "Uncategorized"}
+                                {authorBook.category?.name || "Uncategorized"}
                               </p>
                               <div className="d-flex justify-content-between align-items-center">
                                 <span
@@ -987,15 +961,10 @@ const BookDetails = () => {
                                     authorBook.status
                                   )}`}
                                 >
-                                  {
-                                    authorBook.status
-                                  }
+                                  {authorBook.status}
                                 </span>
                                 <span className="text-success fw-bold">
-                                  {
-                                    authorBook.price
-                                  }{" "}
-                                  $
+                                  {authorBook.price} $
                                 </span>
                               </div>
                             </div>
