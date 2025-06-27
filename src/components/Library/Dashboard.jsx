@@ -402,6 +402,20 @@ const Dashboard = () => {
     );
   }
 
+  // Debug prints for book arrays
+  console.log('allBooks:', allBooks);
+  console.log('filteredBooks:', filteredBooks);
+  console.log('paginatedBooks:', paginatedBooks);
+
+  // Helper function to get the correct book image URL
+  const getBookImageUrl = (book) => {
+    let img = book.images && book.images.length > 0 ? book.images[0] : book.image;
+    if (!img) return '/placeholder.svg';
+    if (img.startsWith('http')) return img;
+    // If it's a relative path, prepend your backend URL (do not remove 'books/')
+    return `http://localhost:8000/storage/${img}`;
+  };
+
   return (
     <>
       <Navbar />
@@ -447,7 +461,7 @@ const Dashboard = () => {
                             <span className="notification-message">
                               <span className="notif-user">{userName}</span>
                               <span> requested </span>
-                              <span className="notif-book">“{firstBook}”</span>
+                              <span className="notif-book">"{firstBook}"</span>
                               {moreCount > 0 && (
                                 <span> and <span className="notif-more">{moreCount} more</span></span>
                               )}
@@ -614,78 +628,117 @@ const Dashboard = () => {
             </div>
           ) : (
             <>
+              {/* Forceful CSS override for visibility */}
+              <style>{`
+                .books-grid {
+                  opacity: 1 !important;
+                  z-index: 1000 !important;
+                  position: relative !important;
+                  background: #fff !important;
+                  color: #000 !important;
+                }
+                .book-card {
+                  opacity: 1 !important;
+                  z-index: 1000 !important;
+                  position: relative !important;
+                  background: #fff !important;
+                  color: #000 !important;
+                }
+                .book-image {
+                  height: 200px !important;
+                  min-height: 200px !important;
+                  max-height: 200px !important;
+                  overflow: hidden !important;
+                  background: #f3f3f3 !important;
+                }
+                .book-image img {
+                  width: 100% !important;
+                  height: 100% !important;
+                  object-fit: contain !important;
+                  background: #f3f3f3 !important;
+                  display: block !important;
+                }
+              `}</style>
               <div className="books-grid">
-                {paginatedBooks.map((book) => (
-                  <div key={book.id} className="book-card">
-                    <div className="book-image">
-                      <img 
-                        src={book.image} 
-                        alt={book.title}
-                        onError={(e) => {
-                          e.currentTarget.src = '/placeholder.svg';
-                        }}
-                      />
-                      <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
-                        {book.status}
-                      </div>
-                      <div className="book-overlay">
-                        <div className="overlay-actions">
-                          <button 
-                            className="overlay-btn view"
-                            onClick={() => navigate(`/books/${book.id}`)}
-                            title="View Book"
-                          >
-                            <Eye size={16} />
-                          </button>
-                          <button 
-                            className="overlay-btn edit"
-                            onClick={() => navigate(`/edit-book/${book.id}`)}
-                            title="Edit Book"
-                          >
-                            <Edit size={16} />
-                          </button>
-                          <button 
-                            className="overlay-btn delete"
-                            onClick={() => handleDeleteBook(book.id)}
-                            title="Delete Book"
-                          >
-                            <Trash2 size={16} />
-                          </button>
+                {paginatedBooks.map((book) => {
+                  const imgUrl = getBookImageUrl(book);
+                  console.log('Render book:', {
+                    id: book.id,
+                    title: book.title,
+                    images: book.images,
+                    image: book.image,
+                    imgUrl
+                  });
+                  return (
+                    <div key={book.id} className="book-card">
+                      <div className="book-image">
+                        <img 
+                          src={imgUrl} 
+                          alt={book.title}
+                          onError={e => { e.currentTarget.src = '/placeholder.svg'; }}
+                        />
+                        <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
+                          {book.status}
+                        </div>
+                        <div className="book-overlay">
+                          <div className="overlay-actions">
+                            <button 
+                              className="overlay-btn view"
+                              onClick={() => navigate(`/books/${book.id}`)}
+                              title="View Book"
+                            >
+                              <Eye size={16} />
+                            </button>
+                            <button 
+                              className="overlay-btn edit"
+                              onClick={() => navigate(`/edit-book/${book.id}`)}
+                              title="Edit Book"
+                            >
+                              <Edit size={16} />
+                            </button>
+                            <button 
+                              className="overlay-btn delete"
+                              onClick={() => handleDeleteBook(book.id)}
+                              title="Delete Book"
+                            >
+                              <Trash2 size={16} />
+                            </button>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div className="book-info">
-                      <h3>{book.title}</h3>
-                      <p className="book-author">By {book.author || book.user?.name || 'Unknown'}</p>
-                      <div className="book-category">
-                        <span className="category-badge">{book.category?.name || 'Uncategorized'}</span>
-                      </div>
-                      <div className="book-details">
-                        <span className="detail-badge condition">{book.condition || 'Unknown'}</span>
-                        {book.genre && <span className="detail-badge genre">{book.genre}</span>}
-                        {book.educational_level && <span className="detail-badge level">{book.educational_level}</span>}
-                      </div>
-                      <div className="book-rating">
-                        <Star size={16} fill="#FBBF24" />
-                        <span>{book.ratings?.length ? (book.ratings.reduce((acc, r) => acc + r.rating, 0) / book.ratings.length).toFixed(1) : '0'}</span>
-                        <span className="rating-count">({book.ratings?.length || 0})</span>
-                      </div>
-                      <div className="book-pricing">
-                        <p className="book-price">${book.price}</p>
-                        {book.rental_price && (
-                          <p className="book-rental-price">Rent: ${book.rental_price}</p>
+                      <div className="book-info">
+                        <h3>{book.title}</h3>
+                        <p className="book-author">By {book.author || book.user?.name || 'Unknown'}</p>
+                        <div className="book-category">
+                          <span className="category-badge">{book.category?.name || 'Uncategorized'}</span>
+                        </div>
+                        <div className="book-details">
+                          <span className="detail-badge condition">{book.condition || 'Unknown'}</span>
+                          {book.genre && <span className="detail-badge genre">{book.genre}</span>}
+                          {book.educational_level && <span className="detail-badge level">{book.educational_level}</span>}
+                        </div>
+                        <div className="book-rating">
+                          <Star size={16} fill="#FBBF24" />
+                          <span>{book.ratings?.length ? (book.ratings.reduce((acc, r) => acc + r.rating, 0) / book.ratings.length).toFixed(1) : '0'}</span>
+                          <span className="rating-count">({book.ratings?.length || 0})</span>
+                        </div>
+                        <div className="book-pricing">
+                          <p className="book-price">${book.price}</p>
+                          {book.rental_price && (
+                            <p className="book-rental-price">Rent: ${book.rental_price}</p>
+                          )}
+                        </div>
+                        <div className="book-meta">
+                          <span className="quantity-badge">Qty: {book.quantity || 1}</span>
+                          <p className="book-date">Added: {new Date(book.created_at).toLocaleDateString()}</p>
+                        </div>
+                        {book.description && (
+                          <p className="book-description">{book.description.substring(0, 100)}...</p>
                         )}
                       </div>
-                      <div className="book-meta">
-                        <span className="quantity-badge">Qty: {book.quantity || 1}</span>
-                        <p className="book-date">Added: {new Date(book.created_at).toLocaleDateString()}</p>
-                      </div>
-                      {book.description && (
-                        <p className="book-description">{book.description.substring(0, 100)}...</p>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
               {totalPages > 1 && (
                 <div className="pagination">
@@ -799,3 +852,6 @@ const Dashboard = () => {
 };
 
 export default Dashboard; 
+
+
+

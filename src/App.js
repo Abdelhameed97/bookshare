@@ -24,6 +24,7 @@ import LibraryDetails from "./components/Library/LibraryDetails";
 import PaymentsPage from "./pages/PaymentsPage";
 import PaymentDetailsPage from './pages/PaymentDetailsPage';
 import AllOrdersPage from './components/Library/AllOrdersPage';
+
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
@@ -37,6 +38,10 @@ import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
 import BookList from './components/Admin/BookList';
 import AdminOrders from './components/Admin/AdminOrders';
+import AdminRoute from './components/GuestRoute/AdminRoute';
+import OwnerRoute from './components/GuestRoute/OwnerRoute';
+import EditBookPage from './components/Library/EditBookPage';
+// route for the forgot password and reset password forms
 import ForgotPassword from "./components/forms/ForgotPassword";
 import ResetPassword from "./components/forms/ResetPassword";
 // import Users from './components/admin/Users';
@@ -47,6 +52,9 @@ function RedirectToDashboardOrHome() {
   if (user && user.role === "owner") {
     return <Navigate to="/dashboard" replace />;
   }
+  if (user && user.role === "admin") {
+    return <Navigate to="/admin/dashboard" replace />;
+  } 
   return <Home />;
 }
 
@@ -87,23 +95,22 @@ function App() {
         <Route path="/social-callback" element={<SocialCallback />} />
 
         <Route path="/contact" element={<ContactPage />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/edit-profile" element={<EditProfile />} />
-        <Route path="/add-book" element={<AddBookPage />} />
-        <Route path="/libraries" element={<LibrariesPage />} />
-        <Route path="/library/:id" element={<LibraryDetails />} />
-        <Route path="/all-orders" element={<AllOrdersPage />} />
-        <Route path="/rag-chat" element={<RagChat />} />
-        <Route path="/category/:category" element={<CategoryPage />} />
+        <Route path="/dashboard" element={<OwnerRoute><Dashboard /></OwnerRoute>} />
+        <Route path="/edit-profile" element={<OwnerRoute><EditProfile /></OwnerRoute>} />
+        <Route path="/add-book" element={<OwnerRoute><AddBookPage /></OwnerRoute>} />
+        <Route path="/libraries" element={<OwnerRoute><LibrariesPage /></OwnerRoute>} />
+        <Route path="/library/:id" element={<OwnerRoute><LibraryDetails /></OwnerRoute>} />
+        <Route path="/all-orders" element={<OwnerRoute><AllOrdersPage /></OwnerRoute>} />
+        <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
         
 
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/admin/dashboard" element={<AdminDashboard />} />
-        <Route path="/admin/categories" element={<CategoryList />} />
-        <Route path="/admin/users" element={<UserList />} />
-        <Route path="/admin/books" element={<BookList />} />
-        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+        <Route path="/admin/categories" element={<AdminRoute><CategoryList /></AdminRoute>} />
+        <Route path="/admin/users" element={<AdminRoute><UserList /></AdminRoute>} />
+        <Route path="/admin/books" element={<AdminRoute><BookList /></AdminRoute>} />
+        <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
 
         <Route path='*' element={<NotFound />} />
 

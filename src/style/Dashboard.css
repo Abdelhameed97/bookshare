@@ -90,4 +90,38 @@
   font-size: 1.1em;
   color: #1e293b;
   font-weight: 700;
+}
+
+/* إصلاح ظهور كروت الكتب في الداشبورد بشكل قاطع */
+.books-grid .book-card {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+  display: block !important;
+  height: auto !important;
+  min-height: 100px !important;
+  background: #fff !important;
+}
+
+/* ستايل قوي لإجبار ظهور كروت الكتب في الداشبورد مؤقتاً للتشخيص */
+.books-grid {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 20px !important;
+  min-height: 300px !important;
+  background: #eee !important;
+}
+.books-grid .book-card {
+  opacity: 1 !important;
+  display: block !important;
+  height: 200px !important;
+  min-height: 200px !important;
+  width: 200px !important;
+  min-width: 200px !important;
+  background: #ff0 !important;
+  color: #000 !important;
+  border: 2px solid #f00 !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  font-size: 2rem !important;
 } 
