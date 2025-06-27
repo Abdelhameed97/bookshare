@@ -33,6 +33,19 @@ import Swal from 'sweetalert2';
 import CustomButton from '../components/shared/CustomButton.js';
 
 const OrderDetailsPage = () => {
+    const getBookImage = (images) => {
+        if (!images || images.length === 0) {
+            return 'https://via.placeholder.com/300x450';
+        }
+
+        const firstImage = images[0];
+        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
+            return firstImage;
+        }
+
+        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
+    };
+
     const { id } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
@@ -426,11 +439,15 @@ const OrderDetailsPage = () => {
                                                 >
                                                     <div className="d-flex align-items-center">
                                                         <img
-                                                            src={item.book?.images?.[0] || 'https://via.placeholder.com/80'}
+                                                            src={getBookImage(item.book.images)}
                                                             alt={item.book?.title}
                                                             width="60"
                                                             height="80"
                                                             className="me-3 object-fit-cover rounded"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = 'https://via.placeholder.com/300x450';
+                                                            }}                                                            
                                                         />
                                                         <div>
                                                             <div className="fw-bold">{item.book?.title || 'N/A'}</div>
