@@ -397,9 +397,8 @@ const BookDetails = () => {
     return comments.map((comment) => (
       <div
         key={comment.id}
-        className={`mb-3 ${
-          depth > 0 ? "ms-4 ps-3 border-start border-2 border-primary" : ""
-        } animate__animated animate__fadeIn`}
+        className={`mb-3 ${depth > 0 ? "ms-4 ps-3 border-start border-2 border-primary" : ""
+          } animate__animated animate__fadeIn`}
       >
         <div className="card border-0 shadow-sm">
           <div className="card-body">
@@ -418,8 +417,8 @@ const BookDetails = () => {
                   {comment.user?.name?.charAt(0) || "A"}
                 </div>
                 <div>
-                  <h6 className="mb-0 fw-bold">
-                    {comment.user?.name || "Anonymous"}
+                  <h6 className="mb-0 fw-bold" style={{ color: "#3b82f6", fontSize: "1.1rem" }}>
+                    👤     {comment.user && comment.user.name ? comment.user.name : "Anonymous"}
                     {user?.id === comment.user?.id && (
                       <span className="badge bg-info ms-2">You</span>
                     )}
@@ -684,18 +683,16 @@ const BookDetails = () => {
                       {user && (
                         <>
                           <button
-                            className={`btn btn-sm ${
-                              isWishlisted ? "btn-danger" : "btn-outline-danger"
-                            }`}
+                            className={`btn btn-sm ${isWishlisted ? "btn-danger" : "btn-outline-danger"
+                              }`}
                             onClick={handleWishlist}
                             disabled={loadingStatus}
                           >
                             {isWishlisted ? <FaHeart /> : <FaRegHeart />}
                           </button>
                           <button
-                            className={`btn btn-sm ${
-                              isInCart ? "btn-primary" : "btn-outline-primary"
-                            }`}
+                            className={`btn btn-sm ${isInCart ? "btn-primary" : "btn-outline-primary"
+                              }`}
                             onClick={handleCart}
                             disabled={loadingStatus}
                           >
@@ -781,18 +778,16 @@ const BookDetails = () => {
                     {user && user.id !== book.user?.id && (
                       <>
                         <button
-                          className={`btn flex-grow-1 ${
-                            isInCart ? "btn-success" : "btn-primary"
-                          }`}
+                          className={`btn flex-grow-1 ${isInCart ? "btn-success" : "btn-primary"
+                            }`}
                           onClick={handleCart}
                           disabled={loadingStatus}
                         >
                           {isInCart ? "Added to Cart" : "Add to Cart"}
                         </button>
                         <button
-                          className={`btn ${
-                            isWishlisted ? "btn-danger" : "btn-outline-danger"
-                          }`}
+                          className={`btn ${isWishlisted ? "btn-danger" : "btn-outline-danger"
+                            }`}
                           onClick={handleWishlist}
                           disabled={loadingStatus}
                         >
