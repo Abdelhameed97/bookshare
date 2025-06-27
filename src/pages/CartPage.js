@@ -118,7 +118,7 @@ const CartPage = () => {
     };
 
     const handleQuantityChange = async (itemId, newQuantity) => {
-        const parsedQuantity = Number.parseInt(newQuantity, 10);
+        const parsedQuantity = parseInt(newQuantity, 10);
 
         if (isNaN(parsedQuantity) || parsedQuantity < 1) {
             await Swal.fire({
@@ -438,29 +438,31 @@ const CartPage = () => {
                                                         <td className="align-middle">
                                                             <Dropdown>
                                                                 <Dropdown.Toggle
-                                                                    variant={item.type === 'rent' ? 'warning' : 'success'}
+                                                                    variant={(item.type ?? 'buy') === 'rent' ? 'warning' : 'success'}
                                                                     size="sm"
                                                                     id="dropdown-type"
-                                                                    disabled={!item.book?.rental_price}
+                                                                    disabled={!item.book?.rental_price && (item.type ?? 'buy') === 'rent'}
                                                                 >
-                                                                    {item.type === 'rent' ? 'Rent' : 'Buy'}
+                                                                    {(item.type ?? 'buy') === 'rent' ? 'Rent' : 'Buy'}
                                                                 </Dropdown.Toggle>
-
                                                                 <Dropdown.Menu>
                                                                     <Dropdown.Item
                                                                         onClick={() => handleChangeType(item.id, 'buy')}
-                                                                        active={item.type === 'buy'}
+                                                                        active={(item.type ?? 'buy') !== 'rent'}
+                                                                        className={(item.type ?? 'buy') !== 'rent' ? 'fw-bold' : ''}
                                                                     >
                                                                         Buy
                                                                     </Dropdown.Item>
                                                                     <Dropdown.Item
                                                                         onClick={() => handleChangeType(item.id, 'rent')}
-                                                                        active={item.type === 'rent'}
+                                                                        active={(item.type ?? 'buy') === 'rent'}
                                                                         disabled={!item.book?.rental_price}
+                                                                        className={(item.type ?? 'buy') === 'rent' ? 'fw-bold' : ''}
                                                                     >
                                                                         Rent
                                                                     </Dropdown.Item>
                                                                 </Dropdown.Menu>
+
                                                             </Dropdown>
                                                         </td>
                                                         <td>
