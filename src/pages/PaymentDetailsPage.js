@@ -11,6 +11,19 @@ import Footer from '../components/HomePage/Footer';
 import '../style/PaymentPage.css';
 
 const PaymentDetailsPage = () => {
+    const getBookImage = (images) => {
+        if (!images || images.length === 0) {
+            return 'https://via.placeholder.com/300x450';
+        }
+
+        const firstImage = images[0];
+        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
+            return firstImage;
+        }
+
+        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
+    };
+
     const { orderId } = useParams();
     const navigate = useNavigate();
     const [selectedMethod, setSelectedMethod] = useState('card');
@@ -90,7 +103,7 @@ const PaymentDetailsPage = () => {
         const num = parseFloat(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
     };
-    
+
 
     if (loading && !isInitialLoad) {
         return (
@@ -235,9 +248,13 @@ const PaymentDetailsPage = () => {
                                             <div key={item.id} className="order-item mb-3">
                                                 <div className="d-flex">
                                                     <img
-                                                        src={item.book?.images?.[0] || 'https://via.placeholder.com/60x90'}
+                                                        src={getBookImage(item.book.images)}
                                                         alt={item.book?.title || 'Book'}
                                                         className="item-image me-3"
+                                                        onError={(e) => {
+                                                            e.target.onerror = null;
+                                                            e.target.src = 'https://via.placeholder.com/300x450';
+                                                        }}
                                                     />
                                                     <div>
                                                         <h6 className="mb-1">{item.book?.title || 'Unknown Book'}</h6>

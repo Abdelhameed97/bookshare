@@ -34,6 +34,19 @@ import Footer from "../components/HomePage/Footer.jsx";
 import { useCart } from '../hooks/useCart';
 
 const CartPage = () => {
+    const getBookImage = (images) => {
+        if (!images || images.length === 0) {
+            return 'https://via.placeholder.com/300x450';
+        }
+
+        const firstImage = images[0];
+        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
+            return firstImage;
+        }
+
+        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
+    };
+    
     const user = JSON.parse(localStorage.getItem('user'));
     const {
         cartItems,
@@ -411,9 +424,14 @@ const CartPage = () => {
                                                         <td>
                                                             <div className="d-flex align-items-center">
                                                                 <img
-                                                                    src={item.book?.images?.[0] || 'https://via.placeholder.com/80x120'}
-                                                                    alt={item.book?.title}
+                                                                    src={getBookImage(item.book.images)}
+                                                            alt={item.book?.title}
                                                                     className="book-cover me-3"
+                                                                    onError={(e) => {
+                                                                        e.target.onerror = null;
+                                                                        e.target.src = 'https://via.placeholder.com/300x450';
+                                                                    }}
+                                                                    
                                                                 />
                                                                 <div>
                                                                     <h6 className="mb-1">{item.book?.title}</h6>
