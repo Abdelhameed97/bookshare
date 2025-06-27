@@ -69,7 +69,6 @@ export const useCart = (userId) => {
         }
     };
 
-
     useEffect(() => {
         fetchCartItems();
     }, [userId]);
