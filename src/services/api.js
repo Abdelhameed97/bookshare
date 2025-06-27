@@ -111,17 +111,14 @@ const apiService = {
     // Payment Endpoints
     createPayment: (paymentData) => api.post('/payments', paymentData),
     getPayment: (paymentId) => api.get(`/payments/${paymentId}`),
-    // Payment Endpoints
     getOrderPayment: (orderId) => api.get(`/orders/${orderId}/payment`)
         .then(response => {
-            // Handle case where payment exists
             if (response.data) {
                 return response;
             }
             return { data: null };
         })
         .catch(err => {
-            // Handle 404 as payment not found (not an error)
             if (err.response?.status === 404) {
                 return { data: null };
             }

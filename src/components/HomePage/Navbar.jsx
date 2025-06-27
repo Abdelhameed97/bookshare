@@ -34,7 +34,9 @@ const Navbar = () => {
   const { cartCount } = useCart(user?.id);
   const { wishlistCount } = useWishlist(user?.id);
   const { orders, fetchOrders, ...restOrders } = useOrders(user?.id);
-  const ordersCount = orders.length;
+  const ordersCount = Array.isArray(orders)
+    ? orders.filter((order) => order.status === "pending").length
+    : 0;
 
   const isLibraryOwner = user?.role === "owner";
 
