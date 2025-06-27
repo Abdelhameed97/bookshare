@@ -37,6 +37,8 @@ import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
 import BookList from './components/Admin/BookList';
 import AdminOrders from './components/Admin/AdminOrders';
+import ForgotPassword from "./components/forms/ForgotPassword";
+import ResetPassword from "./components/forms/ResetPassword";
 // import Users from './components/admin/Users';
 // import Categories from './components/admin/Categories';
 
@@ -63,7 +65,6 @@ function App() {
         <Route path="/books" element={<BooksPage />} />
         <Route path="/books/:id" element={<BookDetails />} />
         <Route path='/register' element={<RegisterPage />} />
-        <Route path='/login' element={<LoginPage />} />
         <Route
           path="/login"
           element={
@@ -80,6 +81,9 @@ function App() {
             </GuestRoute>
           }
         />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+
         <Route path="/social-callback" element={<SocialCallback />} />
 
         <Route path="/contact" element={<ContactPage />} />

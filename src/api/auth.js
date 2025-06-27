@@ -4,7 +4,7 @@ import axios from "axios";
 // Create axios instance
 const api = axios.create({
   baseURL: "http://localhost:8000/api", // adjust if your backend uses another port
-  // ❌ Don't use withCredentials unless you're using cookies/session (you're using token)
+  
 });
 
 // ✅ Automatically attach Authorization token
