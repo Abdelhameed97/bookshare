@@ -339,7 +339,7 @@ const RegisterForm = () => {
                     <FaFacebook />
                   </button>
 
-                  <button
+                  {/* <button
                     className='btn rounded-circle d-flex justify-content-center align-items-center text-white'
                     style={{
                       width: "45px",
@@ -351,7 +351,7 @@ const RegisterForm = () => {
                     onClick={() => handleSocialLogin("linkedin")}
                   >
                     <FaLinkedin />
-                  </button>
+                  </button> */}
                 </div>
               </div>
 
