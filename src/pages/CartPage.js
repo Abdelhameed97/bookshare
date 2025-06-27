@@ -10,7 +10,8 @@ import {
     Alert,
     Spinner,
     Badge,
-    Button
+    Button,
+    Dropdown
 } from 'react-bootstrap';
 import {
     Trash2,
@@ -52,7 +53,13 @@ const CartPage = () => {
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const navigate = useNavigate();
 
-    const subtotal = cartItems.reduce((sum, item) => sum + (parseFloat(item.book?.price || 0) * (item.quantity || 1)), 0);
+    const subtotal = cartItems.reduce((sum, item) => {
+        const price = item.type === 'rent' ?
+            (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0)) :
+            parseFloat(item.book?.price || 0);
+        return sum + (price * (item.quantity || 1));
+    }, 0);
+
     const shippingFee = subtotal > 200 ? 0 : 25;
     const total = subtotal + shippingFee - discount;
 
@@ -117,7 +124,7 @@ const CartPage = () => {
         }
 
         try {
-            await api.updateCartItem(itemId, parsedQuantity);
+            await api.updateCartItem(itemId, { quantity: parsedQuantity });
 
             const updatedItems = cartItems.map(item =>
                 item.id === itemId ? { ...item, quantity: parsedQuantity } : item
@@ -132,6 +139,29 @@ const CartPage = () => {
         }
     };
 
+    const handleChangeType = async (itemId, newType) => {
+        try {
+            await api.updateCartItem(itemId, { type: newType });
+
+            const updatedItems = cartItems.map(item =>
+                item.id === itemId ? { ...item, type: newType } : item
+            );
+            setCartItems(updatedItems);
+
+            await Swal.fire({
+                icon: 'success',
+                title: 'Type Changed',
+                text: `Item changed to ${newType}`,
+                timer: 1500
+            });
+        } catch (err) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Failed to Change Type',
+                text: err.response?.data?.message || 'Failed to update item type',
+            });
+        }
+    };
 
     const handleRemoveItem = async (itemId) => {
         const result = await Swal.fire({
@@ -201,6 +231,7 @@ const CartPage = () => {
             });
         }
     };
+
     const handleOrderNow = async () => {
         if (cartItems.length === 0) return;
         if (!user) {
@@ -209,13 +240,13 @@ const CartPage = () => {
         }
 
         const result = await Swal.fire({
-            title: 'Proceed to Checkout?',
-            text: 'You will be redirected to complete your purchase',
+            title: 'Would Buy Now?',
+            text: 'You will be redirected to order Books',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#28a745',
             cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Continue to Payment'
+            confirmButtonText: 'Continue to Order'
         });
 
         if (!result.isConfirmed) return;
@@ -225,7 +256,10 @@ const CartPage = () => {
                 items: cartItems.map(item => ({
                     book_id: item.book_id,
                     quantity: item.quantity,
-                    price: parseFloat(item.book.price)
+                    type: item.type,
+                    price: item.type === 'rent' ?
+                        (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0)) :
+                        parseFloat(item.book?.price || 0)
                 })),
                 subtotal: parseFloat(subtotal.toFixed(2)),
                 discount: parseFloat(discount.toFixed(2)),
@@ -253,7 +287,6 @@ const CartPage = () => {
                 setAppliedCoupon(null);
             } catch (clearError) {
                 console.error("Error clearing cart:", clearError);
-                // Don't fail the whole operation if cart clearing fails
             }
 
             navigate(`/orders/${orderId}`);
@@ -266,7 +299,6 @@ const CartPage = () => {
             });
         }
     };
-
 
     const showAlertMessage = (message, variant) => {
         setAlertMessage(message);
@@ -366,6 +398,7 @@ const CartPage = () => {
                                             <thead>
                                                 <tr>
                                                     <th>Book</th>
+                                                    <th>Type</th>
                                                     <th>Quantity</th>
                                                     <th>Price</th>
                                                     <th>Total</th>
@@ -387,6 +420,34 @@ const CartPage = () => {
                                                                     <small className="text-muted">By {item.book?.author || item.book?.genre}</small>
                                                                 </div>
                                                             </div>
+                                                        </td>
+                                                        <td className="align-middle">
+                                                            <Dropdown>
+                                                                <Dropdown.Toggle
+                                                                    variant={item.type === 'rent' ? 'warning' : 'success'}
+                                                                    size="sm"
+                                                                    id="dropdown-type"
+                                                                    disabled={!item.book?.rental_price}
+                                                                >
+                                                                    {item.type === 'rent' ? 'Rent' : 'Buy'}
+                                                                </Dropdown.Toggle>
+
+                                                                <Dropdown.Menu>
+                                                                    <Dropdown.Item
+                                                                        onClick={() => handleChangeType(item.id, 'buy')}
+                                                                        active={item.type === 'buy'}
+                                                                    >
+                                                                        Buy
+                                                                    </Dropdown.Item>
+                                                                    <Dropdown.Item
+                                                                        onClick={() => handleChangeType(item.id, 'rent')}
+                                                                        active={item.type === 'rent'}
+                                                                        disabled={!item.book?.rental_price}
+                                                                    >
+                                                                        Rent
+                                                                    </Dropdown.Item>
+                                                                </Dropdown.Menu>
+                                                            </Dropdown>
                                                         </td>
                                                         <td>
                                                             <div className="d-flex align-items-center">
@@ -423,10 +484,14 @@ const CartPage = () => {
                                                             </div>
                                                         </td>
                                                         <td className="align-middle">
-                                                            {parseFloat(item.book?.price || 0).toFixed(2)} EGP
+                                                            {item.type === 'rent' ?
+                                                                (parseFloat(item.book?.rental_price || item.book?.price || 0).toFixed(2)) :
+                                                                parseFloat(item.book?.price || 0).toFixed(2)} EGP
                                                         </td>
                                                         <td className="align-middle">
-                                                            {(parseFloat(item.book?.price || 0) * item.quantity).toFixed(2)} EGP
+                                                            {(item.type === 'rent' ?
+                                                                (parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity) :
+                                                                parseFloat(item.book?.price || 0) * item.quantity).toFixed(2)} EGP
                                                         </td>
                                                         <td className="align-middle text-center">
                                                             <CustomButton
@@ -494,12 +559,19 @@ const CartPage = () => {
                                     {cartItems.map(item => (
                                         <div key={item.id} className="d-flex justify-content-between mb-2 small">
                                             <span className="text-muted">
-                                                {item.book?.title} × {item.quantity}
+                                                {item.book?.title} ({item.type}) × {item.quantity}
                                             </span>
-                                            <span>{(parseFloat(item.book?.price || 0) * item.quantity).toFixed(2)} EGP</span>
+                                            <span>
+                                                {(
+                                                    item.type === 'rent'
+                                                        ? parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity
+                                                        : parseFloat(item.book?.price || 0) * item.quantity
+                                                ).toFixed(2)} EGP
+                                            </span>
                                         </div>
                                     ))}
                                 </div>
+
 
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Subtotal:</span>
@@ -577,4 +649,4 @@ const CartPage = () => {
     );
 };
 
-export default CartPage; 
+export default CartPage;

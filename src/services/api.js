@@ -54,10 +54,9 @@ const apiService = {
         console.log("Sending to cart:", payload);
         return api.post('/cart', payload);
     },
-    updateCartItem: (cartItemId, quantity) => {
-        return api.put(`/cart/${cartItemId}`, {
-            quantity: parseInt(quantity, 10) 
-        });
+    // في ملف api.js
+    updateCartItem: (cartItemId, data) => {
+        return api.put(`/cart/${cartItemId}`, data);
     },
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
 
