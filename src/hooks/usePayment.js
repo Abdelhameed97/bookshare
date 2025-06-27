@@ -48,7 +48,7 @@ export const usePayment = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [navigate]);
 
     const createPayment = async (paymentData) => {
         setProcessing(true);
@@ -68,6 +68,51 @@ export const usePayment = () => {
             return responseData;
         } catch (err) {
             console.error('Payment creation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const createStripePayment = async (orderId) => {
+        setProcessing(true);
+        try {
+            const response = await api.createStripePaymentIntent({ order_id: orderId });
+            if (!response.data?.success) {
+                throw new Error(response.data?.message || 'Failed to create payment intent');
+            }
+            return response.data;
+        } catch (err) {
+            console.error('Stripe payment creation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const confirmStripePayment = async (paymentIntentId) => {
+        setProcessing(true);
+        try {
+            const response = await api.post('/stripe/confirm-payment', {
+                payment_intent_id: paymentIntentId
+            });
+            return response.data;
+        } catch (err) {
+            console.error('Stripe payment confirmation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const createPayPalPayment = async (orderId) => {
+        setProcessing(true);
+        try {
+            console.log('Sending PayPal payment for orderId:', orderId);
+            const response = await api.createPayPalPayment(orderId);
+            return response.data;
+        } catch (err) {
+            console.error('PayPal payment creation failed:', err);
             throw err;
         } finally {
             setProcessing(false);
@@ -94,9 +139,13 @@ export const usePayment = () => {
         loading,
         error,
         processing,
+        setProcessing,
         fetchData,
         createPayment,
         setPayment,
-        fetchUserPayments
+        fetchUserPayments,
+        createStripePayment,
+        confirmStripePayment,
+        createPayPalPayment
     };
 };

@@ -31,6 +31,7 @@ import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
 import Swal from 'sweetalert2';
 import CustomButton from '../components/shared/CustomButton.js';
+import { usePayment } from '../hooks/usePayment';
 
 const OrderDetailsPage = () => {
     const getBookImage = (images) => {
@@ -51,8 +52,20 @@ const OrderDetailsPage = () => {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [processing, setProcessing] = useState(false);
-    const [paymentProcessing, setPaymentProcessing] = useState(false);
+    const [paymentCompleted, setPaymentCompleted] = useState(() => {
+        const savedPayment = localStorage.getItem(`paymentCompleted_${id}`);
+        return savedPayment ? JSON.parse(savedPayment) : false;
+    });
+    const [paymentAttempted, setPaymentAttempted] = useState(() => {
+        const savedAttempt = localStorage.getItem(`paymentAttempted_${id}`);
+        return savedAttempt ? JSON.parse(savedAttempt) : false;
+    });
+
+    const {
+        createStripePayment,
+        processing,
+        setProcessing,
+    } = usePayment();
 
     useEffect(() => {
         const fetchOrderDetails = async () => {
@@ -69,6 +82,11 @@ const OrderDetailsPage = () => {
 
                 if (!orderData) {
                     throw new Error('Order data not found');
+                }
+
+                if (orderData.payment_status === 'paid' || orderData.payment_id) {
+                    setPaymentCompleted(true);
+                    localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(true));
                 }
 
                 const enhancedOrder = {
@@ -98,6 +116,11 @@ const OrderDetailsPage = () => {
         fetchOrderDetails();
     }, [id, navigate]);
 
+    useEffect(() => {
+        localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(paymentCompleted));
+        localStorage.setItem(`paymentAttempted_${id}`, JSON.stringify(paymentAttempted));
+    }, [paymentCompleted, paymentAttempted, id]);
+
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
             title: 'Cancel Order?',
@@ -115,7 +138,6 @@ const OrderDetailsPage = () => {
             setProcessing(true);
             await api.cancelOrder(id);
 
-            // Update order status locally
             setOrder(prevOrder => ({
                 ...prevOrder,
                 status: 'cancelled'
@@ -141,36 +163,7 @@ const OrderDetailsPage = () => {
     };
 
     const handlePayment = async () => {
-        try {
-            setPaymentProcessing(true);
-            const response = await api.processPayment(id);
-            
-            await Swal.fire(
-                'Payment Successful!',
-                'Your payment has been processed successfully.',
-                'success'
-            );
-
-            const orderResponse = await api.getOrderDetails(id);
-            let orderData = orderResponse.data;
-            if (Array.isArray(orderResponse.data)) {
-                orderData = orderResponse.data[0];
-            } else if (orderResponse.data.data) {
-                orderData = orderResponse.data.data;
-            }
-
-            setOrder(orderData);
-            navigate(`/orders/${id}`);
-        } catch (err) {
-            console.error('Error processing payment:', err);
-            Swal.fire(
-                'Payment Failed',
-                err.response?.data?.message || 'There was an error processing your payment.',
-                'error'
-            );
-        } finally {
-            setPaymentProcessing(false);
-        }
+        navigate(`/payment/${id}`);
     };
 
     const getStatusIcon = (status) => {
@@ -258,6 +251,13 @@ const OrderDetailsPage = () => {
         return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
     };
 
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isClient = user?.id === order?.client_id;
+    const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
+        (!order.payment_status || order.payment_status !== 'paid') &&
+        isClient;
+
     if (loading) {
         return (
             <div className="text-center py-5">
@@ -342,11 +342,6 @@ const OrderDetailsPage = () => {
         );
     }
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    const isClient = user?.id === order.client_id;
-    const canCancel = ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
-    const canPay = ['accepted'].includes(order.status?.toLowerCase());
-
     return (
         <>
             <Navbar />
@@ -391,8 +386,23 @@ const OrderDetailsPage = () => {
                             <Col md={6} className="text-md-end">
                                 <div className="d-flex flex-column">
                                     <div className="mb-2">
-                                        <strong>Payment Method:</strong> {order.payment_method || 'N/A'}
+                                        <strong>Payment Status:</strong>
+                                        {order.payment_status === 'paid' ? (
+                                            <Badge bg="success" className="ms-2">
+                                                <CheckCircle size={14} className="me-1" />
+                                                Paid
+                                            </Badge>
+                                        ) : (
+                                            <Badge bg="warning" text="dark" className="ms-2">
+                                                <Clock size={14} className="me-1" />
+                                                Pending
+                                            </Badge>
+                                        )}
                                     </div>
+                                    <div className="mb-2">
+                                        <strong>Payment Method:</strong> {order.payment_method || 'Not Specified'}
+                                    </div>
+
                                     <div className="fs-5 fw-bold">
                                         <strong>Total:</strong> {formatPrice(order.total_price)} EGP
                                     </div>
@@ -439,7 +449,7 @@ const OrderDetailsPage = () => {
                                                 >
                                                     <div className="d-flex align-items-center">
                                                         <img
-                                                            src={getBookImage(item.book.images)}
+                                                            src={getBookImage(item.book?.images)}
                                                             alt={item.book?.title}
                                                             width="60"
                                                             height="80"
@@ -447,7 +457,7 @@ const OrderDetailsPage = () => {
                                                             onError={(e) => {
                                                                 e.target.onerror = null;
                                                                 e.target.src = 'https://via.placeholder.com/300x450';
-                                                            }}                                                            
+                                                            }}
                                                         />
                                                         <div>
                                                             <div className="fw-bold">{item.book?.title || 'N/A'}</div>
@@ -492,24 +502,33 @@ const OrderDetailsPage = () => {
                                         </Button>
                                     )}
                                     {canPay && (
-                                        <Button
-                                            variant="success"
-                                            onClick={handlePayment}
-                                            disabled={paymentProcessing}
-                                            className="px-4 py-2"
-                                        >
-                                            {paymentProcessing ? (
-                                                <>
-                                                    <Spinner animation="border" size="sm" className="me-2" />
-                                                    Processing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CreditCard size={18} className="me-2" />
-                                                    Pay Now
-                                                </>
-                                            )}
-                                        </Button>
+                                        paymentCompleted ? (
+                                            <Button variant="success" className="px-4 py-2" disabled>
+                                                <CheckCircle size={18} className="me-2" />
+                                                Payment Completed
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="success"
+                                                onClick={handlePayment}
+                                                disabled={processing || paymentAttempted}
+                                                className="px-4 py-2"
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <Spinner animation="border" size="sm" className="me-2" />
+                                                        Processing...
+                                                    </>
+                                                ) : paymentAttempted ? (
+                                                    'Payment in progress'
+                                                ) : (
+                                                    <>
+                                                        <CreditCard size={18} className="me-2" />
+                                                        Pay Now
+                                                    </>
+                                                )}
+                                            </Button>
+                                        )
                                     )}
                                 </Col>
                             </Row>
