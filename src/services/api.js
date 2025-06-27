@@ -54,11 +54,22 @@ const apiService = {
         console.log("Sending to cart:", payload);
         return api.post('/cart', payload);
     },
-    // في ملف api.js
     updateCartItem: (cartItemId, data) => {
         return api.put(`/cart/${cartItemId}`, data);
     },
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
+    checkCartStatus: async (bookId) => {
+        try {
+            const response = await api.get('/cart');
+            return {
+                isInCart: response.data.some(item => item.book_id === bookId),
+                cartItem: response.data.find(item => item.book_id === bookId)
+            };
+        } catch (error) {
+            console.error("Error checking cart status:", error);
+            return { isInCart: false, cartItem: null };
+        }
+    },
 
     // Wishlist Endpoints
     getWishlist: () => api.get('/wishlist'),
