@@ -21,6 +21,8 @@ const LibraryDetails = () => {
   const [books, setBooks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 6;
 
   const fetchLibraryDetails = useCallback(async () => {
     try {
@@ -28,7 +30,7 @@ const LibraryDetails = () => {
       
       // Fetch library owner details
       const librariesResponse = await apiService.get('/libraries');
-      const owner = librariesResponse.data.data.find(owner => owner.id === parseInt(id));
+      const owner = librariesResponse.data.data.find(owner => owner.id == id);
       
       if (!owner) {
         throw new Error('Library not found');
@@ -36,7 +38,10 @@ const LibraryDetails = () => {
       
       // Fetch all books and filter by owner
       const booksResponse = await apiService.get('/books');
-      const ownerBooks = booksResponse.data.data.filter(book => book.user_id === parseInt(id));
+      console.log('id:', id, typeof id);
+      console.log('book.user_id:', booksResponse.data.data.map(b => b.user_id));
+      const ownerBooks = booksResponse.data.data.filter(book => book.user_id == id);
+      console.log('ownerBooks:', ownerBooks);
       
       // Calculate stats
       const totalRating = ownerBooks.reduce((sum, book) => {
@@ -59,14 +64,7 @@ const LibraryDetails = () => {
         totalReviews
       });
       
-      setBooks(ownerBooks.map(book => ({
-        ...book,
-        image: book.images?.[0] 
-          ? book.images[0].startsWith('http') 
-            ? book.images[0] 
-            : `http://localhost:8000/storage/${book.images[0]}`
-          : '/placeholder.svg'
-      })));
+      setBooks(ownerBooks);
       
     } catch (error) {
       console.error('Error fetching library details:', error);
@@ -86,6 +84,18 @@ const LibraryDetails = () => {
            book.author?.toLowerCase().includes(searchLower) ||
            book.genre?.toLowerCase().includes(searchLower);
   });
+
+  const totalPages = Math.ceil(filteredBooks.length / booksPerPage);
+  const paginatedBooks = filteredBooks.slice((currentPage - 1) * booksPerPage, currentPage * booksPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm]);
+
+  // Debug prints
+  console.log('books:', books);
+  console.log('filteredBooks:', filteredBooks);
+  console.log('paginatedBooks:', paginatedBooks);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -208,13 +218,48 @@ const LibraryDetails = () => {
           {/* Books Grid */}
           <div className="books-section">
             <h2>Books ({filteredBooks.length})</h2>
+            {/* Forceful CSS override for visibility */}
+            <style>{`
+              .books-grid {
+                opacity: 1 !important;
+                z-index: 1000 !important;
+                position: relative !important;
+                background: #fff !important;
+                color: #000 !important;
+              }
+              .book-card {
+                opacity: 1 !important;
+                z-index: 1000 !important;
+                position: relative !important;
+                background: #fff !important;
+                color: #000 !important;
+              }
+              .book-image {
+                height: 200px !important;
+                min-height: 200px !important;
+                max-height: 200px !important;
+                overflow: hidden !important;
+                background: #f3f3f3 !important;
+              }
+              .book-image img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+                background: #f3f3f3 !important;
+                display: block !important;
+              }
+            `}</style>
             <div className="books-grid">
-              {filteredBooks.length > 0 ? (
-                filteredBooks.map((book) => (
+              {paginatedBooks.length > 0 ? (
+                paginatedBooks.map((book) => (
                   <div key={book.id} className="book-card">
                     <div className="book-image">
                       <img 
-                        src={book.image} 
+                        src={(book.images && book.images.length > 0)
+                          ? (book.images[0].startsWith('http')
+                              ? book.images[0]
+                              : `http://localhost:8000/storage/${book.images[0].replace(/^books\//, '')}`)
+                          : '/placeholder.svg'}
                         alt={book.title}
                         onError={(e) => {
                           e.currentTarget.src = '/placeholder.svg';
@@ -265,6 +310,21 @@ const LibraryDetails = () => {
                 </div>
               )}
             </div>
+            {totalPages > 1 && (
+              <div className="pagination">
+                <button onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))} disabled={currentPage === 1}>{'<'}</button>
+                {[...Array(totalPages)].map((_, idx) => (
+                  <button
+                    key={idx + 1}
+                    className={currentPage === idx + 1 ? 'active' : ''}
+                    onClick={() => setCurrentPage(idx + 1)}
+                  >
+                    {idx + 1}
+                  </button>
+                ))}
+                <button onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))} disabled={currentPage === totalPages}>{'>'}</button>
+              </div>
+            )}
           </div>
         </div>
       </div>

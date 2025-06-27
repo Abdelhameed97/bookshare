@@ -464,49 +464,57 @@ const BooksList = () => {
 
                 {/* Hover Actions */}
                 <div className="hover-actions">
-                  <button
-                    className={`action-button favorite ${
-                      isInWishlist(book.id) ? "active" : ""
-                    }`}
-                    onClick={() => handleAddToWishlist(book.id)}
-                    aria-label={
-                      isInWishlist(book.id)
-                        ? "Remove from wishlist"
-                        : "Add to wishlist"
-                    }
-                  >
-                    <Heart
-                      size={18}
-                      fill={isInWishlist(book.id) ? "currentColor" : "none"}
-                    />
-                  </button>
-                  <button
-                    className="action-button view"
-                    onClick={() => handleQuickView(book.id)}
-                    aria-label="Quick view"
-                  >
-                    <Eye size={18} />
-                  </button>
-                  <button
-                    className={`action-button cart ${
-                      isInCart(book.id) ? "disabled" : ""
-                    }`}
-                    onClick={
-                      !isInCart(book.id)
-                        ? () => handleAddToCart(book.id)
-                        : undefined
-                    }
-                    disabled={isInCart(book.id) || book.status !== "available"}
-                    aria-label={
-                      isInCart(book.id) ? "Already in cart" : "Add to cart"
-                    }
-                  >
-                    {isInCart(book.id) ? (
-                      <Check size={18} />
-                    ) : (
-                      <ShoppingCart size={18} />
-                    )}
-                  </button>
+                  {(!currentUser || currentUser.role === 'owner') ? (
+                    <button
+                      className="action-button view"
+                      onClick={() => handleQuickView(book.id)}
+                      aria-label="Quick view"
+                    >
+                      <Eye size={18} />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        className={`action-button favorite ${isInWishlist(book.id) ? "active" : ""}`}
+                        onClick={() => handleAddToWishlist(book.id)}
+                        aria-label={
+                          isInWishlist(book.id)
+                            ? "Remove from wishlist"
+                            : "Add to wishlist"
+                        }
+                      >
+                        <Heart
+                          size={18}
+                          fill={isInWishlist(book.id) ? "currentColor" : "none"}
+                        />
+                      </button>
+                      <button
+                        className="action-button view"
+                        onClick={() => handleQuickView(book.id)}
+                        aria-label="Quick view"
+                      >
+                        <Eye size={18} />
+                      </button>
+                      <button
+                        className={`action-button cart ${isInCart(book.id) ? "disabled" : ""}`}
+                        onClick={
+                          !isInCart(book.id)
+                            ? () => handleAddToCart(book.id)
+                            : undefined
+                        }
+                        disabled={isInCart(book.id) || book.status !== "available"}
+                        aria-label={
+                          isInCart(book.id) ? "Already in cart" : "Add to cart"
+                        }
+                      >
+                        {isInCart(book.id) ? (
+                          <Check size={18} />
+                        ) : (
+                          <ShoppingCart size={18} />
+                        )}
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Category Tag */}
@@ -546,24 +554,24 @@ const BooksList = () => {
                 </div>
 
                 {/* Add to Cart Button */}
-                <button
-                  className={`add-to-cart-btn ${
-                    isInCart(book.id) ? "disabled" : ""
-                  }`}
-                  onClick={
-                    !isInCart(book.id)
-                      ? () => handleAddToCart(book.id)
-                      : undefined
-                  }
-                  disabled={isInCart(book.id) || book.status !== "available"}
-                >
-                  {isInCart(book.id) ? (
-                    <Check size={16} />
-                  ) : (
-                    <ShoppingCart size={16} />
-                  )}
-                  <span>{isInCart(book.id) ? "In Cart" : "Add to Cart"}</span>
-                </button>
+                {currentUser && currentUser.role === 'client' && (
+                  <button
+                    className={`add-to-cart-btn ${isInCart(book.id) ? "disabled" : ""}`}
+                    onClick={
+                      !isInCart(book.id)
+                        ? () => handleAddToCart(book.id)
+                        : undefined
+                    }
+                    disabled={isInCart(book.id) || book.status !== "available"}
+                  >
+                    {isInCart(book.id) ? (
+                      <Check size={16} />
+                    ) : (
+                      <ShoppingCart size={16} />
+                    )}
+                    <span>{isInCart(book.id) ? "In Cart" : "Add to Cart"}</span>
+                  </button>
+                )}
               </div>
             </div>
           ))

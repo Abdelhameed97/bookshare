@@ -124,6 +124,40 @@ const AdminOrders = () => {
         </div>
         {loading ? (
           <p>Loading orders...</p>
+        ) : orders.length === 0 ? (
+          <div className="orders-table-wrapper">
+            <table className="orders-table">
+              <thead>
+                <tr>
+                  <th>Order ID</th>
+                  <th>Customer</th>
+                  <th>Books</th>
+                  <th>Total</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colSpan="7">
+                    <div style={{
+                      background: '#f3f4f6',
+                      color: '#64748b',
+                      borderRadius: '12px',
+                      padding: '2.5rem 0',
+                      fontWeight: 600,
+                      fontSize: '1.15rem',
+                      textAlign: 'center',
+                      letterSpacing: '0.5px'
+                    }}>
+                      <span role="img" aria-label="empty">📦</span> No orders found.
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         ) : (
           <div className="orders-table-wrapper">
             <table className="orders-table">
@@ -141,7 +175,20 @@ const AdminOrders = () => {
               <tbody>
                 {paginatedOrders.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="text-center">No orders in this tab.</td>
+                    <td colSpan="7">
+                      <div style={{
+                        background: '#f3f4f6',
+                        color: '#64748b',
+                        borderRadius: '12px',
+                        padding: '2.5rem 0',
+                        fontWeight: 600,
+                        fontSize: '1.15rem',
+                        textAlign: 'center',
+                        letterSpacing: '0.5px'
+                      }}>
+                        <span role="img" aria-label="empty">📦</span> No orders in this tab.
+                      </div>
+                    </td>
                   </tr>
                 ) : (
                   paginatedOrders.map(order => (

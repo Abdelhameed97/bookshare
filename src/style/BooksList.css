@@ -789,3 +789,50 @@
    cursor: not-allowed;
    box-shadow: none;
  }
+
+ /* مودرن كارد لصفحة كل الكتب */
+ .books-display .book-card {
+   min-height: 420px;
+   border-radius: 24px;
+   box-shadow: 0 8px 32px rgba(59, 130, 246, 0.10), 0 1.5px 8px rgba(139, 92, 246, 0.08);
+   background: white;
+   padding: 0;
+   transition: box-shadow 0.35s cubic-bezier(0.4,0,0.2,1), transform 0.35s cubic-bezier(0.4,0,0.2,1);
+   border: 1px solid #e2e8f0;
+   position: relative;
+   opacity: 1;
+   animation: slideInUp 1s ease-out forwards;
+ }
+ .books-display .book-card:hover {
+   box-shadow: 0 16px 48px rgba(59, 130, 246, 0.18), 0 4px 24px rgba(139, 92, 246, 0.12);
+   transform: translateY(-10px) scale(1.035);
+   background: #f8fafc;
+ }
+ .books-display .book-image-container {
+   height: 260px;
+   background: #f3f4f6;
+   display: block;
+   overflow: hidden;
+ }
+ .books-display .book-image {
+   width: 100%;
+   height: 100%;
+   object-fit: cover;
+   background: #f3f4f6;
+ }
+ .books-display .add-to-cart-btn {
+   background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+   color: #fff;
+   border: none;
+   border-radius: 30px;
+   font-weight: 600;
+   font-size: 1rem;
+   box-shadow: 0 8px 20px rgba(59, 130, 246, 0.13);
+   transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+ }
+ .books-display .add-to-cart-btn:hover {
+   background: linear-gradient(90deg, #8b5cf6 0%, #3b82f6 100%);
+   color: #fff;
+   transform: translateY(-2px) scale(1.03);
+   box-shadow: 0 12px 30px rgba(139, 92, 246, 0.18);
+ }
