@@ -1,0 +1,15 @@
+.star-rating {
+    display: inline-flex;
+    align-items: center;
+}
+
+.star-rating svg {
+    color: #ffc107;
+}
+
+.star-rating span {
+    transition: all 0.2s ease;
+}
+
+.star-rating span:hover {
+    transform: scale(1.2); }
