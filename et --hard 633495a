@@ -1,0 +1,121 @@
+[33m1dda907[m[33m ([m[1;31morigin/rating[m[33m, [m[1;32mrating[m[33m)[m Fix Images In Wishlist, Order, Cart And Payment
+[33m2dd3c93[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Merge pull request #39 from Abdelhameed97/rating
+[33m60d8298[m Add Rating To Book And Fix Add To Cart In Book Details
+[33m05c7d75[m Merge pull request #38 from Abdelhameed97/cart
+[33md07c802[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpayment[m[33m, [m[1;31morigin/cart[m[33m, [m[1;32mcart[m[33m)[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+[33m633495a[m Add Rent And Buy Type To Cart
+[33mebd202f[m Merge pull request #37 from Abdelhameed97/social-branch
+[33md6ba572[m remove linkedin button from login and register form.
+[33m083913e[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+[33m459b234[m Merge pull request #36 from Abdelhameed97/payment
+[33m372ef81[m[33m ([m[1;31morigin/payment[m[33m)[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+[33medfe51c[m Fix Order Status Filter In Payment Page And Update Oders Page
+[33mb58af0e[m Merge pull request #35 from Abdelhameed97/social-branch
+[33mfad3830[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+[33me8e9d49[m Revert "Merge pull request #34 from Abdelhameed97/payment"
+[33me50b32c[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+[33m9e6da9d[m Merge pull request #34 from Abdelhameed97/payment
+[33m13deb44[m Fix Filter Of Status Orders In Payment And Update Oreder
+[33m4accef1[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+[33ma37381d[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+[33m6c480c6[m add design for login.
+[33m129c3bb[m Merge pull request #33 from Abdelhameed97/RAG_Chat
+[33mbfd9fe7[m edit
+[33md499dba[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+[33m1a5969c[m Add PalPay Method To Payment And Fix Stripe And Cash Method Payment
+[33mb64db87[m Merge pull request #32 from Abdelhameed97/admin
+[33m4bb47d5[m  update admin dashboard
+[33mff2a982[m  add admin dashboard , users ,categories librarys finished done
+[33m759ad49[m  add admin dashboard , users ,categories librarys finished
+[33md13ecbe[m  add admin dashboard , users ,categories
+[33m5f1231d[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+[33ma9e63b0[m merge
+[33m82c88c4[m Merge pull request #31 from Abdelhameed97/social-branch
+[33mbca26a9[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+[33md83515d[m update design
+[33m2032dbf[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+[33m9135a30[m Merge pull request #30 from Abdelhameed97/social-branch
+[33m4b04357[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+[33m6ac8bff[m udpate style socialCallback
+[33m5a08095[m Merge pull request #29 from Abdelhameed97/social-branch
+[33md2ffb44[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+[33m302e1ff[m edit redircit for user account.
+[33m4452234[m add chat
+[33ma1f827b[m add chat
+[33m7750fe4[m Merge pull request #28 from Abdelhameed97/translation
+[33m08265e7[m  change navbar lang
+[33mfbe2b59[m  change navbar lang
+[33m6b76ea0[m translation
+[33m597bf6c[m Add New Method In Payment
+[33m3acaf26[m Merge pull request #27 from Abdelhameed97/social-branch
+[33m45331b5[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-login
+[33m15a3137[m Merge pull request #26 from Abdelhameed97/order
+[33m8bc4f53[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-login
+[33m024b7da[m Code of Social media login is Work done.
+[33mb15a7cb[m[33m ([m[1;31morigin/order[m[33m, [m[1;32morder[m[33m)[m Order And Cart Are Updated
+[33ma55a9b9[m Merge pull request #25 from Abdelhameed97/social-login
+[33m689b96f[m edit design of get-start page.
+[33mb0fe05c[m Merge pull request #24 from Abdelhameed97/social-login
+[33m1256ba5[m test social account.
+[33mb5265bc[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-login
+[33mf9b0483[m Merge pull request #23 from Abdelhameed97/order
+[33ma41a8db[m Order Updated
+[33m1814f9e[m giMerge branch 'main' of https://github.com/Abdelhameed97/bookshare into get-started
+[33m8106eb7[m Merge pull request #22 from Abdelhameed97/cart
+[33m5475dd8[m Fixed Problems Of Cart
+[33maa5a9cb[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into get-started
+[33mb470688[m Merge pull request #21 from Abdelhameed97/library
+[33m163c7cf[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into library
+[33m9524e09[m add files lang
+[33m7295526[m Merge pull request #20 from Abdelhameed97/payment
+[33m9c5b88c[m try to solve problem social_login.
+[33m3ab4ea8[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into get-started
+[33mf5d14c1[m edit file SocialCallback for navigation user to home page or dashboard for owner.
+[33mb5756d2[m Merge pull request #19 from Abdelhameed97/get-started
+[33m17f8ac2[m edit some route for social medai login.
+[33mfd3f5d7[m add file SocialCallback.jsx for recive role and token from backend.
+[33m58a8eb5[m add file enviroment and update register form data
+[33m5e88399[m send role from getstarted component to registerform component.
+[33m52957d0[m Payment And Order Are Updated
+[33m01379fe[m Payment And Order Are Updated
+[33ma8ba674[m 404 page
+[33m31a9648[m 404 page
+[33m01ba845[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into get-started
+[33m1ca15b6[m Merge pull request #18 from Abdelhameed97/library
+[33m5be31d2[m update navbar
+[33mbda75ee[m Merge pull request #17 from Abdelhameed97/library
+[33m26beef1[m add GetStarted component to choose roll to make detected user role and send it with social medai accounts.
+[33m69170a8[m update order status done  and style done
+[33m6ba2d9a[m update order status done
+[33mb8a363b[m Merge pull request #16 from Abdelhameed97/payment
+[33m8b9fac9[m Add Payment Page
+[33me93281d[m Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+[33m4572d23[m Update Order Details Page
+[33m2ce79b5[m Merge pull request #15 from Abdelhameed97/prevent-login
+[33m870e20b[m update login to prevent loged in user from login if he login.
+[33mb20fa64[m dashbord finished and show other lib
+[33m8b62bb3[m Merge pull request #14 from Abdelhameed97/library
+[33ma4813b8[m update profile library owner done
+[33m0d9ec7a[m Merge pull request #13 from Abdelhameed97/library
+[33me892e29[m test
+[33m0ae1654[m edit profile improved
+[33md6465e7[m add libraray navbar and section dashbord and edit profile
+[33m355fd60[m make navebar responseive
+[33m23e25b5[m Merge pull request #11 from Abdelhameed97/restore-my-work
+[33m3f4b211[m[33m ([m[1;31morigin/restore-my-work[m[33m, [m[1;32mrestore-my-work[m[33m)[m Prodected Wishlist, Order, Cart and navbar
+[33made4ddc[m Prodected Wishlist, Order, Cart and navbar
+[33m158d53a[m Prodected Wishlist, Order, Cart and navbar
+[33m1ce1a6c[m Prodected Wishlist, Order, Cart and navbar
+[33m5419e79[m Merge pull request #10 from Abdelhameed97/add-book
+[33m3ee491e[m update wishlist
+[33mf588c09[m Merge main
+[33m47bdbc8[m update style
+[33m75382b2[m[33m ([m[1;32mmain[m[33m)[m Merge restore-my-work into main and resolve conflicts
+[33m898170a[m Merge restore-my-work into main and resolve conflicts
+[33mdd48929[m Merge restore-my-work into main and resolve conflicts
+[33m7cc0e55[m[33m ([m[1;32mmerge[m[33m)[m Fix error in book list and in new release
+[33mff63fda[m Fix error in book list
+[33m9c7dedc[m Fix error in book list
+[33m5cc4cf3[m Solve Conflicts
+[33m1f7166f[m Solve Conflicts
+[33mf199eee[m[33m ([m[1;32mtest[m[33m)[m Pull Is
