@@ -81,7 +81,7 @@ function App() {
           }
         />
         <Route path="/social-callback" element={<SocialCallback />} />
-
+        
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
