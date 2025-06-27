@@ -14,22 +14,20 @@ export const usePayment = () => {
         setLoading(true);
         setError(null);
         try {
+            // First get order details
             const orderResponse = await api.getOrderDetails(orderId);
             const orderData = orderResponse.data?.data || orderResponse.data;
+            if (!orderData) throw new Error('Order not found');
 
-            if (!orderData) {
-                throw new Error('Order not found');
-            }
-
+            // Then get payment details if exists
             try {
                 const paymentResponse = await api.getOrderPayment(orderId);
                 const paymentData = paymentResponse.data?.data || paymentResponse.data;
-
                 if (paymentData) {
                     setPayment(paymentData);
                 }
             } catch (paymentError) {
-                console.log('No payment exists yet, will create new one');
+                console.log('No payment exists yet');
             }
 
             setOrder({
@@ -38,7 +36,6 @@ export const usePayment = () => {
             });
 
         } catch (err) {
-            console.error('Error fetching payment details:', err);
             setError(err.response?.data?.message || err.message || 'Failed to load payment details');
             if (err.response?.status === 401) {
                 localStorage.removeItem('token');

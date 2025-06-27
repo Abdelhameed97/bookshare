@@ -111,15 +111,24 @@ const apiService = {
     // Payment Endpoints
     createPayment: (paymentData) => api.post('/payments', paymentData),
     getPayment: (paymentId) => api.get(`/payments/${paymentId}`),
-    getOrderPayment: (orderId) => api.get(`/orders/${orderId}/payment`).catch(err => {
-        if (err.response?.status === 404) {
+    // Payment Endpoints
+    getOrderPayment: (orderId) => api.get(`/orders/${orderId}/payment`)
+        .then(response => {
+            // Handle case where payment exists
+            if (response.data) {
+                return response;
+            }
             return { data: null };
-        }
-        throw err;
-    }),
+        })
+        .catch(err => {
+            // Handle 404 as payment not found (not an error)
+            if (err.response?.status === 404) {
+                return { data: null };
+            }
+            throw err;
+        }),
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
     getUserPayments: () => api.get('/payments'),
-
     // Stripe Payment
     createStripePaymentIntent: (orderId) => api.post('/stripe/create-payment-intent', { order_id: orderId }),
     confirmStripePayment: (paymentId) => api.post('/stripe/confirm-payment', { payment_id: paymentId }),
