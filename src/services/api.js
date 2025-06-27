@@ -46,7 +46,7 @@ const apiService = {
 
         const payload = {
             book_id: bookId,
-            type: data.type,
+            type: data.type ?? 'buy',
             quantity: 1,
             user_id: user.id
         };
@@ -54,10 +54,12 @@ const apiService = {
         console.log("Sending to cart:", payload);
         return api.post('/cart', payload);
     },
-    updateCartItem: (cartItemId, quantity) => {
-        return api.put(`/cart/${cartItemId}`, {
-            quantity: parseInt(quantity, 10)
-        });
+    updateCartItem: (cartItemId, data) => {
+        // Ensure quantity is parsed as integer
+        if (data.quantity) {
+            data.quantity = parseInt(data.quantity, 10);
+        }
+        return api.put(`/cart/${cartItemId}`, data);
     },
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
     checkCartStatus: async (bookId) => {
