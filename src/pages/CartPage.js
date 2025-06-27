@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Container,
     Row,
@@ -21,7 +21,6 @@ import {
     ShoppingCart,
     Plus,
     Minus,
-    CheckCircle,
     AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -46,11 +45,10 @@ const CartPage = () => {
 
         return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
     };
-    
+
     const user = JSON.parse(localStorage.getItem('user'));
     const {
         cartItems,
-        cartCount,
         loading,
         error,
         fetchCartItems,
@@ -253,8 +251,8 @@ const CartPage = () => {
         }
 
         const result = await Swal.fire({
-            title: 'Would Buy Now?',
-            text: 'You will be redirected to order Books',
+            title: 'Proceed to Checkout?',
+            text: 'You will be redirected to complete your order',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#28a745',
@@ -282,8 +280,6 @@ const CartPage = () => {
             };
 
             const response = await api.createOrder(orderData);
-            console.log("Order response:", response.data);
-
             const orderList = response.data?.data;
             const orderId = Array.isArray(orderList) && orderList.length > 0 ? orderList[0].id : null;
 
@@ -327,6 +323,7 @@ const CartPage = () => {
             </div>
         );
     }
+
     if (error) {
         return (
             <>
@@ -425,13 +422,12 @@ const CartPage = () => {
                                                             <div className="d-flex align-items-center">
                                                                 <img
                                                                     src={getBookImage(item.book.images)}
-                                                            alt={item.book?.title}
+                                                                    alt={item.book?.title}
                                                                     className="book-cover me-3"
                                                                     onError={(e) => {
                                                                         e.target.onerror = null;
                                                                         e.target.src = 'https://via.placeholder.com/300x450';
                                                                     }}
-                                                                    
                                                                 />
                                                                 <div>
                                                                     <h6 className="mb-1">{item.book?.title}</h6>
@@ -590,7 +586,6 @@ const CartPage = () => {
                                     ))}
                                 </div>
 
-
                                 <div className="d-flex justify-content-between mb-2">
                                     <span>Subtotal:</span>
                                     <span>{subtotal.toFixed(2)} EGP</span>
@@ -655,7 +650,6 @@ const CartPage = () => {
                                 >
                                     Order Now
                                 </CustomButton>
-
                             </Card.Body>
                         </Card>
                     </Col>

@@ -54,8 +54,10 @@ const apiService = {
         console.log("Sending to cart:", payload);
         return api.post('/cart', payload);
     },
-    updateCartItem: (cartItemId, data) => {
-        return api.put(`/cart/${cartItemId}`, data);
+    updateCartItem: (cartItemId, quantity) => {
+        return api.put(`/cart/${cartItemId}`, {
+            quantity: parseInt(quantity, 10)
+        });
     },
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
     checkCartStatus: async (bookId) => {
@@ -115,6 +117,13 @@ const apiService = {
     }),
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
     getUserPayments: () => api.get('/payments'),
+
+    // Stripe Payment
+    createStripePaymentIntent: (orderId) => api.post('/stripe/create-payment-intent', { order_id: orderId }),
+    confirmStripePayment: (paymentId) => api.post('/stripe/confirm-payment', { payment_id: paymentId }),
+
+    // PayPal Payment
+    createPayPalPayment: (orderId) => api.post('/paypal/create-payment', { order_id: orderId }),
 
     // Coupon Endpoints
     applyCoupon: (couponCode) => api.post('/coupons/apply', { code: couponCode }),
