@@ -28,6 +28,11 @@ import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
+import CategoryPage from "./pages/CategoryPage";
+ import RagChat from "./pages/RagChat";
+import FloatingChatButton from "./components/FloatingChatButton";
+import './App.css';
+
 import AdminDashboard from './components/Admin/Dashboard';
 import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
@@ -104,7 +109,10 @@ function App() {
         <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
 
         <Route path='*' element={<NotFound />} />
+
       </Routes>
+       <FloatingChatButton />
+
     </Router>
   );
 }

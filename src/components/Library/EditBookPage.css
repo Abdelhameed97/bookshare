@@ -1,3 +1,4 @@
+/* EditBookPage Scoped Styles */
 .edit-book-container {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   padding: 40px 15px;
@@ -35,7 +36,7 @@
   font-size: 1rem;
   color: #6b7280;
 }
-.back-link {
+.edit-book-back-link {
   position: absolute;
   left: 20px;
   top: 32px;
@@ -47,19 +48,19 @@
   gap: 8px;
   transition: color 0.2s;
 }
-.back-link:hover { color: #3b82f6; }
+.edit-book-back-link:hover { color: #3b82f6; }
 .edit-book-form {
   padding: 28px 24px 18px 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
 }
-.row {
+.edit-book-row {
   display: flex;
   gap: 18px;
   flex-wrap: wrap;
 }
-.col {
+.edit-book-col {
   flex: 1 1 220px;
   min-width: 180px;
   display: flex;
@@ -91,7 +92,7 @@
 .edit-book-form .error {
   border-color: #ef4444;
 }
-.error-message {
+.edit-book-error-message {
   color: #ef4444;
   font-size: 0.92em;
   margin-top: 2px;
@@ -99,16 +100,16 @@
   align-items: center;
   gap: 4px;
 }
-.image-preview-area {
+.edit-book-image-preview-area {
   margin-top: 6px;
 }
-.image-preview-list {
+.edit-book-image-preview-list {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 6px;
 }
-.image-preview {
+.edit-book-image-preview {
   position: relative;
   width: 60px;
   height: 60px;
@@ -120,12 +121,12 @@
   align-items: center;
   justify-content: center;
 }
-.image-preview img {
+.edit-book-image-preview img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.remove-image {
+.edit-book-remove-image {
   position: absolute;
   top: 2px;
   right: 2px;
@@ -142,10 +143,10 @@
   justify-content: center;
   transition: background 0.18s;
 }
-.remove-image:hover {
+.edit-book-remove-image:hover {
   background: #dc2626;
 }
-.form-actions {
+.edit-book-form-actions {
   display: flex;
   justify-content: flex-end;
   gap: 14px;
@@ -153,8 +154,8 @@
   border-top: 1px solid #e5e7eb;
   padding-top: 16px;
 }
-.btn-primary,
-.btn-secondary {
+.edit-book-btn-primary,
+.edit-book-btn-secondary {
   padding: 12px 24px;
   border-radius: 8px;
   font-size: 1rem;
@@ -166,18 +167,18 @@
   gap: 8px;
   transition: background 0.2s, color 0.2s;
 }
-.btn-primary {
+.edit-book-btn-primary {
   background: #3b82f6;
   color: #fff;
 }
-.btn-primary:hover {
+.edit-book-btn-primary:hover {
   background: #2563eb;
 }
-.btn-secondary {
+.edit-book-btn-secondary {
   background: #e5e7eb;
   color: #374151;
 }
-.btn-secondary:hover {
+.edit-book-btn-secondary:hover {
   background: #cbd5e1;
 }
 @media (max-width: 700px) {
@@ -188,7 +189,7 @@
   .edit-book-form {
     padding: 12px 2px;
   }
-  .row {
+  .edit-book-row {
     flex-direction: column;
     gap: 8px;
   }

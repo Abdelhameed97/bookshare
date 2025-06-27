@@ -165,7 +165,7 @@ const EditBookPage = () => {
       <div className="edit-book-container">
         <div className="edit-book-card">
           <div className="edit-book-header">
-            <Link to="/dashboard" className="back-link">
+            <Link to="/dashboard" className="edit-book-back-link">
               <ArrowLeft size={20} />
               Back to Dashboard
             </Link>
@@ -173,35 +173,35 @@ const EditBookPage = () => {
             <p>Edit your book details</p>
           </div>
           <form onSubmit={handleSubmit} className="edit-book-form">
-            <div className="row">
-              <div className="col">
+            <div className="edit-book-row">
+              <div className="edit-book-col">
                 <label>Title</label>
                 <input type="text" name="title" value={formData.title} onChange={handleInputChange} className={errors.title ? 'error' : ''} />
-                {errors.title && <div className="error-message"><AlertCircle size={16} /> {errors.title}</div>}
+                {errors.title && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.title}</div>}
               </div>
-              <div className="col">
+              <div className="edit-book-col">
                 <label>Author</label>
                 <input type="text" name="author" value={formData.author} onChange={handleInputChange} className={errors.author ? 'error' : ''} />
-                {errors.author && <div className="error-message"><AlertCircle size={16} /> {errors.author}</div>}
+                {errors.author && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.author}</div>}
               </div>
             </div>
-            <div className="row">
-              <div className="col">
+            <div className="edit-book-row">
+              <div className="edit-book-col">
                 <label>Description</label>
                 <textarea name="description" value={formData.description} onChange={handleInputChange} className={errors.description ? 'error' : ''} rows={2} />
-                {errors.description && <div className="error-message"><AlertCircle size={16} /> {errors.description}</div>}
+                {errors.description && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.description}</div>}
               </div>
             </div>
-            <div className="row">
-              <div className="col">
+            <div className="edit-book-row">
+              <div className="edit-book-col">
                 <label>Genre</label>
                 <input type="text" name="genre" value={formData.genre} onChange={handleInputChange} />
               </div>
-              <div className="col">
+              <div className="edit-book-col">
                 <label>Educational Level</label>
                 <input type="text" name="educational_level" value={formData.educational_level} onChange={handleInputChange} />
               </div>
-              <div className="col">
+              <div className="edit-book-col">
                 <label>Condition</label>
                 <select name="condition" value={formData.condition} onChange={handleInputChange}>
                   <option value="new">New</option>
@@ -209,24 +209,24 @@ const EditBookPage = () => {
                 </select>
               </div>
             </div>
-            <div className="row">
-              <div className="col">
+            <div className="edit-book-row">
+              <div className="edit-book-col">
                 <label>Price</label>
                 <input type="number" name="price" value={formData.price} onChange={handleInputChange} className={errors.price ? 'error' : ''} />
-                {errors.price && <div className="error-message"><AlertCircle size={16} /> {errors.price}</div>}
+                {errors.price && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.price}</div>}
               </div>
-              <div className="col">
+              <div className="edit-book-col">
                 <label>Rental Price</label>
                 <input type="number" name="rental_price" value={formData.rental_price} onChange={handleInputChange} />
               </div>
-              <div className="col">
+              <div className="edit-book-col">
                 <label>Quantity</label>
                 <input type="number" name="quantity" value={formData.quantity} onChange={handleInputChange} className={errors.quantity ? 'error' : ''} />
-                {errors.quantity && <div className="error-message"><AlertCircle size={16} /> {errors.quantity}</div>}
+                {errors.quantity && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.quantity}</div>}
               </div>
             </div>
-            <div className="row">
-              <div className="col">
+            <div className="edit-book-row">
+              <div className="edit-book-col">
                 <label>Status</label>
                 <select name="status" value={formData.status} onChange={handleInputChange}>
                   <option value="available">Available</option>
@@ -234,7 +234,7 @@ const EditBookPage = () => {
                   <option value="sold">Sold</option>
                 </select>
               </div>
-              <div className="col">
+              <div className="edit-book-col">
                 <label>Category</label>
                 <select name="category_id" value={formData.category_id} onChange={handleInputChange} className={errors.category_id ? 'error' : ''}>
                   <option value="">Select Category</option>
@@ -242,35 +242,37 @@ const EditBookPage = () => {
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
                 </select>
-                {errors.category_id && <div className="error-message"><AlertCircle size={16} /> {errors.category_id}</div>}
+                {errors.category_id && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.category_id}</div>}
               </div>
             </div>
-            <div className="row">
-              <div className="col image-preview-area">
+            <div className="edit-book-row">
+              <div className="edit-book-col edit-book-image-preview-area">
                 <label>Images</label>
                 <input type="file" accept="image/*" multiple onChange={handleImageChange} />
-                <div className="image-preview-list">
+                <div className="edit-book-image-preview-list">
                   {formData.existingImages.map((img, idx) => (
-                    <div key={idx} className="image-preview">
+                    <div key={idx} className="edit-book-image-preview">
                       <img src={img.startsWith('http') ? img : `http://localhost:8000/storage/${img}`} alt="book" />
-                      <button type="button" onClick={() => removeImage(idx, 'existing')} className="remove-image">×</button>
+                      <button type="button" onClick={() => removeImage(idx, 'existing')} className="edit-book-remove-image">×</button>
                     </div>
                   ))}
                   {formData.images.map((img, idx) => (
-                    <div key={idx} className="image-preview">
-                      <img src={URL.createObjectURL(img)} alt="preview" />
-                      <button type="button" onClick={() => removeImage(idx, 'new')} className="remove-image">×</button>
+                    <div key={idx} className="edit-book-image-preview">
+                      <img src={URL.createObjectURL(img)} alt="book" />
+                      <button type="button" onClick={() => removeImage(idx, 'new')} className="edit-book-remove-image">×</button>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-            <div className="form-actions">
-              <Link to="/dashboard" className="btn-secondary">Cancel</Link>
-              <button type="submit" className="btn-primary" disabled={loading}>
+            <div className="edit-book-form-actions">
+              <button type="submit" className="edit-book-btn-primary" disabled={loading}>
                 <Save size={18} />
                 {loading ? 'Saving...' : 'Save Changes'}
               </button>
+              <Link to="/dashboard" className="edit-book-btn-secondary">
+                Cancel
+              </Link>
             </div>
           </form>
         </div>
