@@ -1,4 +1,3 @@
-// App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
@@ -27,8 +26,7 @@ import AllOrdersPage from './components/Library/AllOrdersPage';
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
-import CategoryPage from "./pages/CategoryPage";
- import RagChat from "./pages/RagChat";
+import RagChat from "./pages/RagChat";
 import FloatingChatButton from "./components/FloatingChatButton";
 import './App.css';
 
@@ -37,8 +35,8 @@ import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
 import BookList from './components/Admin/BookList';
 import AdminOrders from './components/Admin/AdminOrders';
-// import Users from './components/admin/Users';
-// import Categories from './components/admin/Categories';
+import CategoriesPage from "./pages/CategoriesPage";
+import CategoryPage from "./pages/CategoryPage";
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -81,7 +79,6 @@ function App() {
           }
         />
         <Route path="/social-callback" element={<SocialCallback />} />
-        
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/edit-profile" element={<EditProfile />} />
@@ -90,9 +87,9 @@ function App() {
         <Route path="/library/:id" element={<LibraryDetails />} />
         <Route path="/all-orders" element={<AllOrdersPage />} />
         <Route path="/rag-chat" element={<RagChat />} />
-        <Route path="/category/:category" element={<CategoryPage />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/categories/:id" element={<CategoryPage />} />
         
-
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/dashboard" element={<AdminDashboard />} />
@@ -102,10 +99,8 @@ function App() {
         <Route path="/admin/orders" element={<AdminOrders />} />
 
         <Route path='*' element={<NotFound />} />
-
       </Routes>
-       <FloatingChatButton />
-
+      <FloatingChatButton />
     </Router>
   );
 }

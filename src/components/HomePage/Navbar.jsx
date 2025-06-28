@@ -24,12 +24,15 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
-
-  const navLocation = useLocation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
+
+  // Define all required functions
+  const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
+  const toggleMobileMenu = () => setIsOpen(!isOpen);
+  const closeMobileMenu = () => setIsOpen(false);
 
   const { cartCount } = useCart(user?.id);
   const { wishlistCount } = useWishlist(user?.id);
@@ -37,35 +40,31 @@ const Navbar = () => {
   const ordersCount = orders.length;
 
   const isLibraryOwner = user?.role === "owner";
-
   const { t, language } = useTranslation();
-
   const [showClientNotifications, setShowClientNotifications] = useState(false);
+const regularNavLinks = [
+  { to: "/", label: "home", icon: null },
+  { to: "/about", label: "about", icon: null },
+  { to: "/categories", label: "categories", icon: null }, // تأكد من وجود هذا السطر
+  { to: "/books", label: "books", icon: null },
+  { to: "/contact", label: "contact", icon: null },
+];
 
-  const regularNavLinks = [
-    { to: "/", label: "home" },
-    { to: "/about", label: "about" },
-    // { to: "/coming-soon", label: "comingSoon" },
-    { to: "/top-seller", label: "topSeller" },
-    { to: "/books", label: "books" },
-    { to: "/contact", label: "contact" },
-  ];
-
-  const ownerNavLinks = [
-    { to: "/dashboard", label: "dashboard" },
-    { to: "/edit-profile", label: "editProfile" },
-    { to: "/add-book", label: "addBook" },
-    { to: "/libraries", label: "allLibraries" },
-    { to: "/all-orders", label: "orders" },
-  ];
+const ownerNavLinks = [
+  { to: "/dashboard", label: "dashboard", icon: FaTachometerAlt },
+  { to: "/categories", label: "categories", icon: null }, // أضف هذا السطر
+  { to: "/edit-profile", label: "editProfile", icon: FaUserEdit },
+  { to: "/add-book", label: "addBook", icon: FaBook },
+  { to: "/libraries", label: "allLibraries", icon: null },
+  { to: "/all-orders", label: "orders", icon: FaBoxOpen },
+];
 
   const adminNavLinks = [
-    { to: "/admin/dashboard", label: "adminDashboard" },
-
-    { to: "/admin/users", label: "users" },
-    { to: "/admin/categories", label: "categories" },
-    { to: "/admin/books", label: "books" },
-    { to: "/admin/orders", label: "orders" },
+    { to: "/admin/dashboard", label: "adminDashboard", icon: FaTachometerAlt },
+    { to: "/admin/users", label: "users", icon: null },
+    { to: "/admin/categories", label: "categories", icon: null },
+    { to: "/admin/books", label: "books", icon: FaBook },
+    { to: "/admin/orders", label: "orders", icon: FaBoxOpen },
   ];
 
   const navLinks = user?.role === "admin"
@@ -73,11 +72,6 @@ const Navbar = () => {
     : isLibraryOwner
       ? ownerNavLinks
       : regularNavLinks;
-      
-
-  const toggleMobileMenu = () => setIsOpen(!isOpen);
-  const closeMobileMenu = () => setIsOpen(false);
-  const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -108,10 +102,8 @@ const Navbar = () => {
     navigate(path);
   };
 
-  // Notifications for client
   const clientOrderNotifications = useMemo(() => {
     if (!user || user.role !== 'client' || !orders) return [];
-    // Only show notifications for orders that are not pending
     return orders
       .filter(order => order.status === 'accepted' || order.status === 'rejected')
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
@@ -140,11 +132,11 @@ const Navbar = () => {
             <div className="navbar-content">
               <div className="nav-links-desktop">
                 {navLinks.map((link) => {
-                  const isActive = navLocation.pathname === link.to;
+                  const isActive = location.pathname === link.to;
                   const IconComponent = link.icon;
                   return (
                     <Link
-                      key={link.label}
+                      key={link.to}
                       to={link.to}
                       className={`nav-link${isActive ? " active" : ""}`}
                       style={{
@@ -157,16 +149,6 @@ const Navbar = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: "0.5rem",
-                      }}
-                      onMouseOver={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = "#e3e9f1";
-                        }
-                      }}
-                      onMouseOut={(e) => {
-                        if (!isActive) {
-                          e.currentTarget.style.background = "transparent";
-                        }
                       }}
                     >
                       {IconComponent && <IconComponent size={16} />}
@@ -187,7 +169,6 @@ const Navbar = () => {
 
                 <LanguageSwitcher />
 
-                {/* Client Notifications Bell */}
                 {user?.role === 'client' && (
                   <div className="client-notification-section">
                     <button
@@ -425,11 +406,11 @@ const Navbar = () => {
 
           <div className="mobile-nav-links">
             {navLinks.map((link) => {
-              const isActive = navLocation.pathname === link.to;
+              const isActive = location.pathname === link.to;
               const IconComponent = link.icon;
               return (
                 <Link
-                  key={link.label}
+                  key={link.to}
                   to={link.to}
                   className={`mobile-nav-link${isActive ? " active" : ""}`}
                   onClick={closeMobileMenu}
