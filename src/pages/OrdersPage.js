@@ -93,6 +93,25 @@ const OrdersPage = () => {
         }
     };
 
+    // Function to mark notification as read
+    const markNotificationAsRead = (orderId) => {
+        try {
+            const readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+            if (!readNotifications.includes(orderId)) {
+                const updated = [...readNotifications, orderId];
+                localStorage.setItem('readNotifications', JSON.stringify(updated));
+                console.log('Marked order notification as read:', orderId);
+                
+                // Dispatch custom event to notify navbar
+                window.dispatchEvent(new CustomEvent('notificationRead', {
+                    detail: { orderId: orderId }
+                }));
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    };
+
     if (!userId) {
         return (
             <>
@@ -185,6 +204,12 @@ const OrdersPage = () => {
                                     <Nav.Link eventKey="all">All Orders</Nav.Link>
                                 </Nav.Item>
                                 <Nav.Item>
+                                    <Nav.Link eventKey="pending">
+                                        <Clock size={16} className="me-1" />
+                                        Pending
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
                                     <Nav.Link eventKey="accepted">
                                         <CheckCircle size={16} className="me-1" />
                                         Accepted
@@ -221,6 +246,7 @@ const OrdersPage = () => {
                                     </Nav.Link>
                                 </Nav.Item>
                             </Nav>
+
 
                             <Tab.Content>
                                 <Tab.Pane eventKey={activeTab}>
@@ -263,7 +289,10 @@ const OrdersPage = () => {
                                                                     variant="outline-primary"
                                                                     size="sm"
                                                                     className="me-2"
-                                                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                                                    onClick={() => {
+                                                                        navigate(`/orders/${order.id}`);
+                                                                        markNotificationAsRead(order.id);
+                                                                    }}
                                                                 >
                                                                     <FileText size={16} className="me-1" />
                                                                     Details

@@ -18,7 +18,7 @@ export const usePayment = () => {
             const orderData = orderResponse.data?.data || orderResponse.data;
 
             if (!orderData) {
-                throw new Error('Order not found');
+                throw new Error('Order not found or may have been cancelled');
             }
 
             try {
@@ -39,7 +39,14 @@ export const usePayment = () => {
 
         } catch (err) {
             console.error('Error fetching payment details:', err);
-            setError(err.response?.data?.message || err.message || 'Failed to load payment details');
+            let errorMessage = err.response?.data?.message || err.message;
+
+            if (errorMessage.includes('Order not found') ||
+                errorMessage.includes('No query results')) {
+                errorMessage = 'The order was not found or may have been cancelled';
+            }
+
+            setError(errorMessage);
             if (err.response?.status === 401) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -48,7 +55,7 @@ export const usePayment = () => {
         } finally {
             setLoading(false);
         }
-    }, []);
+    }, [navigate]);
 
     const createPayment = async (paymentData) => {
         setProcessing(true);
@@ -74,6 +81,73 @@ export const usePayment = () => {
         }
     };
 
+    const createStripePayment = async (orderId) => {
+        setProcessing(true);
+        try {
+            const response = await api.createStripePaymentIntent({ order_id: orderId });
+            if (!response.data?.success) {
+                throw new Error(response.data?.message || 'Failed to create payment intent');
+            }
+            return response.data;
+        } catch (err) {
+            console.error('Stripe payment creation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const confirmStripePayment = async (paymentIntentId) => {
+        setProcessing(true);
+        try {
+            const response = await api.post('/stripe/confirm-payment', {
+                payment_intent_id: paymentIntentId
+            });
+            return response.data;
+        } catch (err) {
+            console.error('Stripe payment confirmation failed:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
+    const createPayPalPayment = async (orderId) => {
+        setProcessing(true);
+        try {
+            const response = await api.createPayPalPayment(orderId);
+
+            if (!response.data) {
+                throw new Error('No response from PayPal');
+            }
+
+            if (!response.data.success) {
+                throw new Error(response.data.message || 'Payment failed');
+            }
+
+            if (!response.data.approval_url) {
+                throw new Error('Missing PayPal approval URL');
+            }
+
+            return response.data;
+        } catch (err) {
+            console.error('PayPal payment error:', err);
+
+            const errorObj = {
+                ...err,
+                response: err.response || {
+                    data: {
+                        message: err.message || 'Payment processing failed'
+                    }
+                }
+            };
+
+            throw errorObj;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     const fetchUserPayments = useCallback(async () => {
         setLoading(true);
         setError(null);
@@ -94,9 +168,13 @@ export const usePayment = () => {
         loading,
         error,
         processing,
+        setProcessing,
         fetchData,
         createPayment,
         setPayment,
-        fetchUserPayments
+        fetchUserPayments,
+        createStripePayment,
+        confirmStripePayment,
+        createPayPalPayment
     };
 };

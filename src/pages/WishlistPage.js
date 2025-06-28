@@ -30,6 +30,19 @@ import Footer from "../components/HomePage/Footer.jsx";
 import Swal from 'sweetalert2';
 
 const WishlistPage = () => {
+    const getBookImage = (images) => {
+        if (!images || images.length === 0) {
+            return 'https://via.placeholder.com/300x450';
+        }
+
+        const firstImage = images[0];
+        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
+            return firstImage;
+        }
+
+        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
+    };
+
     const [sortBy, setSortBy] = useState('recent');
     const [filterBy, setFilterBy] = useState('all');
     const navigate = useNavigate();
@@ -167,7 +180,6 @@ const WishlistPage = () => {
         }
     };
 
-
     if (!userId) {
         return (
             <>
@@ -301,9 +313,13 @@ const WishlistPage = () => {
                                         <div className="wishlist-card-img-container">
                                             <Card.Img
                                                 variant="top"
-                                                src={item.book.images?.[0] || 'https://via.placeholder.com/300x450'}
+                                                src={getBookImage(item.book.images)}
                                                 alt={item.book.title}
                                                 className="wishlist-card-img"
+                                                onError={(e) => {
+                                                    e.target.onerror = null;
+                                                    e.target.src = 'https://via.placeholder.com/300x450';
+                                                }}
                                             />
                                             <button
                                                 className="wishlist-heart-btn"

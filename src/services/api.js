@@ -46,7 +46,7 @@ const apiService = {
 
         const payload = {
             book_id: bookId,
-            type: data.type,
+            type: data.type ?? 'buy',
             quantity: 1,
             user_id: user.id,
         }
@@ -54,7 +54,6 @@ const apiService = {
         console.log("Sending to cart:", payload)
         return api.post("/cart", payload)
     },
-    // في ملف api.js
     updateCartItem: (cartItemId, data) => {
         return api.put(`/cart/${cartItemId}`, data)
     },
@@ -114,6 +113,15 @@ const apiService = {
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
     getUserPayments: () => api.get("/payments"),
 
+    // PayPal Payment
+    createPayPalPayment: (orderId) => api.post('/paypal/create-payment', { order_id: orderId })
+        .catch(err => {
+            if (err.response?.status === 400) {
+                throw new Error(err.response.data?.message || 'Order cannot be paid');
+            }
+            throw err;
+        }),
+    
     // Coupon Endpoints
     applyCoupon: couponCode => api.post("/coupons/apply", { code: couponCode }),
 

@@ -8,6 +8,7 @@ import CustomButton from '../components/shared/CustomButton';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from '../components/HomePage/Footer';
 import '../style/PaymentPage.css';
+import { useOrders } from '../hooks/useOrders';
 
 const PaymentsPage = () => {
     const navigate = useNavigate();
@@ -19,6 +20,8 @@ const PaymentsPage = () => {
     const { fetchUserPayments } = usePayment();
     const user = JSON.parse(localStorage.getItem('user'));
     const userId = user?.id;
+
+    const { orders } = useOrders(userId);
 
     useEffect(() => {
         const loadPayments = async () => {
@@ -60,7 +63,6 @@ const PaymentsPage = () => {
     };
 
     const getOrderStatusBadge = (status) => {
-
         switch (status) {
             case 'accepted':
                 return <Badge bg="success">Accepted</Badge>;
@@ -91,6 +93,37 @@ const PaymentsPage = () => {
         const num = parseFloat(price);
         return isNaN(num) ? '0.00' : num.toFixed(2);
     };
+
+    const getPaymentIdDisplay = (payment) => {
+        if (payment.paypal_payment_id) {
+            return `PayPal: ${payment.paypal_payment_id}`;
+        }
+        if (payment.stripe_payment_id) {
+            return `Stripe: ${payment.stripe_payment_id}`;
+        }
+        return `Local: #${payment.id}`;
+    };
+
+    const getPaymentMethodIcon = (method) => {
+        switch (method) {
+            case 'paypal':
+                return <img src="/paypal-icon.png" alt="PayPal" style={{ width: '16px', height: '16px' }} />;
+            case 'stripe':
+                return <img src="/stripe-icon.png" alt="Stripe" style={{ width: '16px', height: '16px' }} />;
+            default:
+                return <CreditCard size={16} />;
+        }
+    };    
+
+    const formatMethodName = (method) => {
+        const map = {
+            paypal: 'PayPal',
+            stripe: 'Stripe',
+            cash: 'Cash',
+            card: 'Card'
+        };
+        return map[method] || method.charAt(0).toUpperCase() + method.slice(1);
+    };    
 
     if (!userId) {
         return (
@@ -153,7 +186,6 @@ const PaymentsPage = () => {
             </>
         );
     }
-
 
     return (
         <>
@@ -258,46 +290,48 @@ const PaymentsPage = () => {
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
-                                        <tbody>
-                                            {filteredPayments.map(payment => (
-                                                <tr key={payment.id}>
-                                                    <td>#{payment.id}</td>
-                                                    <td>{formatDate(payment.created_at)}</td>
-                                                    <td>
-                                                        <div>
-                                                            <strong>Order #{payment.order_id}</strong>
-                                                            {payment.order && (
-                                                                <div className="text-muted small">
-                                                                    Items: {payment.order.quantity}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    </td>
-                                                    <td className="text-capitalize">
-                                                        <CreditCard size={16} className="me-1" />
-                                                        {payment.method}
-                                                    </td>
-                                                    <td>{formatPrice(payment.amount)} EGP</td>
-                                                    <td>{getStatusBadge(payment.status)}</td>
-                                                    <td>
-                                                        {payment.order ?
-                                                            getOrderStatusBadge(payment.order.status) :
-                                                            <Badge bg="secondary">N/A</Badge>
-                                                        }
-                                                    </td>
-                                                    <td>
-                                                        <Button
-                                                            variant="outline-primary"
-                                                            size="sm"
-                                                            onClick={() => navigate(`/orders/${payment.order_id}`)}
-                                                            className="me-2"
-                                                        >
-                                                            View Order
-                                                        </Button>
-                                                    </td>
-                                                </tr>
-                                            ))}
-                                        </tbody>
+                                            <tbody>
+                                                {filteredPayments.map(payment => (
+                                                    <tr key={payment.id}>
+                                                        <td>#{payment.id}</td>
+                                                        <td>{formatDate(payment.created_at)}</td>
+                                                        <td>
+                                                            <div>
+                                                                <strong>Order #{payment.order_id}</strong>
+                                                                {payment.order && (
+                                                                    <div className="text-muted small">
+                                                                        Items: {payment.order.quantity}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        </td>
+                                                        <td className="text-capitalize">
+                                                            <CreditCard size={16} className="me-1" />
+                                                            {payment.method}
+                                                        </td>
+
+                                                        <td>{formatPrice(payment.amount)} EGP</td>
+                                                        <td>{getStatusBadge(payment.status)}</td>
+                                                        <td>
+                                                            {payment.order ?
+                                                                getOrderStatusBadge(payment.order.status) :
+                                                                <Badge bg="secondary">N/A</Badge>
+                                                            }
+                                                        </td>
+                                                        <td>
+                                                            <Button
+                                                                variant="outline-primary"
+                                                                size="sm"
+                                                                onClick={() => navigate(`/orders/${payment.order_id}`)}
+                                                                className="me-2"
+                                                            >
+                                                                View Order
+                                                            </Button>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+
                                     </Table>
                                 )}
                             </Card.Body>

@@ -31,59 +31,83 @@ import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
 import Swal from 'sweetalert2';
 import CustomButton from '../components/shared/CustomButton.js';
+import { usePayment } from '../hooks/usePayment';
 
 const OrderDetailsPage = () => {
+    const getBookImage = (images) => {
+        if (!images || images.length === 0) {
+            return 'https://via.placeholder.com/300x450';
+        }
+
+        const firstImage = images[0];
+        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
+            return firstImage;
+        }
+
+        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
+    };
+
     const { id } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
+    const [payment, setPayment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [processing, setProcessing] = useState(false);
-    const [paymentProcessing, setPaymentProcessing] = useState(false);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
+    const [paymentAttempted, setPaymentAttempted] = useState(false);
+
+    const {
+        processing,
+        setProcessing,
+    } = usePayment();
+
+    const fetchOrderAndPayment = async () => {
+        try {
+            setLoading(true);
+
+            // Fetch order details
+            const orderResponse = await api.getOrderDetails(id);
+            let orderData = orderResponse.data?.data || orderResponse.data;
+            if (!orderData) throw new Error('Order not found');
+
+            // Fetch payment details
+            try {
+                const paymentResponse = await api.getOrderPayment(id);
+                const paymentData = paymentResponse.data?.data || paymentResponse.data;
+                if (paymentData) {
+                    setPayment(paymentData);
+                    if (paymentData.status === 'paid') {
+                        setPaymentCompleted(true);
+                    }
+                }
+            } catch (paymentError) {
+                console.log('No payment record found');
+            }
+
+            setOrder({
+                ...orderData,
+                order_items: orderData.order_items?.map(item => ({
+                    ...item,
+                    unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
+                    total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
+                }))
+            });
+
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to load order details');
+            if (err.response?.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        const fetchOrderDetails = async () => {
-            try {
-                const response = await api.getOrderDetails(id);
-                console.log('Order details response:', response.data);
-
-                let orderData = response.data;
-                if (Array.isArray(response.data)) {
-                    orderData = response.data[0];
-                } else if (response.data.data) {
-                    orderData = response.data.data;
-                }
-
-                if (!orderData) {
-                    throw new Error('Order data not found');
-                }
-
-                const enhancedOrder = {
-                    ...orderData,
-                    order_items: orderData.order_items?.map(item => ({
-                        ...item,
-                        unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
-                        total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
-                    }))
-                };
-
-                setOrder(enhancedOrder);
-                setError(null);
-            } catch (err) {
-                console.error('Error fetching order:', err);
-                if (err.response?.status === 401) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    navigate('/login', { state: { from: `/orders/${id}` } });
-                }
-                setError(err.response?.data?.message || err.message || 'Failed to load order details');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        fetchOrderDetails();
-    }, [id, navigate]);
+        fetchOrderAndPayment();
+    }, [id]);
 
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
@@ -102,7 +126,6 @@ const OrderDetailsPage = () => {
             setProcessing(true);
             await api.cancelOrder(id);
 
-            // Update order status locally
             setOrder(prevOrder => ({
                 ...prevOrder,
                 status: 'cancelled'
@@ -128,36 +151,8 @@ const OrderDetailsPage = () => {
     };
 
     const handlePayment = async () => {
-        try {
-            setPaymentProcessing(true);
-            const response = await api.processPayment(id);
-            
-            await Swal.fire(
-                'Payment Successful!',
-                'Your payment has been processed successfully.',
-                'success'
-            );
-
-            const orderResponse = await api.getOrderDetails(id);
-            let orderData = orderResponse.data;
-            if (Array.isArray(orderResponse.data)) {
-                orderData = orderResponse.data[0];
-            } else if (orderResponse.data.data) {
-                orderData = orderResponse.data.data;
-            }
-
-            setOrder(orderData);
-            navigate(`/orders/${id}`);
-        } catch (err) {
-            console.error('Error processing payment:', err);
-            Swal.fire(
-                'Payment Failed',
-                err.response?.data?.message || 'There was an error processing your payment.',
-                'error'
-            );
-        } finally {
-            setPaymentProcessing(false);
-        }
+        setPaymentAttempted(true);
+        navigate(`/payment/${id}`);
     };
 
     const getStatusIcon = (status) => {
@@ -220,6 +215,43 @@ const OrderDetailsPage = () => {
         }
     };
 
+    const getPaymentStatusBadge = () => {
+        if (!payment) {
+            return (
+                <Badge bg="secondary" className="custom-badge">
+                    <Clock size={16} className="me-1" /> Not Paid
+                </Badge>
+            );
+        }
+
+        switch (payment.status) {
+            case 'paid':
+                return (
+                    <Badge bg="success" className="custom-badge">
+                        <CheckCircle size={16} className="me-1" /> Paid
+                    </Badge>
+                );
+            case 'pending':
+                return (
+                    <Badge bg="warning" text="dark" className="custom-badge">
+                        <Clock size={16} className="me-1" /> Pending
+                    </Badge>
+                );
+            case 'failed':
+                return (
+                    <Badge bg="danger" className="custom-badge">
+                        <XCircle size={16} className="me-1" /> Failed
+                    </Badge>
+                );
+            default:
+                return (
+                    <Badge bg="secondary" className="custom-badge">
+                        <Clock size={16} className="me-1" /> Not Paid
+                    </Badge>
+                );
+        }
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         try {
@@ -244,6 +276,14 @@ const OrderDetailsPage = () => {
     const getItemPrice = (item) => {
         return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
     };
+
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isClient = user?.id === order?.client_id;
+    const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
+        !paymentCompleted &&
+        (!payment || payment.status !== 'paid') &&
+        isClient;
 
     if (loading) {
         return (
@@ -329,11 +369,6 @@ const OrderDetailsPage = () => {
         );
     }
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    const isClient = user?.id === order.client_id;
-    const canCancel = ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
-    const canPay = ['accepted'].includes(order.status?.toLowerCase());
-
     return (
         <>
             <Navbar />
@@ -378,8 +413,13 @@ const OrderDetailsPage = () => {
                             <Col md={6} className="text-md-end">
                                 <div className="d-flex flex-column">
                                     <div className="mb-2">
-                                        <strong>Payment Method:</strong> {order.payment_method || 'N/A'}
+                                        <strong>Payment Status: </strong>
+                                        {getPaymentStatusBadge()}
                                     </div>
+                                    <div className="mb-2">
+                                        <strong>Payment Method:</strong> {order.payment_method || 'Not Specified'}
+                                    </div>
+
                                     <div className="fs-5 fw-bold">
                                         <strong>Total:</strong> {formatPrice(order.total_price)} EGP
                                     </div>
@@ -426,11 +466,15 @@ const OrderDetailsPage = () => {
                                                 >
                                                     <div className="d-flex align-items-center">
                                                         <img
-                                                            src={item.book?.images?.[0] || 'https://via.placeholder.com/80'}
+                                                            src={getBookImage(item.book?.images)}
                                                             alt={item.book?.title}
                                                             width="60"
                                                             height="80"
                                                             className="me-3 object-fit-cover rounded"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = 'https://via.placeholder.com/300x450';
+                                                            }}
                                                         />
                                                         <div>
                                                             <div className="fw-bold">{item.book?.title || 'N/A'}</div>
@@ -475,24 +519,33 @@ const OrderDetailsPage = () => {
                                         </Button>
                                     )}
                                     {canPay && (
-                                        <Button
-                                            variant="success"
-                                            onClick={handlePayment}
-                                            disabled={paymentProcessing}
-                                            className="px-4 py-2"
-                                        >
-                                            {paymentProcessing ? (
-                                                <>
-                                                    <Spinner animation="border" size="sm" className="me-2" />
-                                                    Processing...
-                                                </>
-                                            ) : (
-                                                <>
-                                                    <CreditCard size={18} className="me-2" />
-                                                    Pay Now
-                                                </>
-                                            )}
-                                        </Button>
+                                        paymentCompleted || payment?.status === 'paid' ? (
+                                            <Button variant="success" className="px-4 py-2" disabled>
+                                                <CheckCircle size={18} className="me-2" />
+                                                Payment Completed
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                variant="success"
+                                                onClick={handlePayment}
+                                                disabled={processing || paymentAttempted}
+                                                className="px-4 py-2"
+                                            >
+                                                {processing ? (
+                                                    <>
+                                                        <Spinner animation="border" size="sm" className="me-2" />
+                                                        Processing...
+                                                    </>
+                                                ) : paymentAttempted ? (
+                                                    'Payment in progress'
+                                                ) : (
+                                                    <>
+                                                        <CreditCard size={18} className="me-2" />
+                                                        Pay Now
+                                                    </>
+                                                )}
+                                            </Button>
+                                        )
                                     )}
                                 </Col>
                             </Row>

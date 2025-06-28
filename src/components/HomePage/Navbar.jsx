@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
+import "../../style/Notifications.css";
 import {
   FaSearch,
   FaShoppingCart,
@@ -29,40 +30,40 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
 
-  // Define all required functions
   const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
   const toggleMobileMenu = () => setIsOpen(!isOpen);
   const closeMobileMenu = () => setIsOpen(false);
 
   const { cartCount } = useCart(user?.id);
   const { wishlistCount } = useWishlist(user?.id);
-  const { orders } = useOrders(user?.id);
+  const { orders, fetchOrders } = useOrders(user?.id);
   const ordersCount = orders.length;
 
   const isLibraryOwner = user?.role === "owner";
-  const { t, language } = useTranslation();
+  const { t } = useTranslation();
   const [showClientNotifications, setShowClientNotifications] = useState(false);
-const regularNavLinks = [
-  { to: "/", label: "home", icon: null },
-  { to: "/about", label: "about", icon: null },
-  { to: "/categories", label: "categories", icon: null }, // تأكد من وجود هذا السطر
-  { to: "/books", label: "books", icon: null },
-  { to: "/contact", label: "contact", icon: null },
-];
 
-const ownerNavLinks = [
-  { to: "/dashboard", label: "dashboard", icon: FaTachometerAlt },
-  { to: "/categories", label: "categories", icon: null }, // أضف هذا السطر
-  { to: "/edit-profile", label: "editProfile", icon: FaUserEdit },
-  { to: "/add-book", label: "addBook", icon: FaBook },
-  { to: "/libraries", label: "allLibraries", icon: null },
-  { to: "/all-orders", label: "orders", icon: FaBoxOpen },
-];
+  const regularNavLinks = [
+    { to: "/", label: "home" },
+    { to: "/about", label: "about" },
+    { to: "/categories", label: "categories" },
+    { to: "/books", label: "books" },
+    { to: "/contact", label: "contact" },
+  ];
+
+  const ownerNavLinks = [
+    { to: "/dashboard", label: "dashboard", icon: FaTachometerAlt },
+    { to: "/categories", label: "categories" },
+    { to: "/edit-profile", label: "editProfile", icon: FaUserEdit },
+    { to: "/add-book", label: "addBook", icon: FaBook },
+    { to: "/libraries", label: "allLibraries" },
+    { to: "/all-orders", label: "orders", icon: FaBoxOpen },
+  ];
 
   const adminNavLinks = [
     { to: "/admin/dashboard", label: "adminDashboard", icon: FaTachometerAlt },
-    { to: "/admin/users", label: "users", icon: null },
-    { to: "/admin/categories", label: "categories", icon: null },
+    { to: "/admin/users", label: "users" },
+    { to: "/admin/categories", label: "categories" },
     { to: "/admin/books", label: "books", icon: FaBook },
     { to: "/admin/orders", label: "orders", icon: FaBoxOpen },
   ];
@@ -72,6 +73,11 @@ const ownerNavLinks = [
     : isLibraryOwner
       ? ownerNavLinks
       : regularNavLinks;
+
+  const [readNotifications, setReadNotifications] = useState(() => {
+    const stored = localStorage.getItem('readNotifications');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -85,6 +91,23 @@ const ownerNavLinks = [
     } else {
       setUser(null);
     }
+  }, []);
+
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('readNotifications');
+      if (stored) {
+        setReadNotifications(JSON.parse(stored));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    window.addEventListener('notificationRead', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('notificationRead', handleStorageChange);
+    };
   }, []);
 
   const handleLogout = () => {
@@ -108,6 +131,27 @@ const ownerNavLinks = [
       .filter(order => order.status === 'accepted' || order.status === 'rejected')
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }, [user, orders]);
+
+  const unreadNotifications = useMemo(() => {
+    if (!user || user.role !== 'client' || !orders) return [];
+    return clientOrderNotifications.filter(n => !readNotifications.includes(n.id));
+  }, [user, orders, clientOrderNotifications, readNotifications]);
+
+  const handleShowNotifications = async () => {
+    if (!showClientNotifications) {
+      await fetchOrders();
+    }
+    setShowClientNotifications(v => !v);
+  };
+
+  const handleNotificationView = (orderId) => {
+    const updated = [...readNotifications, orderId];
+    setReadNotifications(updated);
+    localStorage.setItem('readNotifications', JSON.stringify(updated));
+    window.dispatchEvent(new CustomEvent('notificationRead', {
+      detail: { orderId: orderId }
+    }));
+  };
 
   return (
     <>
@@ -174,33 +218,53 @@ const ownerNavLinks = [
                     <button
                       className="icon-button client-notification-btn"
                       title={t('notifications')}
-                      onClick={() => setShowClientNotifications(v => !v)}
+                      onClick={handleShowNotifications}
                     >
                       <FaBell size={20} />
-                      {clientOrderNotifications.length > 0 && (
-                        <span className="client-notification-badge">{clientOrderNotifications.length}</span>
+                      {unreadNotifications.length > 0 && (
+                        <span className="client-notification-badge">{unreadNotifications.length}</span>
                       )}
                     </button>
                     {showClientNotifications && (
                       <div className="client-notification-dropdown">
                         <h4>Order Updates</h4>
-                        {clientOrderNotifications.length === 0 ? (
-                          <div className="no-notifications">No notifications</div>
-                        ) : (
-                          clientOrderNotifications.slice(0, 8).map(order => (
-                            <div key={order.id} className="client-notification-item">
-                              <span className="client-notification-message">
-                                Your order for <b>"{order.order_items?.[0]?.book?.title || 'a book'}"</b> was
-                                <span className={order.status === 'accepted' ? 'notif-accepted' : 'notif-rejected'}>
-                                  {order.status === 'accepted' ? ' accepted' : ' rejected'}
-                                </span>
-                              </span>
-                              <div className="client-notification-meta">
-                                <small>{new Date(order.updated_at).toLocaleString()}</small>
-                                <Link to={`/orders/${order.id}`} className="client-notification-link-btn">View</Link>
+                        <div className="client-notifications-scroll-container">
+                          {unreadNotifications.length === 0 ? (
+                            <div className="no-notifications">No notifications</div>
+                          ) : (
+                            unreadNotifications.slice(0, 2).map(order => (
+                              <div key={order.id} className="client-notification-item">
+                                <div className="client-notification-row">
+                                  <span className="client-notif-icon">
+                                    {order.status === 'accepted' ? '✅' : '❌'}
+                                  </span>
+                                  <span className="client-notification-message">
+                                    Your order for <span className="client-notif-book">"{order.order_items?.[0]?.book?.title || 'a book'}"</span> was
+                                    <span className={order.status === 'accepted' ? 'notif-accepted' : 'notif-rejected'}>
+                                      {order.status === 'accepted' ? ' accepted' : ' rejected'}
+                                    </span>
+                                  </span>
+                                </div>
+                                <div className="client-notification-meta">
+                                  <small>{new Date(order.updated_at).toLocaleString()}</small>
+                                  <Link
+                                    to={`/orders/${order.id}`}
+                                    className="client-notification-link-btn"
+                                    onClick={() => handleNotificationView(order.id)}
+                                  >
+                                    View
+                                  </Link>
+                                </div>
                               </div>
-                            </div>
-                          ))
+                            ))
+                          )}
+                        </div>
+                        {unreadNotifications.length > 2 && (
+                          <div className="client-view-all-notifications">
+                            <Link to="/client-notifications" className="client-view-all-link">
+                              View All Notifications ({unreadNotifications.length})
+                            </Link>
+                          </div>
                         )}
                       </div>
                     )}
@@ -450,6 +514,14 @@ const ownerNavLinks = [
                   onClick={closeMobileMenu}
                 >
                   {t('orders')} ({ordersCount})
+                </Link>
+                <Link
+                  to="/client-notifications"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                >
+                  <FaBell size={16} style={{ marginRight: "0.5rem" }} />
+                  Notifications ({unreadNotifications.length})
                 </Link>
               </>
             ) : (

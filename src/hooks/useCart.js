@@ -33,6 +33,48 @@ export const useCart = (userId) => {
         }
     };
 
+    const addToCart = async (bookId, data = {}) => {
+        try {
+            const payload = {
+                type: data.type ?? 'buy',
+            };
+
+            await api.addToCart(bookId, payload);
+            await fetchCartItems();
+            return true;
+        } catch (error) {
+            console.error("Error adding to cart:", error);
+            throw error;
+        }
+    };
+    
+
+    const removeFromCart = async (bookId) => {
+        try {
+            const cartItem = cartItems.find(item => item.book_id === bookId);
+            if (cartItem) {
+                await api.removeCartItem(cartItem.id);
+                await fetchCartItems();
+            }
+            return true;
+        } catch (error) {
+            console.error("Error removing from cart:", error);
+            throw error;
+        }
+    };
+
+    const checkCartStatus = async (bookId) => {
+        try {
+            const response = await api.getCart();
+            const isInCart = response.data.some(item => item.book_id === bookId);
+            return isInCart;
+        } catch (error) {
+            console.error("Error checking cart status:", error);
+            return false;
+        }
+    };
+
+
     useEffect(() => {
         fetchCartItems();
     }, [userId]);
@@ -47,6 +89,9 @@ export const useCart = (userId) => {
         loading,
         error,
         fetchCartItems,
+        addToCart,
+        removeFromCart,
+        checkCartStatus,
         setCartItems
     };
 };

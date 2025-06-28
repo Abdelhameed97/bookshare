@@ -1,5 +1,5 @@
 import Swal from 'sweetalert2';
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     Container,
     Row,
@@ -21,8 +21,9 @@ import {
     ShoppingCart,
     Plus,
     Minus,
-    CheckCircle,
-    AlertCircle
+    AlertCircle,
+    CreditCard,
+    Wallet
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
@@ -34,10 +35,22 @@ import Footer from "../components/HomePage/Footer.jsx";
 import { useCart } from '../hooks/useCart';
 
 const CartPage = () => {
+    const getBookImage = (images) => {
+        if (!images || images.length === 0) {
+            return 'https://via.placeholder.com/300x450';
+        }
+
+        const firstImage = images[0];
+        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
+            return firstImage;
+        }
+
+        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
+    };
+
     const user = JSON.parse(localStorage.getItem('user'));
     const {
         cartItems,
-        cartCount,
         loading,
         error,
         fetchCartItems,
@@ -51,7 +64,15 @@ const CartPage = () => {
     const [couponCode, setCouponCode] = useState('');
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
     const navigate = useNavigate();
+
+    const paymentMethods = [
+        { id: '', label: 'Select Payment Method', icon: null },
+        { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
+        { id: 'cash', label: 'Cash on Delivery', icon: <Wallet size={20} className="me-2" /> },
+        { id: 'paypal', label: 'PayPal', icon: <CreditCard size={20} className="me-2" /> },
+    ];
 
     const subtotal = cartItems.reduce((sum, item) => {
         const price = item.type === 'rent' ?
@@ -107,7 +128,7 @@ const CartPage = () => {
     };
 
     const handleQuantityChange = async (itemId, newQuantity) => {
-        const parsedQuantity = Number.parseInt(newQuantity, 10);
+        const parsedQuantity = parseInt(newQuantity, 10);
 
         if (isNaN(parsedQuantity) || parsedQuantity < 1) {
             await Swal.fire({
@@ -239,9 +260,18 @@ const CartPage = () => {
             return;
         }
 
+        if (!selectedPaymentMethod) {
+            await Swal.fire({
+                icon: 'error',
+                title: 'Payment Method Required',
+                text: 'Please select a payment method before proceeding',
+            });
+            return;
+        }
+
         const result = await Swal.fire({
-            title: 'Would Buy Now?',
-            text: 'You will be redirected to order Books',
+            title: 'Proceed to Checkout?',
+            text: 'You will be redirected to complete your order',
             icon: 'question',
             showCancelButton: true,
             confirmButtonColor: '#28a745',
@@ -265,12 +295,11 @@ const CartPage = () => {
                 discount: parseFloat(discount.toFixed(2)),
                 shipping: parseFloat(shippingFee.toFixed(2)),
                 total: parseFloat(total.toFixed(2)),
-                coupon_code: appliedCoupon?.code || null
+                coupon_code: appliedCoupon?.code || null,
+                payment_method: selectedPaymentMethod 
             };
 
             const response = await api.createOrder(orderData);
-            console.log("Order response:", response.data);
-
             const orderList = response.data?.data;
             const orderId = Array.isArray(orderList) && orderList.length > 0 ? orderList[0].id : null;
 
@@ -278,7 +307,6 @@ const CartPage = () => {
                 throw new Error("Order ID not found in response");
             }
 
-            // Clear the cart after successful order creation
             try {
                 await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
                 setCartItems([]);
@@ -314,6 +342,7 @@ const CartPage = () => {
             </div>
         );
     }
+
     if (error) {
         return (
             <>
@@ -349,7 +378,6 @@ const CartPage = () => {
     return (
         <>
             <Navbar />
-
             <Container className="cart-container py-5">
                 {showAlert && (
                     <Alert
@@ -365,13 +393,13 @@ const CartPage = () => {
                 <div className="d-flex align-items-center mb-4">
                     <CustomButton
                         variant="outline-primary"
-                        className="me-3"
+                        className="me-3 back-btn"
                         onClick={() => navigate(-1)}
                     >
                         <ChevronLeft size={20} className="me-1" />
                         Back
                     </CustomButton>
-                    <Title>Shopping Cart <Badge bg="primary" className="ms-2">{cartItems.length}</Badge></Title>
+                    <Title className="page-title">Shopping Cart <Badge bg="primary" className="ms-2">{cartItems.length}</Badge></Title>
                 </div>
 
                 <Row>
@@ -379,7 +407,7 @@ const CartPage = () => {
                         <Card className="mb-4 cart-card">
                             <Card.Body>
                                 {cartItems.length === 0 ? (
-                                    <div className="text-center py-4">
+                                    <div className="text-center py-4 empty-cart">
                                         <ShoppingCart size={48} className="text-muted mb-3" />
                                         <h4>Your cart is empty</h4>
                                         <p className="text-muted mb-3">
@@ -388,6 +416,7 @@ const CartPage = () => {
                                         <CustomButton
                                             variant="primary"
                                             onClick={() => navigate('/books')}
+                                            className="browse-btn"
                                         >
                                             Browse Books
                                         </CustomButton>
@@ -411,9 +440,13 @@ const CartPage = () => {
                                                         <td>
                                                             <div className="d-flex align-items-center">
                                                                 <img
-                                                                    src={item.book?.images?.[0] || 'https://via.placeholder.com/80x120'}
+                                                                    src={getBookImage(item.book.images)}
                                                                     alt={item.book?.title}
                                                                     className="book-cover me-3"
+                                                                    onError={(e) => {
+                                                                        e.target.onerror = null;
+                                                                        e.target.src = 'https://via.placeholder.com/300x450';
+                                                                    }}
                                                                 />
                                                                 <div>
                                                                     <h6 className="mb-1">{item.book?.title}</h6>
@@ -424,25 +457,27 @@ const CartPage = () => {
                                                         <td className="align-middle">
                                                             <Dropdown>
                                                                 <Dropdown.Toggle
-                                                                    variant={item.type === 'rent' ? 'warning' : 'success'}
+                                                                    variant={(item.type ?? 'buy') === 'rent' ? 'warning' : 'success'}
                                                                     size="sm"
                                                                     id="dropdown-type"
-                                                                    disabled={!item.book?.rental_price}
+                                                                    disabled={!item.book?.rental_price && (item.type ?? 'buy') === 'rent'}
+                                                                    className="type-toggle"
                                                                 >
-                                                                    {item.type === 'rent' ? 'Rent' : 'Buy'}
+                                                                    {(item.type ?? 'buy') === 'rent' ? 'Rent' : 'Buy'}
                                                                 </Dropdown.Toggle>
-
                                                                 <Dropdown.Menu>
                                                                     <Dropdown.Item
                                                                         onClick={() => handleChangeType(item.id, 'buy')}
-                                                                        active={item.type === 'buy'}
+                                                                        active={(item.type ?? 'buy') !== 'rent'}
+                                                                        className={(item.type ?? 'buy') !== 'rent' ? 'fw-bold' : ''}
                                                                     >
                                                                         Buy
                                                                     </Dropdown.Item>
                                                                     <Dropdown.Item
                                                                         onClick={() => handleChangeType(item.id, 'rent')}
-                                                                        active={item.type === 'rent'}
+                                                                        active={(item.type ?? 'buy') === 'rent'}
                                                                         disabled={!item.book?.rental_price}
+                                                                        className={(item.type ?? 'buy') === 'rent' ? 'fw-bold' : ''}
                                                                     >
                                                                         Rent
                                                                     </Dropdown.Item>
@@ -483,12 +518,12 @@ const CartPage = () => {
                                                                 </CustomButton>
                                                             </div>
                                                         </td>
-                                                        <td className="align-middle">
+                                                        <td className="align-middle price">
                                                             {item.type === 'rent' ?
                                                                 (parseFloat(item.book?.rental_price || item.book?.price || 0).toFixed(2)) :
                                                                 parseFloat(item.book?.price || 0).toFixed(2)} EGP
                                                         </td>
-                                                        <td className="align-middle">
+                                                        <td className="align-middle price">
                                                             {(item.type === 'rent' ?
                                                                 (parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity) :
                                                                 parseFloat(item.book?.price || 0) * item.quantity).toFixed(2)} EGP
@@ -508,10 +543,11 @@ const CartPage = () => {
                                             </tbody>
                                         </Table>
 
-                                        <div className="d-flex justify-content-between mt-4">
+                                        <div className="d-flex justify-content-between mt-4 cart-actions">
                                             <CustomButton
                                                 variant="outline-primary"
                                                 onClick={() => navigate('/books')}
+                                                className="continue-btn"
                                             >
                                                 <ChevronLeft size={18} className="me-1" />
                                                 Continue Shopping
@@ -519,6 +555,7 @@ const CartPage = () => {
                                             <CustomButton
                                                 variant="danger"
                                                 onClick={handleClearCart}
+                                                className="clear-btn"
                                             >
                                                 Clear Cart
                                             </CustomButton>
@@ -551,17 +588,17 @@ const CartPage = () => {
                     </Col>
 
                     <Col lg={4}>
-                        <Card className="summary-card sticky-top">
+                        <Card className="summary-card">
                             <Card.Body>
                                 <h5 className="summary-title mb-3">Order Summary</h5>
 
                                 <div className="cart-items-summary mb-3">
                                     {cartItems.map(item => (
-                                        <div key={item.id} className="d-flex justify-content-between mb-2 small">
+                                        <div key={item.id} className="d-flex justify-content-between mb-2 small summary-item">
                                             <span className="text-muted">
                                                 {item.book?.title} ({item.type}) × {item.quantity}
                                             </span>
-                                            <span>
+                                            <span className="price">
                                                 {(
                                                     item.type === 'rent'
                                                         ? parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity
@@ -572,26 +609,25 @@ const CartPage = () => {
                                     ))}
                                 </div>
 
-
-                                <div className="d-flex justify-content-between mb-2">
+                                <div className="d-flex justify-content-between mb-2 summary-item">
                                     <span>Subtotal:</span>
-                                    <span>{subtotal.toFixed(2)} EGP</span>
+                                    <span className="price">{subtotal.toFixed(2)} EGP</span>
                                 </div>
 
                                 {appliedCoupon ? (
-                                    <div className="d-flex justify-content-between mb-2 text-success">
+                                    <div className="d-flex justify-content-between mb-2 text-success summary-item">
                                         <span>
                                             Discount ({appliedCoupon.code})
                                             <Button
                                                 variant="link"
                                                 size="sm"
-                                                className="p-0 ms-2 text-danger"
+                                                className="p-0 ms-2 text-danger remove-coupon-btn"
                                                 onClick={removeCoupon}
                                             >
                                                 Remove
                                             </Button>
                                         </span>
-                                        <span>-{discount.toFixed(2)} EGP</span>
+                                        <span className="price">-{discount.toFixed(2)} EGP</span>
                                     </div>
                                 ) : (
                                     <div className="coupon-section mb-3">
@@ -602,12 +638,14 @@ const CartPage = () => {
                                                 value={couponCode}
                                                 onChange={(e) => setCouponCode(e.target.value)}
                                                 size="sm"
+                                                className="coupon-input"
                                             />
                                             <Button
                                                 variant="outline-secondary"
                                                 onClick={applyCoupon}
                                                 disabled={isApplyingCoupon || !couponCode.trim()}
                                                 size="sm"
+                                                className="apply-btn"
                                             >
                                                 {isApplyingCoupon ? 'Applying...' : 'Apply'}
                                             </Button>
@@ -615,9 +653,9 @@ const CartPage = () => {
                                     </div>
                                 )}
 
-                                <div className="d-flex justify-content-between mb-2">
+                                <div className="d-flex justify-content-between mb-2 summary-item">
                                     <span>Shipping:</span>
-                                    <span className={shippingFee === 0 ? 'text-success' : ''}>
+                                    <span className={shippingFee === 0 ? 'text-success price' : 'price'}>
                                         {shippingFee === 0 ? 'FREE' : `${shippingFee.toFixed(2)} EGP`}
                                     </span>
                                 </div>
@@ -629,21 +667,37 @@ const CartPage = () => {
                                     <strong className="total-price">{total.toFixed(2)} EGP</strong>
                                 </div>
 
+                                <div className="payment-methods mb-4">
+                                    <Form.Group>
+                                        <Form.Label className="fw-bold">Payment Method</Form.Label>
+                                        <Form.Select
+                                            value={selectedPaymentMethod || ''}
+                                            onChange={(e) => setSelectedPaymentMethod(e.target.value || null)}
+                                            className="payment-select"
+                                        >
+                                            {paymentMethods.map(method => (
+                                                <option key={method.id} value={method.id}>
+                                                    {method.label}
+                                                </option>
+                                            ))}
+                                        </Form.Select>
+                                    </Form.Group>
+                                </div>
+
                                 <CustomButton
                                     variant="primary"
                                     className="w-100 checkout-btn mb-3"
                                     onClick={handleOrderNow}
-                                    disabled={cartItems.length === 0}
+                                    disabled={cartItems.length === 0 || !selectedPaymentMethod}
                                 >
-                                    Order Now
+                                    {cartItems.length === 0 ? 'Cart is Empty' :
+                                        !selectedPaymentMethod ? 'Select Payment Method' : 'Place Order'}
                                 </CustomButton>
-
                             </Card.Body>
                         </Card>
                     </Col>
                 </Row>
             </Container>
-
             <Footer />
         </>
     );

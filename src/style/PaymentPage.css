@@ -1,13 +1,104 @@
 .payment-container {
     max-width: 1200px;
     margin: 0 auto;
+    position: relative;
+    z-index: 1;
 }
 
-.payment-card,
+.payment-card {
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+    border: none;
+    position: relative;
+    z-index: 1;
+    transition: all 0.3s ease;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+}
+
 .order-summary-card {
     border-radius: 10px;
     box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
     border: none;
+    position: sticky;
+    top: 20px;
+    z-index: 1;
+    max-height: calc(100vh - 100px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    background-color: #f9f9f9;
+}
+
+.order-summary-card .card-body {
+    overflow-y: auto;
+    flex: 1;
+    padding: 1.25rem;
+    scroll-behavior: smooth;
+}
+
+.order-summary-card .list-group-item {
+    transition: all 0.3s ease;
+    border-left: 0;
+    border-right: 0;
+    animation: slideIn 0.3s ease forwards;
+    opacity: 0;
+}
+
+.order-summary-card .list-group-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.order-summary-card .list-group-item:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.order-summary-card .list-group-item:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.order-summary-card .list-group-item:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.order-summary-card .list-group-item:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.order-summary-card .list-group-item:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.order-summary-card ::-webkit-scrollbar {
+    width: 6px;
+}
+
+.order-summary-card ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.order-summary-card ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.order-summary-card ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
 }
 
 .payment-card .payment-methods {
@@ -44,57 +135,10 @@
     border-radius: 8px;
 }
 
-.payment-card .bank-details {
-    background-color: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-}
-
-.payment-card .bank-details p {
-    margin-bottom: 8px;
-}
-
-.payment-card .payment-security {
-    background-color: #f0f7ff;
-    padding: 15px;
-    border-radius: 8px;
-}
-
 .payment-btn {
     padding: 12px;
     font-weight: 600;
     font-size: 1.1rem;
-}
-
-.order-summary-card {
-    background-color: #f9f9f9;
-}
-
-.order-summary-card .order-item {
-    padding-bottom: 15px;
-    border-bottom: 1px solid #eee;
-}
-
-.order-summary-card .order-item:last-child {
-    border-bottom: none;
-    padding-bottom: 0;
-}
-
-.order-summary-card .item-image {
-    width: 60px;
-    height: 90px;
-    object-fit: cover;
-    border-radius: 4px;
-}
-
-.order-summary-card .item-price {
-    font-weight: 600;
-    color: #0d6efd;
-}
-
-.order-summary-card .payment-logo {
-    height: 30px;
-    margin-bottom: 15px;
 }
 
 .total-summary {
@@ -132,14 +176,26 @@
     gap: 0.5rem;
 }
 
+.payment-card .table {
+    margin-bottom: 0;
+}
+
 .payment-card .table th {
     background-color: #f8f9fa;
     font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 10;
 }
 
 .payment-card .table td,
 .payment-card .table th {
     vertical-align: middle;
+    transition: background-color 0.2s ease;
+}
+
+.payment-card .table tr:hover td {
+    background-color: #f8f9fa;
 }
 
 .payment-card .badge {
@@ -148,8 +204,83 @@
     padding: 0.5rem;
     font-size: 0.875rem;
     font-weight: 500;
+    transition: transform 0.2s ease;
+}
+
+.payment-card .badge:hover {
+    transform: scale(1.05);
 }
 
 .payment-card .badge svg {
     margin-right: 0.25rem;
+}
+
+.payment-card ::-webkit-scrollbar {
+    width: 8px;
+}
+
+.payment-card ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+.payment-card ::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 10px;
+}
+
+.payment-card ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.payment-card tbody tr {
+    animation: fadeIn 0.3s ease forwards;
+    opacity: 0;
+}
+
+.payment-card tbody tr:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.payment-card tbody tr:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.payment-card tbody tr:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.payment-card tbody tr:nth-child(4) {
+    animation-delay: 0.4s;
+}
+
+.payment-card tbody tr:nth-child(5) {
+    animation-delay: 0.5s;
+}
+
+.payment-card tbody tr:nth-child(6) {
+    animation-delay: 0.6s;
+}
+
+.payment-method.disabled-method {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.payment-method.disabled-method:hover {
+    background-color: transparent;
+    border-color: #dee2e6;
 }

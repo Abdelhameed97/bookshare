@@ -1,77 +1,77 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react"
-import {
-    BookOpen,
-    Users,
-    DollarSign,
-    TrendingUp,
-    Plus,
-    Edit,
-    Eye,
-    Trash2,
-    Search,
-    Filter,
-    Calendar,
-    Star,
-    RefreshCw,
-    Upload,
-    Settings,
-    Bell,
-    TrendingDown,
-    Activity,
-    User,
-} from "lucide-react"
-import { Link, useNavigate, useLocation } from "react-router-dom"
-import apiService from "../../services/api"
-import Swal from "sweetalert2"
-import "./Dashboard.css"
-import Navbar from "../HomePage/Navbar"
-import Footer from "../HomePage/Footer"
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { 
+  BookOpen, 
+  Users, 
+  DollarSign, 
+  TrendingUp, 
+  Plus, 
+  Edit, 
+  Eye, 
+  Trash2,
+  Search,
+  Filter,
+  Calendar,
+  Star,
+  RefreshCw,
+  Upload,
+  Settings,
+  Bell,
+  TrendingDown,
+  Activity,
+  User
+} from 'lucide-react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
+import apiService from '../../services/api';
+import Swal from 'sweetalert2';
+import './Dashboard.css';
+import Navbar from '../HomePage/Navbar';
+import Footer from '../HomePage/Footer';
 
 const Dashboard = () => {
-    const [stats, setStats] = useState({
-        totalBooks: 0,
-        totalOrders: 0,
-        totalRevenue: 0,
-        totalCustomers: 0,
-        monthlyRevenue: 0,
-        weeklyOrders: 0,
-        availableBooks: 0,
-        rentedBooks: 0,
-        soldBooks: 0,
-        booksByCategory: {},
-    })
-    const [recentBooks, setRecentBooks] = useState([])
-    const [recentOrders, setRecentOrders] = useState([])
-    const [allBooks, setAllBooks] = useState([])
-    const [allOrders, setAllOrders] = useState([])
-    const [loading, setLoading] = useState(true)
-    const [refreshing, setRefreshing] = useState(false)
-    const [searchTerm, setSearchTerm] = useState("")
-    const [filterStatus, setFilterStatus] = useState("all")
-    const [filterCategory, setFilterCategory] = useState("all")
-    const [sortBy, setSortBy] = useState("date")
-    const [sortOrder, setSortOrder] = useState("desc")
-    const [selectedTimeRange, setSelectedTimeRange] = useState("all")
-    const [notifications, setNotifications] = useState([])
-    const [showNotifications, setShowNotifications] = useState(false)
-    const [currentPage, setCurrentPage] = useState(1)
-    const booksPerPage = 6
-
-    const navigate = useNavigate()
-    const location = useLocation()
-
-    // Memoize currentUser to prevent unnecessary re-renders
-    const currentUser = useMemo(() => {
-        const storedUser = localStorage.getItem("user")
-        if (storedUser) {
-            try {
-                return JSON.parse(storedUser)
-            } catch {
-                return null
-            }
-        }
-        return null
-    }, [])
+  const [stats, setStats] = useState({
+    totalBooks: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalCustomers: 0,
+    monthlyRevenue: 0,
+    weeklyOrders: 0,
+    availableBooks: 0,
+    rentedBooks: 0,
+    soldBooks: 0,
+    booksByCategory: {}
+  });
+  const [recentBooks, setRecentBooks] = useState([]);
+  const [recentOrders, setRecentOrders] = useState([]);
+  const [allBooks, setAllBooks] = useState([]);
+  const [allOrders, setAllOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterCategory, setFilterCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('date');
+  const [sortOrder, setSortOrder] = useState('desc');
+  const [selectedTimeRange, setSelectedTimeRange] = useState('all');
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 6;
+  
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Memoize currentUser to prevent unnecessary re-renders
+  const currentUser = useMemo(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        return JSON.parse(storedUser);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  }, []);
 
     // Memoized filtered and sorted books
     const filteredBooks = useMemo(() => {
@@ -150,44 +150,32 @@ const Dashboard = () => {
         setCurrentPage(1)
     }, [searchTerm, filterStatus, filterCategory, sortBy, sortOrder])
 
-    // Memoized filtered orders
-    const filteredOrders = useMemo(() => {
-        let filtered = allOrders.filter(order =>
-            order.order_items.some(item =>
-                allBooks.some(
-                    book =>
-                        book.id === item.book_id &&
-                        book.user_id === currentUser?.id
-                )
-            )
-        )
-
-        if (selectedTimeRange !== "all") {
-            const now = new Date()
-            const timeRanges = {
-                today: new Date(
-                    now.getFullYear(),
-                    now.getMonth(),
-                    now.getDate()
-                ),
-                week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-                month: new Date(now.getFullYear(), now.getMonth(), 1),
-                year: new Date(now.getFullYear(), 0, 1),
-            }
-
-            if (timeRanges[selectedTimeRange]) {
-                filtered = filtered.filter(
-                    order =>
-                        new Date(order.created_at) >=
-                        timeRanges[selectedTimeRange]
-                )
-            }
-        }
-
-        return filtered.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
-        )
-    }, [allOrders, allBooks, currentUser, selectedTimeRange])
+  // Memoized filtered orders
+  const filteredOrders = useMemo(() => {
+    let filtered = allOrders.filter(order => 
+      order.order_items.some(item => 
+        allBooks.some(book => book.id === item.book_id && book.user_id === currentUser?.id)
+      )
+    );
+    
+    if (selectedTimeRange !== 'all') {
+      const now = new Date();
+      const timeRanges = {
+        today: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+        week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
+        month: new Date(now.getFullYear(), now.getMonth(), 1),
+        year: new Date(now.getFullYear(), 0, 1)
+      };
+      
+      if (timeRanges[selectedTimeRange]) {
+        filtered = filtered.filter(order => 
+          new Date(order.created_at) >= timeRanges[selectedTimeRange]
+        );
+      }
+    }
+    
+    return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  }, [allOrders, allBooks, currentUser, selectedTimeRange]);
 
     // Get only pending orders for this library's books
     const pendingOrders = useMemo(
@@ -195,69 +183,52 @@ const Dashboard = () => {
         [allOrders]
     )
 
-    const fetchDashboardData = useCallback(async () => {
-        if (!currentUser) return
+  const fetchDashboardData = useCallback(async () => {
+    if (!currentUser) return;
+    
+    try {
+      setLoading(true);
+      console.log('Fetching dashboard data for user:', currentUser.id);
+      
+      // Fetch all data in parallel
+      const [booksResponse, ordersResponse, categoriesResponse, notificationsResponse] = await Promise.allSettled([
+        apiService.getBooks(),
+        apiService.getOrders(),
+        apiService.getCategories(),
+        apiService.getNotifications()
+      ]);
+      
+      console.log('Books response:', booksResponse);
+      console.log('Orders response:', ordersResponse);
+      
+      // Handle successful responses
+      const userBooks = booksResponse.status === 'fulfilled' && booksResponse.value.data.data 
+        ? booksResponse.value.data.data.filter(book => book.user_id === currentUser.id)
+        : [];
+      console.log('User books:', userBooks);
+      
+      const userOrders = ordersResponse.status === 'fulfilled' && ordersResponse.value.data.data 
+        ? ordersResponse.value.data.data.filter(order => 
+        order.order_items.some(item => 
+          userBooks.some(book => book.id === item.book_id)
+        )
+          )
+        : [];
+      console.log('User orders:', userOrders);
 
-        try {
-            setLoading(true)
-            console.log("Fetching dashboard data for user:", currentUser.id)
-
-            // Fetch all data in parallel
-            const [
-                booksResponse,
-                ordersResponse,
-                categoriesResponse,
-                notificationsResponse,
-            ] = await Promise.allSettled([
-                apiService.getBooks(),
-                apiService.getOrders(),
-                apiService.getCategories(),
-                apiService.getNotifications(),
-            ])
-
-            console.log("Books response:", booksResponse)
-            console.log("Orders response:", ordersResponse)
-
-            // Handle successful responses
-            const userBooks =
-                booksResponse.status === "fulfilled" &&
-                booksResponse.value.data.data
-                    ? booksResponse.value.data.data.filter(
-                          book => book.user_id === currentUser.id
-                      )
-                    : []
-            console.log("User books:", userBooks)
-
-            const userOrders =
-                ordersResponse.status === "fulfilled" &&
-                ordersResponse.value.data.data
-                    ? ordersResponse.value.data.data.filter(order =>
-                          order.order_items.some(item =>
-                              userBooks.some(book => book.id === item.book_id)
-                          )
-                      )
-                    : []
-            console.log("User orders:", userOrders)
-
-            // Log any failed API calls
-            if (booksResponse.status === "rejected") {
-                console.error("Failed to fetch books:", booksResponse.reason)
-            }
-            if (ordersResponse.status === "rejected") {
-                console.error("Failed to fetch orders:", ordersResponse.reason)
-            }
-            if (categoriesResponse.status === "rejected") {
-                console.error(
-                    "Failed to fetch categories:",
-                    categoriesResponse.reason
-                )
-            }
-            if (notificationsResponse.status === "rejected") {
-                console.error(
-                    "Failed to fetch notifications:",
-                    notificationsResponse.reason
-                )
-            }
+      // Log any failed API calls
+      if (booksResponse.status === 'rejected') {
+        console.error('Failed to fetch books:', booksResponse.reason);
+      }
+      if (ordersResponse.status === 'rejected') {
+        console.error('Failed to fetch orders:', ordersResponse.reason);
+      }
+      if (categoriesResponse.status === 'rejected') {
+        console.error('Failed to fetch categories:', categoriesResponse.reason);
+      }
+      if (notificationsResponse.status === 'rejected') {
+        console.error('Failed to fetch notifications:', notificationsResponse.reason);
+      }
 
             // Calculate comprehensive stats
             const totalRevenue = userOrders.reduce((sum, order) => {
@@ -332,91 +303,85 @@ const Dashboard = () => {
                 booksByCategory,
             })
 
-            // Set all books with processed images
-            setAllBooks(
-                userBooks.map(book => ({
-                    ...book,
-                    image: book.images?.[0]
-                        ? book.images[0].startsWith("http")
-                            ? book.images[0]
-                            : `http://localhost:8001/storage/${book.images[0]}`
-                        : "/placeholder.svg",
-                }))
-            )
+      // Set all books with processed images
+      setAllBooks(userBooks.map(book => ({
+        ...book,
+        image: book.images?.[0] 
+          ? book.images[0].startsWith('http') 
+            ? book.images[0] 
+            : `http://localhost:8000/storage/${book.images[0]}`
+          : '/placeholder.svg'
+      })));
 
-            setAllOrders(userOrders)
-            setRecentBooks(
-                userBooks.slice(0, 5).map(book => ({
-                    ...book,
-                    image: book.images?.[0]
-                        ? book.images[0].startsWith("http")
-                            ? book.images[0]
-                            : `http://localhost:8001/storage/${book.images[0]}`
-                        : "/placeholder.svg",
-                }))
-            )
-            setRecentOrders(userOrders.slice(0, 5))
+      setAllOrders(userOrders);
+      setRecentBooks(userBooks.slice(0, 5).map(book => ({
+        ...book,
+        image: book.images?.[0] 
+          ? book.images[0].startsWith('http') 
+            ? book.images[0] 
+            : `http://localhost:8000/storage/${book.images[0]}`
+          : '/placeholder.svg'
+      })));
+      setRecentOrders(userOrders.slice(0, 5));
+      
+      // Set notifications
+      const userNotifications = notificationsResponse.status === 'fulfilled' && notificationsResponse.value.data.data 
+        ? notificationsResponse.value.data.data.filter(
+            notification => notification.user_id === currentUser.id
+          )
+        : [];
+      setNotifications(userNotifications.slice(0, 5));
 
-            // Set notifications
-            const userNotifications =
-                notificationsResponse.status === "fulfilled" &&
-                notificationsResponse.value.data.data
-                    ? notificationsResponse.value.data.data.filter(
-                          notification =>
-                              notification.user_id === currentUser.id
-                      )
-                    : []
-            setNotifications(userNotifications.slice(0, 5))
-        } catch (error) {
-            console.error("Error fetching dashboard data:", error)
-
-            // Handle specific error cases
-            if (error.response?.status === 404) {
-                console.log("No data found, setting empty arrays")
-                setAllBooks([])
-                setAllOrders([])
-                setNotifications([])
-                setStats({
-                    totalBooks: 0,
-                    totalOrders: 0,
-                    totalRevenue: "0.00",
-                    totalCustomers: 0,
-                    monthlyRevenue: "0.00",
-                    weeklyOrders: 0,
-                    availableBooks: 0,
-                    rentedBooks: 0,
-                    soldBooks: 0,
-                    booksByCategory: {},
-                })
-            } else {
-                Swal.fire({
-                    icon: "error",
-                    title: "Error",
-                    text: "Failed to load dashboard data",
-                })
-            }
-        } finally {
-            setLoading(false)
-            setRefreshing(false)
-        }
-    }, [currentUser])
-
-    const handleRefresh = async () => {
-        setRefreshing(true)
-        await fetchDashboardData()
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+      
+      // Handle specific error cases
+      if (error.response?.status === 404) {
+        console.log('No data found, setting empty arrays');
+        setAllBooks([]);
+        setAllOrders([]);
+        setNotifications([]);
+        setStats({
+          totalBooks: 0,
+          totalOrders: 0,
+          totalRevenue: '0.00',
+          totalCustomers: 0,
+          monthlyRevenue: '0.00',
+          weeklyOrders: 0,
+          availableBooks: 0,
+          rentedBooks: 0,
+          soldBooks: 0,
+          booksByCategory: {}
+        });
+      } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: 'Failed to load dashboard data'
+      });
+      }
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
     }
+  }, [currentUser]);
 
-    const handleDeleteBook = async bookId => {
-        try {
-            const result = await Swal.fire({
-                title: "Are you sure?",
-                text: "You won't be able to revert this!",
-                icon: "warning",
-                showCancelButton: true,
-                confirmButtonColor: "#d33",
-                cancelButtonColor: "#3085d6",
-                confirmButtonText: "Yes, delete it!",
-            })
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchDashboardData();
+  };
+
+  const handleDeleteBook = async (bookId) => {
+    try {
+      const result = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!'
+      });
 
             if (result.isConfirmed) {
                 await apiService.delete(`/books/${bookId}`)
@@ -461,150 +426,96 @@ const Dashboard = () => {
         }
     }
 
-    useEffect(() => {
-        if (!currentUser || currentUser.role !== "owner") {
-            navigate("/login")
-            return
-        }
-
-        fetchDashboardData()
-    }, [currentUser, location.pathname, fetchDashboardData])
-
-    if (loading) {
-        return (
-            <div className="dashboard-loading">
-                <div className="loading-spinner"></div>
-                <p>Loading dashboard...</p>
-            </div>
-        )
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'owner') {
+      navigate('/login');
+      return;
     }
+    
+    fetchDashboardData();
+  }, [currentUser, location.pathname, fetchDashboardData]);
 
+  if (loading) {
     return (
-        <>
-            <Navbar />
-            <div className="dashboard-container">
-                {/* Header */}
-                <div className="dashboard-header">
-                    <div className="dashboard-title">
-                        <h1>Library Dashboard</h1>
-                        <p>
-                            Welcome back, {currentUser?.name || "Library Owner"}
-                        </p>
-                        <div className="dashboard-subtitle">
-                            <Activity size={16} />
-                            <span>
-                                Last updated: {new Date().toLocaleTimeString()}
+      <div className="dashboard-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading dashboard...</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <Navbar />
+      <div className="dashboard-container">
+        {/* Header */}
+        <div className="dashboard-header">
+          <div className="dashboard-title">
+            <h1>Library Dashboard</h1>
+            <p>Welcome back, {currentUser?.name || 'Library Owner'}</p>
+            <div className="dashboard-subtitle">
+              <Activity size={16} />
+              <span>Last updated: {new Date().toLocaleTimeString()}</span>
+              {refreshing && <span className="updating-indicator"> • Updating...</span>}
+            </div>
+          </div>
+          <div className="dashboard-actions">
+            {/* Notification Bell */}
+            <div className="notification-section">
+              <button 
+                className="btn-notification"
+                onClick={() => setShowNotifications(!showNotifications)}
+                title="Notifications"
+              >
+                <Bell size={24} />
+                {pendingOrders.length > 0 && (
+                  <span className="notification-badge">{pendingOrders.length}</span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="notifications-dropdown">
+                  <h4>New Book Requests</h4>
+                  {pendingOrders.length === 0 ? (
+                    <div className="no-notifications">No new requests</div>
+                  ) : (
+                    pendingOrders.slice(0, 8).map(order => {
+                      const userName = order.user?.name || order.client?.name || 'Someone';
+                      const firstBook = order.order_items?.[0]?.book?.title || 'a book';
+                      const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
+                      return (
+                        <div key={order.id} className="notification-item">
+                          <div className="notification-row">
+                            <span className="notif-icon">📚</span>
+                            <span className="notification-message">
+                              <span className="notif-user">{userName}</span>
+                              <span> requested </span>
+                              <span className="notif-book">“{firstBook}”</span>
+                              {moreCount > 0 && (
+                                <span> and <span className="notif-more">{moreCount} more</span></span>
+                              )}
                             </span>
-                            {refreshing && (
-                                <span className="updating-indicator">
-                                    {" "}
-                                    • Updating...
-                                </span>
-                            )}
+                          </div>
+                          <div className="notification-meta">
+                            <small>{new Date(order.created_at).toLocaleString()}</small>
+                            <Link to="/all-orders" className="notification-link-btn">View</Link>
+                          </div>
                         </div>
-                    </div>
-                    <div className="dashboard-actions">
-                        {/* Notification Bell */}
-                        <div className="notification-section">
-                            <button
-                                className="btn-notification"
-                                onClick={() =>
-                                    setShowNotifications(!showNotifications)
-                                }
-                                title="Notifications"
-                            >
-                                <Bell size={24} />
-                                {pendingOrders.length > 0 && (
-                                    <span className="notification-badge">
-                                        {pendingOrders.length}
-                                    </span>
-                                )}
-                            </button>
-                            {showNotifications && (
-                                <div className="notifications-dropdown">
-                                    <h4>New Book Requests</h4>
-                                    {pendingOrders.length === 0 ? (
-                                        <div className="no-notifications">
-                                            No new requests
-                                        </div>
-                                    ) : (
-                                        pendingOrders.slice(0, 8).map(order => {
-                                            const userName =
-                                                order.user?.name ||
-                                                order.client?.name ||
-                                                "Someone"
-                                            const firstBook =
-                                                order.order_items?.[0]?.book
-                                                    ?.title || "a book"
-                                            const moreCount =
-                                                order.order_items?.length > 1
-                                                    ? order.order_items.length -
-                                                      1
-                                                    : 0
-                                            return (
-                                                <div
-                                                    key={order.id}
-                                                    className="notification-item"
-                                                >
-                                                    <div className="notification-row">
-                                                        <span className="notif-icon">
-                                                            📚
-                                                        </span>
-                                                        <span className="notification-message">
-                                                            <span className="notif-user">
-                                                                {userName}
-                                                            </span>
-                                                            <span>
-                                                                {" "}
-                                                                requested{" "}
-                                                            </span>
-                                                            <span className="notif-book">
-                                                                “{firstBook}”
-                                                            </span>
-                                                            {moreCount > 0 && (
-                                                                <span>
-                                                                    {" "}
-                                                                    and{" "}
-                                                                    <span className="notif-more">
-                                                                        {
-                                                                            moreCount
-                                                                        }{" "}
-                                                                        more
-                                                                    </span>
-                                                                </span>
-                                                            )}
-                                                        </span>
-                                                    </div>
-                                                    <div className="notification-meta">
-                                                        <small>
-                                                            {new Date(
-                                                                order.created_at
-                                                            ).toLocaleString()}
-                                                        </small>
-                                                        <Link
-                                                            to="/all-orders"
-                                                            className="notification-link-btn"
-                                                        >
-                                                            View
-                                                        </Link>
-                                                    </div>
-                                                </div>
-                                            )
-                                        })
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        <Link to="/edit-profile" className="btn-secondary">
-                            <User size={20} />
-                            Edit Profile
-                        </Link>
-                        <Link to="/add-book" className="btn-primary">
-                            <Plus size={20} />
-                            Add New Book
-                        </Link>
-                    </div>
+                      );
+                    })
+                  )}
                 </div>
+              )}
+            </div>
+            <Link to="/edit-profile" className="btn-secondary">
+              <User size={20} />
+              Edit Profile
+            </Link>
+            <Link to="/add-book" className="btn-primary">
+              <Plus size={20} />
+              Add New Book
+            </Link>
+          </div>
+        </div>
 
                 {/* Enhanced Stats Cards */}
                 <div className="stats-grid">
@@ -762,238 +673,138 @@ const Dashboard = () => {
                         </div>
                     </div>
 
-                    {loading ? (
-                        <div className="loading-state">
-                            <div className="loading-spinner"></div>
-                            <p>Loading your books...</p>
+          {loading ? (
+            <div className="loading-state">
+              <div className="loading-spinner"></div>
+              <p>Loading your books...</p>
+            </div>
+          ) : (
+            <>
+              <div className="books-grid">
+                {paginatedBooks.map((book) => (
+                  <div key={book.id} className="book-card">
+                    <div className="book-image">
+                      <img 
+                        src={book.image} 
+                        alt={book.title}
+                        onError={(e) => {
+                          e.currentTarget.src = '/placeholder.svg';
+                        }}
+                      />
+                      <div className="book-status" style={{ backgroundColor: getStatusColor(book.status) }}>
+                        {book.status}
+                      </div>
+                      <div className="book-overlay">
+                        <div className="overlay-actions">
+                          <button 
+                            className="overlay-btn view"
+                            onClick={() => navigate(`/books/${book.id}`)}
+                            title="View Book"
+                          >
+                            <Eye size={16} />
+                          </button>
+                          <button 
+                            className="overlay-btn edit"
+                            onClick={() => navigate(`/edit-book/${book.id}`)}
+                            title="Edit Book"
+                          >
+                            <Edit size={16} />
+                          </button>
+                          <button 
+                            className="overlay-btn delete"
+                            onClick={() => handleDeleteBook(book.id)}
+                            title="Delete Book"
+                          >
+                            <Trash2 size={16} />
+                          </button>
                         </div>
-                    ) : (
-                        <>
-                            <div className="books-grid">
-                                {paginatedBooks.map(book => (
-                                    <div key={book.id} className="book-card">
-                                        <div className="book-image">
-                                            <img
-                                                src={book.image}
-                                                alt={book.title}
-                                                onError={e => {
-                                                    e.currentTarget.src =
-                                                        "/placeholder.svg"
-                                                }}
-                                            />
-                                            <div
-                                                className="book-status"
-                                                style={{
-                                                    backgroundColor:
-                                                        getStatusColor(
-                                                            book.status
-                                                        ),
-                                                }}
-                                            >
-                                                {book.status}
-                                            </div>
-                                            <div className="book-overlay">
-                                                <div className="overlay-actions">
-                                                    <button
-                                                        className="overlay-btn view"
-                                                        onClick={() =>
-                                                            navigate(
-                                                                `/books/${book.id}`
-                                                            )
-                                                        }
-                                                        title="View Book"
-                                                    >
-                                                        <Eye size={16} />
-                                                    </button>
-                                                    <button
-                                                        className="overlay-btn edit"
-                                                        onClick={() =>
-                                                            navigate(
-                                                                `/edit-book/${book.id}`
-                                                            )
-                                                        }
-                                                        title="Edit Book"
-                                                    >
-                                                        <Edit size={16} />
-                                                    </button>
-                                                    <button
-                                                        className="overlay-btn delete"
-                                                        onClick={() =>
-                                                            handleDeleteBook(
-                                                                book.id
-                                                            )
-                                                        }
-                                                        title="Delete Book"
-                                                    >
-                                                        <Trash2 size={16} />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="book-info">
-                                            <h3>{book.title}</h3>
-                                            <p className="book-author">
-                                                By{" "}
-                                                {book.author ||
-                                                    book.user?.name ||
-                                                    "Unknown"}
-                                            </p>
-                                            <div className="book-category">
-                                                <span className="category-badge">
-                                                    {book.category?.name ||
-                                                        "Uncategorized"}
-                                                </span>
-                                            </div>
-                                            <div className="book-details">
-                                                <span className="detail-badge condition">
-                                                    {book.condition ||
-                                                        "Unknown"}
-                                                </span>
-                                                {book.genre && (
-                                                    <span className="detail-badge genre">
-                                                        {book.genre}
-                                                    </span>
-                                                )}
-                                                {book.educational_level && (
-                                                    <span className="detail-badge level">
-                                                        {book.educational_level}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="book-rating">
-                                                <Star
-                                                    size={16}
-                                                    fill="#FBBF24"
-                                                />
-                                                <span>
-                                                    {book.ratings?.length
-                                                        ? (
-                                                              book.ratings.reduce(
-                                                                  (acc, r) =>
-                                                                      acc +
-                                                                      r.rating,
-                                                                  0
-                                                              ) /
-                                                              book.ratings
-                                                                  .length
-                                                          ).toFixed(1)
-                                                        : "0"}
-                                                </span>
-                                                <span className="rating-count">
-                                                    ({book.ratings?.length || 0}
-                                                    )
-                                                </span>
-                                            </div>
-                                            <div className="book-pricing">
-                                                <p className="book-price">
-                                                    ${book.price}
-                                                </p>
-                                                {book.rental_price && (
-                                                    <p className="book-rental-price">
-                                                        Rent: $
-                                                        {book.rental_price}
-                                                    </p>
-                                                )}
-                                            </div>
-                                            <div className="book-meta">
-                                                <span className="quantity-badge">
-                                                    Qty: {book.quantity || 1}
-                                                </span>
-                                                <p className="book-date">
-                                                    Added:{" "}
-                                                    {new Date(
-                                                        book.created_at
-                                                    ).toLocaleDateString()}
-                                                </p>
-                                            </div>
-                                            {book.description && (
-                                                <p className="book-description">
-                                                    {book.description.substring(
-                                                        0,
-                                                        100
-                                                    )}
-                                                    ...
-                                                </p>
-                                            )}
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                            {totalPages > 1 && (
-                                <div className="pagination">
-                                    <button
-                                        onClick={() =>
-                                            setCurrentPage(prev =>
-                                                Math.max(prev - 1, 1)
-                                            )
-                                        }
-                                        disabled={currentPage === 1}
-                                    >
-                                        {"<"}
-                                    </button>
-                                    {[...Array(totalPages)].map((_, idx) => (
-                                        <button
-                                            key={idx + 1}
-                                            className={
-                                                currentPage === idx + 1
-                                                    ? "active"
-                                                    : ""
-                                            }
-                                            onClick={() =>
-                                                setCurrentPage(idx + 1)
-                                            }
-                                        >
-                                            {idx + 1}
-                                        </button>
-                                    ))}
-                                    <button
-                                        onClick={() =>
-                                            setCurrentPage(prev =>
-                                                Math.min(prev + 1, totalPages)
-                                            )
-                                        }
-                                        disabled={currentPage === totalPages}
-                                    >
-                                        {">"}
-                                    </button>
-                                </div>
-                            )}
-                            {filteredBooks.length === 0 && (
-                                <div className="empty-state">
-                                    <BookOpen size={48} />
-                                    <p>
-                                        {loading
-                                            ? "Loading books..."
-                                            : allBooks.length === 0
-                                            ? "No books found in your library"
-                                            : "No books found matching your criteria"}
-                                    </p>
-                                    {!loading && allBooks.length === 0 && (
-                                        <Link
-                                            to="/add-book"
-                                            className="btn-primary"
-                                        >
-                                            <Plus size={16} />
-                                            Add Your First Book
-                                        </Link>
-                                    )}
-                                    {!loading && allBooks.length > 0 && (
-                                        <button
-                                            className="btn-primary"
-                                            onClick={() => {
-                                                setSearchTerm("")
-                                                setFilterStatus("all")
-                                                setFilterCategory("all")
-                                            }}
-                                        >
-                                            Clear Filters
-                                        </button>
-                                    )}
-                                </div>
-                            )}
-                        </>
-                    )}
+                      </div>
+                    </div>
+                    <div className="book-info">
+                      <h3>{book.title}</h3>
+                      <p className="book-author">By {book.author || book.user?.name || 'Unknown'}</p>
+                      <div className="book-category">
+                        <span className="category-badge">{book.category?.name || 'Uncategorized'}</span>
+                      </div>
+                      <div className="book-details">
+                        <span className="detail-badge condition">{book.condition || 'Unknown'}</span>
+                        {book.genre && <span className="detail-badge genre">{book.genre}</span>}
+                        {book.educational_level && <span className="detail-badge level">{book.educational_level}</span>}
+                      </div>
+                      <div className="book-rating">
+                        <Star size={16} fill="#FBBF24" />
+                        <span>{book.ratings?.length ? (book.ratings.reduce((acc, r) => acc + r.rating, 0) / book.ratings.length).toFixed(1) : '0'}</span>
+                        <span className="rating-count">({book.ratings?.length || 0})</span>
+                      </div>
+                      <div className="book-pricing">
+                        <p className="book-price">${book.price}</p>
+                        {book.rental_price && (
+                          <p className="book-rental-price">Rent: ${book.rental_price}</p>
+                        )}
+                      </div>
+                      <div className="book-meta">
+                        <span className="quantity-badge">Qty: {book.quantity || 1}</span>
+                        <p className="book-date">Added: {new Date(book.created_at).toLocaleDateString()}</p>
+                      </div>
+                      {book.description && (
+                        <p className="book-description">{book.description.substring(0, 100)}...</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {totalPages > 1 && (
+                <div className="pagination">
+                  <button 
+                    onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={currentPage === 1}
+                  >
+                    {'<'}
+                  </button>
+                  {[...Array(totalPages)].map((_, idx) => (
+                    <button
+                      key={idx + 1}
+                      className={currentPage === idx + 1 ? 'active' : ''}
+                      onClick={() => setCurrentPage(idx + 1)}
+                    >
+                      {idx + 1}
+                    </button>
+                  ))}
+                  <button 
+                    onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                    disabled={currentPage === totalPages}
+                  >
+                    {'>'}
+                  </button>
                 </div>
+              )}
+              {filteredBooks.length === 0 && (
+                <div className="empty-state">
+                  <BookOpen size={48} />
+                  <p>{loading ? 'Loading books...' : allBooks.length === 0 ? 'No books found in your library' : 'No books found matching your criteria'}</p>
+                  {!loading && allBooks.length === 0 && (
+                    <Link to="/add-book" className="btn-primary">
+                      <Plus size={16} />
+                      Add Your First Book
+                    </Link>
+                  )}
+                  {!loading && allBooks.length > 0 && (
+                    <button 
+                      className="btn-primary"
+                      onClick={() => {
+                        setSearchTerm('');
+                        setFilterStatus('all');
+                        setFilterCategory('all');
+                      }}
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              )}
+            </>
+          )}
+        </div>
 
                 {/* Dynamic Orders Section */}
                 <div className="dashboard-section">
@@ -1094,4 +905,4 @@ const Dashboard = () => {
     )
 }
 
-export default Dashboard
+export default Dashboard; 
