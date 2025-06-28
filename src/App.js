@@ -1,4 +1,3 @@
-// App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
@@ -30,8 +29,7 @@ import ClientNotificationsPage from './pages/ClientNotificationsPage';
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
-import CategoryPage from "./pages/CategoryPage";
- import RagChat from "./pages/RagChat";
+import RagChat from "./pages/RagChat";
 import FloatingChatButton from "./components/FloatingChatButton";
 import ForgotPassword from './components/forms/ForgotPassword';
 import ResetPassword from './components/forms/ResetPassword';
@@ -42,6 +40,8 @@ import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
 import BookList from './components/Admin/BookList';
 import AdminOrders from './components/Admin/AdminOrders';
+import CategoriesPage from "./pages/CategoriesPage";
+import CategoryPage from "./pages/CategoryPage";
 import AdminNotificationsPage from './components/Admin/NotificationsPage';
 import AdminRoute from './components/GuestRoute/AdminRoute';
 import OwnerRoute from './components/GuestRoute/OwnerRoute';
@@ -94,6 +94,16 @@ function App() {
           }
         />
         <Route path="/social-callback" element={<SocialCallback />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/edit-profile" element={<EditProfile />} />
+        <Route path="/add-book" element={<AddBookPage />} />
+        <Route path="/libraries" element={<LibrariesPage />} />
+        <Route path="/library/:id" element={<LibraryDetails />} />
+        <Route path="/all-orders" element={<AllOrdersPage />} />
+        <Route path="/rag-chat" element={<RagChat />} />
+        <Route path="/categories" element={<CategoriesPage />} />
+        <Route path="/categories/:id" element={<CategoryPage />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/contact" element={<ContactPage />} />
@@ -107,7 +117,6 @@ function App() {
         <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
         <Route path="/client-notifications" element={<ClientNotificationsPage />} />
         
-
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
         <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
@@ -118,10 +127,8 @@ function App() {
         <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
 
         <Route path='*' element={<NotFound />} />
-
       </Routes>
-       <FloatingChatButton />
-
+      <FloatingChatButton />
     </Router>
   );
 }
