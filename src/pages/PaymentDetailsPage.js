@@ -75,11 +75,18 @@ const PaymentDetailsPage = () => {
 
         if (isInitialLoad) {
             fetchData(orderId)
+                .then(() => {
+                    if (payment?.method) {
+                        setSelectedMethod(payment.method);
+                    }
+                })
                 .catch(err => console.error('[PaymentPage] Initial fetch error:', err));
+
             setIsInitialLoad(false);
             return;
         }
-    }, [orderId, fetchData, isInitialLoad]);
+    }, [orderId, fetchData, isInitialLoad, payment?.method]);
+    
 
     const paymentMethods = [
         { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
@@ -326,18 +333,18 @@ const PaymentDetailsPage = () => {
                                 ) : (
                                     <>
                                         <h5 className="mb-4">Select Payment Method</h5>
-                                        <div className="payment-methods mb-4">
-                                            {paymentMethods.map(method => (
-                                                <div
-                                                    key={method.id}
-                                                    className={`payment-method ${selectedMethod === method.id ? 'active' : ''}`}
-                                                    onClick={() => setSelectedMethod(method.id)}
-                                                >
-                                                    {method.icon}
-                                                    {method.label}
-                                                </div>
-                                            ))}
-                                        </div>
+                                            <div className="payment-methods mb-4">
+                                                {paymentMethods.map(method => (
+                                                    <div
+                                                        key={method.id}
+                                                        className={`payment-method ${selectedMethod === method.id ? 'active' : ''}`}
+                                                        onClick={() => setSelectedMethod(method.id)}
+                                                    >
+                                                        {method.icon}
+                                                        {method.label}
+                                                    </div>
+                                                ))}
+                                            </div>
 
                                         {selectedMethod === 'stripe' ? (
                                             <Elements stripe={stripePromise}>

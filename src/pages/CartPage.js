@@ -287,17 +287,17 @@ const CartPage = () => {
                     book_id: item.book_id,
                     quantity: item.quantity,
                     type: item.type,
-                    price: item.type === 'rent'
-                        ? (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0))
-                        : parseFloat(item.book?.price || 0)
+                    price: item.type === 'rent' ?
+                        (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0)) :
+                        parseFloat(item.book?.price || 0)
                 })),
                 subtotal: parseFloat(subtotal.toFixed(2)),
                 discount: parseFloat(discount.toFixed(2)),
                 shipping: parseFloat(shippingFee.toFixed(2)),
                 total: parseFloat(total.toFixed(2)),
                 coupon_code: appliedCoupon?.code || null,
-                payment_method: selectedPaymentMethod
-            };        
+                payment_method: selectedPaymentMethod 
+            };
 
             const response = await api.createOrder(orderData);
             const orderList = response.data?.data;
