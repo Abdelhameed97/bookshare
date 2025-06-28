@@ -50,76 +50,64 @@ const OrderDetailsPage = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [order, setOrder] = useState(null);
+    const [payment, setPayment] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [paymentCompleted, setPaymentCompleted] = useState(() => {
-        const savedPayment = localStorage.getItem(`paymentCompleted_${id}`);
-        return savedPayment ? JSON.parse(savedPayment) : false;
-    });
-    const [paymentAttempted, setPaymentAttempted] = useState(() => {
-        const savedAttempt = localStorage.getItem(`paymentAttempted_${id}`);
-        return savedAttempt ? JSON.parse(savedAttempt) : false;
-    });
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
+    const [paymentAttempted, setPaymentAttempted] = useState(false);
 
     const {
-        createStripePayment,
         processing,
         setProcessing,
     } = usePayment();
 
-    useEffect(() => {
-        const fetchOrderDetails = async () => {
+    const fetchOrderAndPayment = async () => {
+        try {
+            setLoading(true);
+
+            // Fetch order details
+            const orderResponse = await api.getOrderDetails(id);
+            let orderData = orderResponse.data?.data || orderResponse.data;
+            if (!orderData) throw new Error('Order not found');
+
+            // Fetch payment details
             try {
-                const response = await api.getOrderDetails(id);
-                console.log('Order details response:', response.data);
-
-                let orderData = response.data;
-                if (Array.isArray(response.data)) {
-                    orderData = response.data[0];
-                } else if (response.data.data) {
-                    orderData = response.data.data;
+                const paymentResponse = await api.getOrderPayment(id);
+                const paymentData = paymentResponse.data?.data || paymentResponse.data;
+                if (paymentData) {
+                    setPayment(paymentData);
+                    if (paymentData.status === 'paid') {
+                        setPaymentCompleted(true);
+                    }
                 }
-
-                if (!orderData) {
-                    throw new Error('Order data not found');
-                }
-
-                if (orderData.payment_status === 'paid' || orderData.payment_id) {
-                    setPaymentCompleted(true);
-                    localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(true));
-                }
-
-                const enhancedOrder = {
-                    ...orderData,
-                    order_items: orderData.order_items?.map(item => ({
-                        ...item,
-                        unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
-                        total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
-                    }))
-                };
-
-                setOrder(enhancedOrder);
-                setError(null);
-            } catch (err) {
-                console.error('Error fetching order:', err);
-                if (err.response?.status === 401) {
-                    localStorage.removeItem('token');
-                    localStorage.removeItem('user');
-                    navigate('/login', { state: { from: `/orders/${id}` } });
-                }
-                setError(err.response?.data?.message || err.message || 'Failed to load order details');
-            } finally {
-                setLoading(false);
+            } catch (paymentError) {
+                console.log('No payment record found');
             }
-        };
 
-        fetchOrderDetails();
-    }, [id, navigate]);
+            setOrder({
+                ...orderData,
+                order_items: orderData.order_items?.map(item => ({
+                    ...item,
+                    unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
+                    total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
+                }))
+            });
+
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to load order details');
+            if (err.response?.status === 401) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login');
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        localStorage.setItem(`paymentCompleted_${id}`, JSON.stringify(paymentCompleted));
-        localStorage.setItem(`paymentAttempted_${id}`, JSON.stringify(paymentAttempted));
-    }, [paymentCompleted, paymentAttempted, id]);
+        fetchOrderAndPayment();
+    }, [id]);
 
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
@@ -163,6 +151,7 @@ const OrderDetailsPage = () => {
     };
 
     const handlePayment = async () => {
+        setPaymentAttempted(true);
         navigate(`/payment/${id}`);
     };
 
@@ -226,6 +215,43 @@ const OrderDetailsPage = () => {
         }
     };
 
+    const getPaymentStatusBadge = () => {
+        if (!payment) {
+            return (
+                <Badge bg="secondary" className="custom-badge">
+                    <Clock size={16} className="me-1" /> Not Paid
+                </Badge>
+            );
+        }
+
+        switch (payment.status) {
+            case 'paid':
+                return (
+                    <Badge bg="success" className="custom-badge">
+                        <CheckCircle size={16} className="me-1" /> Paid
+                    </Badge>
+                );
+            case 'pending':
+                return (
+                    <Badge bg="warning" text="dark" className="custom-badge">
+                        <Clock size={16} className="me-1" /> Pending
+                    </Badge>
+                );
+            case 'failed':
+                return (
+                    <Badge bg="danger" className="custom-badge">
+                        <XCircle size={16} className="me-1" /> Failed
+                    </Badge>
+                );
+            default:
+                return (
+                    <Badge bg="secondary" className="custom-badge">
+                        <Clock size={16} className="me-1" /> Not Paid
+                    </Badge>
+                );
+        }
+    };
+
     const formatDate = (dateString) => {
         if (!dateString) return 'N/A';
         try {
@@ -255,7 +281,8 @@ const OrderDetailsPage = () => {
     const isClient = user?.id === order?.client_id;
     const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
     const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
-        (!order.payment_status || order.payment_status !== 'paid') &&
+        !paymentCompleted &&
+        (!payment || payment.status !== 'paid') &&
         isClient;
 
     if (loading) {
@@ -386,18 +413,8 @@ const OrderDetailsPage = () => {
                             <Col md={6} className="text-md-end">
                                 <div className="d-flex flex-column">
                                     <div className="mb-2">
-                                        <strong>Payment Status:</strong>
-                                        {order.payment_status === 'paid' ? (
-                                            <Badge bg="success" className="ms-2">
-                                                <CheckCircle size={14} className="me-1" />
-                                                Paid
-                                            </Badge>
-                                        ) : (
-                                            <Badge bg="warning" text="dark" className="ms-2">
-                                                <Clock size={14} className="me-1" />
-                                                Pending
-                                            </Badge>
-                                        )}
+                                        <strong>Payment Status: </strong>
+                                        {getPaymentStatusBadge()}
                                     </div>
                                     <div className="mb-2">
                                         <strong>Payment Method:</strong> {order.payment_method || 'Not Specified'}
@@ -502,7 +519,7 @@ const OrderDetailsPage = () => {
                                         </Button>
                                     )}
                                     {canPay && (
-                                        paymentCompleted ? (
+                                        paymentCompleted || payment?.status === 'paid' ? (
                                             <Button variant="success" className="px-4 py-2" disabled>
                                                 <CheckCircle size={18} className="me-2" />
                                                 Payment Completed

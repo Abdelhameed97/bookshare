@@ -185,6 +185,12 @@ const OrdersPage = () => {
                                     <Nav.Link eventKey="all">All Orders</Nav.Link>
                                 </Nav.Item>
                                 <Nav.Item>
+                                    <Nav.Link eventKey="pending">
+                                        <Clock size={16} className="me-1" />
+                                        Pending
+                                    </Nav.Link>
+                                </Nav.Item>
+                                <Nav.Item>
                                     <Nav.Link eventKey="accepted">
                                         <CheckCircle size={16} className="me-1" />
                                         Accepted
@@ -221,6 +227,7 @@ const OrdersPage = () => {
                                     </Nav.Link>
                                 </Nav.Item>
                             </Nav>
+
 
                             <Tab.Content>
                                 <Tab.Pane eventKey={activeTab}>
