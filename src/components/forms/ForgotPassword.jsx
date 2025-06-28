@@ -12,7 +12,7 @@ export default function ForgotPassword() {
     setErrors({});
 
     try {
-      const response = await api.post('/forgot-password', { email });
+      const response = await api.post('/auth/forgot-password', { email });
       setStatus(response.data.message); // Laravel بيرجع "message" مش "status"
     } catch (error) {
       if (error.response?.data?.errors) {
