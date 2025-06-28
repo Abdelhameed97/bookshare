@@ -6,6 +6,7 @@ import api from '../../api/auth';
 import { Link, useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
 import '../../style/AdminDashboard.css';
+import '../../style/Notifications.css';
 
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
@@ -76,36 +77,45 @@ const AdminDashboard = () => {
               {showNotifications && (
                 <div className="notifications-dropdown">
                   <h4>New Book Requests</h4>
-                  {pendingOrders.length === 0 ? (
-                    <div className="no-notifications">No new requests</div>
-                  ) : (
-                    pendingOrders.slice(0, 8).map(order => {
-                      const userName = order.user?.name || order.client?.name || 'Someone';
-                      const firstBook = order.order_items?.[0]?.book?.title || 'a book';
-                      const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
-                      return (
-                        <div key={order.id} className="notification-item">
-                          <div className="notification-row">
-                            <span className="notif-icon">📚</span>
-                            <span className="notification-message">
-                              <span className="notif-user">{userName}</span>
-                              <span> requested </span>
-                              <span className="notif-book">“{firstBook}”</span>
-                              {moreCount > 0 && (
-                                <span> and <span className="notif-more">{moreCount} more</span></span>
-                              )}
-                            </span>
+                  <div className="notifications-scroll-container">
+                    {pendingOrders.length === 0 ? (
+                      <div className="no-notifications">No new requests</div>
+                    ) : (
+                      pendingOrders.slice(0, 2).map(order => {
+                        const userName = order.user?.name || order.client?.name || 'Someone';
+                        const firstBook = order.order_items?.[0]?.book?.title || 'a book';
+                        const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
+                        return (
+                          <div key={order.id} className="notification-item">
+                            <div className="notification-row">
+                              <span className="notif-icon">📚</span>
+                              <span className="notification-message">
+                                <span className="notif-user">{userName}</span>
+                                <span> requested </span>
+                                <span className="notif-book">"{firstBook}"</span>
+                                {moreCount > 0 && (
+                                  <span> and <span className="notif-more">{moreCount} more</span></span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="notification-meta">
+                              <small>{new Date(order.created_at).toLocaleString()}</small>
+                              <button
+                                className="notification-link-btn"
+                                onClick={() => navigate('/admin/orders')}
+                              >View</button>
+                            </div>
                           </div>
-                          <div className="notification-meta">
-                            <small>{new Date(order.created_at).toLocaleString()}</small>
-                            <button
-                              className="notification-link-btn"
-                              onClick={() => navigate('/admin/orders')}
-                            >View</button>
-                          </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })
+                    )}
+                  </div>
+                  {pendingOrders.length > 2 && (
+                    <div className="view-all-notifications">
+                      <Link to="/admin/notifications" className="view-all-link">
+                        View All Notifications ({pendingOrders.length})
+                      </Link>
+                    </div>
                   )}
                 </div>
               )}

@@ -9,14 +9,8 @@ import {
   Eye, 
   Trash2,
   Search,
-  Filter,
-  Calendar,
   Star,
-  RefreshCw,
-  Upload,
-  Settings,
   Bell,
-  TrendingDown,
   Activity,
   User
 } from 'lucide-react';
@@ -40,8 +34,6 @@ const Dashboard = () => {
     soldBooks: 0,
     booksByCategory: {}
   });
-  const [recentBooks, setRecentBooks] = useState([]);
-  const [recentOrders, setRecentOrders] = useState([]);
   const [allBooks, setAllBooks] = useState([]);
   const [allOrders, setAllOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -51,8 +43,6 @@ const Dashboard = () => {
   const [filterCategory, setFilterCategory] = useState('all');
   const [sortBy, setSortBy] = useState('date');
   const [sortOrder, setSortOrder] = useState('desc');
-  const [selectedTimeRange, setSelectedTimeRange] = useState('all');
-  const [notifications, setNotifications] = useState([]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const booksPerPage = 6;
@@ -141,24 +131,8 @@ const Dashboard = () => {
       )
     );
     
-    if (selectedTimeRange !== 'all') {
-      const now = new Date();
-      const timeRanges = {
-        today: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-        week: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000),
-        month: new Date(now.getFullYear(), now.getMonth(), 1),
-        year: new Date(now.getFullYear(), 0, 1)
-      };
-      
-      if (timeRanges[selectedTimeRange]) {
-        filtered = filtered.filter(order => 
-          new Date(order.created_at) >= timeRanges[selectedTimeRange]
-        );
-      }
-    }
-    
     return filtered.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [allOrders, allBooks, currentUser, selectedTimeRange]);
+  }, [allOrders, allBooks, currentUser]);
 
   // Get only pending orders for this library's books
   const pendingOrders = useMemo(() =>
@@ -174,11 +148,10 @@ const Dashboard = () => {
       console.log('Fetching dashboard data for user:', currentUser.id);
       
       // Fetch all data in parallel
-      const [booksResponse, ordersResponse, categoriesResponse, notificationsResponse] = await Promise.allSettled([
+      const [booksResponse, ordersResponse, categoriesResponse] = await Promise.allSettled([
         apiService.getBooks(),
         apiService.getOrders(),
-        apiService.getCategories(),
-        apiService.getNotifications()
+        apiService.getCategories()
       ]);
       
       console.log('Books response:', booksResponse);
@@ -208,9 +181,6 @@ const Dashboard = () => {
       }
       if (categoriesResponse.status === 'rejected') {
         console.error('Failed to fetch categories:', categoriesResponse.reason);
-      }
-      if (notificationsResponse.status === 'rejected') {
-        console.error('Failed to fetch notifications:', notificationsResponse.reason);
       }
 
       // Calculate comprehensive stats
@@ -277,24 +247,7 @@ const Dashboard = () => {
       })));
 
       setAllOrders(userOrders);
-      setRecentBooks(userBooks.slice(0, 5).map(book => ({
-        ...book,
-        image: book.images?.[0] 
-          ? book.images[0].startsWith('http') 
-            ? book.images[0] 
-            : `http://localhost:8000/storage/${book.images[0]}`
-          : '/placeholder.svg'
-      })));
-      setRecentOrders(userOrders.slice(0, 5));
       
-      // Set notifications
-      const userNotifications = notificationsResponse.status === 'fulfilled' && notificationsResponse.value.data.data 
-        ? notificationsResponse.value.data.data.filter(
-            notification => notification.user_id === currentUser.id
-          )
-        : [];
-      setNotifications(userNotifications.slice(0, 5));
-
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       
@@ -303,7 +256,6 @@ const Dashboard = () => {
         console.log('No data found, setting empty arrays');
         setAllBooks([]);
         setAllOrders([]);
-        setNotifications([]);
         setStats({
           totalBooks: 0,
           totalOrders: 0,
@@ -328,11 +280,6 @@ const Dashboard = () => {
       setRefreshing(false);
     }
   }, [currentUser]);
-
-  const handleRefresh = async () => {
-    setRefreshing(true);
-    await fetchDashboardData();
-  };
 
   const handleDeleteBook = async (bookId) => {
     try {
@@ -391,7 +338,7 @@ const Dashboard = () => {
     }
     
     fetchDashboardData();
-  }, [currentUser, location.pathname, fetchDashboardData]);
+  }, [currentUser, location.pathname, fetchDashboardData, navigate]);
 
   if (loading) {
     return (
@@ -447,33 +394,42 @@ const Dashboard = () => {
               {showNotifications && (
                 <div className="notifications-dropdown">
                   <h4>New Book Requests</h4>
-                  {pendingOrders.length === 0 ? (
-                    <div className="no-notifications">No new requests</div>
-                  ) : (
-                    pendingOrders.slice(0, 8).map(order => {
-                      const userName = order.user?.name || order.client?.name || 'Someone';
-                      const firstBook = order.order_items?.[0]?.book?.title || 'a book';
-                      const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
-                      return (
-                        <div key={order.id} className="notification-item">
-                          <div className="notification-row">
-                            <span className="notif-icon">📚</span>
-                            <span className="notification-message">
-                              <span className="notif-user">{userName}</span>
-                              <span> requested </span>
-                              <span className="notif-book">"{firstBook}"</span>
-                              {moreCount > 0 && (
-                                <span> and <span className="notif-more">{moreCount} more</span></span>
-                              )}
-                            </span>
+                  <div className="notifications-scroll-container">
+                    {pendingOrders.length === 0 ? (
+                      <div className="no-notifications">No new requests</div>
+                    ) : (
+                      pendingOrders.slice(0, 2).map(order => {
+                        const userName = order.user?.name || order.client?.name || 'Someone';
+                        const firstBook = order.order_items?.[0]?.book?.title || 'a book';
+                        const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
+                        return (
+                          <div key={order.id} className="notification-item">
+                            <div className="notification-row">
+                              <span className="notif-icon">📚</span>
+                              <span className="notification-message">
+                                <span className="notif-user">{userName}</span>
+                                <span> requested </span>
+                                <span className="notif-book">"{firstBook}"</span>
+                                {moreCount > 0 && (
+                                  <span> and <span className="notif-more">{moreCount} more</span></span>
+                                )}
+                              </span>
+                            </div>
+                            <div className="notification-meta">
+                              <small>{new Date(order.created_at).toLocaleString()}</small>
+                              <Link to="/all-orders" className="notification-link-btn">View</Link>
+                            </div>
                           </div>
-                          <div className="notification-meta">
-                            <small>{new Date(order.created_at).toLocaleString()}</small>
-                            <Link to="/all-orders" className="notification-link-btn">View</Link>
-                          </div>
-                        </div>
-                      );
-                    })
+                        );
+                      })
+                    )}
+                  </div>
+                  {pendingOrders.length > 2 && (
+                    <div className="view-all-notifications">
+                      <Link to="/notifications" className="view-all-link">
+                        View All Notifications ({pendingOrders.length})
+                      </Link>
+                    </div>
                   )}
                 </div>
               )}
@@ -852,6 +808,5 @@ const Dashboard = () => {
 };
 
 export default Dashboard; 
-
 
 
