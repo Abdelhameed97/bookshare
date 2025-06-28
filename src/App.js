@@ -33,6 +33,8 @@ import SocialCallback from "./pages/SocialCallback";
 import CategoryPage from "./pages/CategoryPage";
  import RagChat from "./pages/RagChat";
 import FloatingChatButton from "./components/FloatingChatButton";
+import ForgotPassword from './components/forms/ForgotPassword';
+import ResetPassword from './components/forms/ResetPassword';
 import './App.css';
 
 import AdminDashboard from './components/Admin/Dashboard';
@@ -92,7 +94,8 @@ function App() {
           }
         />
         <Route path="/social-callback" element={<SocialCallback />} />
-
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/dashboard" element={<OwnerRoute><Dashboard /></OwnerRoute>} />
         <Route path="/edit-profile" element={<OwnerRoute><EditProfile /></OwnerRoute>} />
