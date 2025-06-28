@@ -1,96 +1,81 @@
-import { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import axios from 'axios';
-import { useSearchParams } from 'react-router-dom';
 
 const ResetPassword = () => {
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get("token");
-  const email = searchParams.get("email") || "";
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordConfirmation, setPasswordConfirmation] = useState('');
+  const [message, setMessage] = useState('');
 
-  const [password, setPassword] = useState("");
-  const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [message, setMessage] = useState("");
-  const [errors, setErrors] = useState({});
-
-  // ✅ استدعاء csrf cookie في أول تحميل للصفحة
-  useEffect(() => {
-    axios.get("http://localhost:8000/sanctum/csrf-cookie", { withCredentials: true });
-  }, []);
+  // Extract token from URL (e.g., /reset-password?token=abc123)
+  const token = new URLSearchParams(window.location.search).get('token');
+  // const gmail = new URLSearchParams(window.location.search).get('email')
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setMessage("");
-    setErrors({});
+
+    console.log('Sending reset password request with:');
+    console.log({
+      // gmail,
+      email,
+      token,
+      password,
+      password_confirmation: passwordConfirmation,
+    });
 
     try {
-      const response = await axios.post(
-        "http://localhost:8000/reset-password",
-        {
-          token,
-          email,
-          password,
-          password_confirmation: passwordConfirmation,
-        },
-        {
-          withCredentials: true,
-        }
-      );
+      const response = await axios.post('http://localhost:8000/api/auth/reset-password', {
+        email,
+        token,
+        password,
+        password_confirmation: passwordConfirmation,
+      });
 
-      setMessage("Password has been reset successfully ✅");
+      setMessage('Password reset successful!');
+      console.log(response.data);
     } catch (error) {
-      console.error(error);
+      console.error('❌ Reset failed:', error.response?.data || error.message);
       if (error.response?.data?.errors) {
-        setErrors(error.response.data.errors);
-      } else {
-        setMessage("Something went wrong. Please try again.");
+        console.log('Validation Errors:', error.response.data.errors);
       }
+      setMessage('Reset failed. Please check the console for details.');
     }
   };
 
   return (
-    <div style={{ maxWidth: "400px", margin: "auto", padding: "2rem" }}>
-      <h2>Reset Password</h2>
-      {message && <p style={{ color: "green" }}>{message}</p>}
+    <div style={{ padding: '20px' }}>
+      <h2>Reset Your Password</h2>
       <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: "1rem" }}>
-          <label>Email</label>
+        <div>
+          <label>Email:</label>
           <input
             type="email"
             value={email}
-            disabled
-            style={{ width: "100%", padding: "0.5rem" }}
+            required
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>New Password</label>
+        <div>
+          <label>New Password:</label>
           <input
             type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
             required
-            style={{ width: "100%", padding: "0.5rem" }}
+            onChange={(e) => setPassword(e.target.value)}
           />
-          {errors.password && (
-            <p style={{ color: "red" }}>{errors.password}</p>
-          )}
         </div>
-
-        <div style={{ marginBottom: "1rem" }}>
-          <label>Confirm Password</label>
+        <div>
+          <label>Confirm Password:</label>
           <input
             type="password"
             value={passwordConfirmation}
-            onChange={(e) => setPasswordConfirmation(e.target.value)}
             required
-            style={{ width: "100%", padding: "0.5rem" }}
+            onChange={(e) => setPasswordConfirmation(e.target.value)}
           />
         </div>
-
-        <button type="submit" style={{ padding: "0.5rem 1rem" }}>
-          Reset Password
-        </button>
+        <button type="submit">Reset Password</button>
       </form>
+      {message && <p>{message}</p>}
     </div>
   );
 };
