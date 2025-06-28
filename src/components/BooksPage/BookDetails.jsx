@@ -193,7 +193,10 @@ const BookDetails = () => {
     setParentId(commentId);
     setReplyingTo(username);
     setEditingComment(null);
-    document.getElementById("comment-input").focus();
+    if (user) {
+      const input = document.getElementById("comment-input");
+      if (input) input.focus();
+    }
   };
 
   const handleEdit = (comment) => {
