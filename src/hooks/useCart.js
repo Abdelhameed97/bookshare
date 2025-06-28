@@ -33,9 +33,13 @@ export const useCart = (userId) => {
         }
     };
 
-    const addToCart = async (bookId, data = { type: 'buy' }) => {
+    const addToCart = async (bookId, data = {}) => {
         try {
-            await api.addToCart(bookId, data);
+            const payload = {
+                type: data.type ?? 'buy',
+            };
+
+            await api.addToCart(bookId, payload);
             await fetchCartItems();
             return true;
         } catch (error) {
@@ -43,6 +47,7 @@ export const useCart = (userId) => {
             throw error;
         }
     };
+    
 
     const removeFromCart = async (bookId) => {
         try {
@@ -68,6 +73,7 @@ export const useCart = (userId) => {
             return false;
         }
     };
+
 
     useEffect(() => {
         fetchCartItems();

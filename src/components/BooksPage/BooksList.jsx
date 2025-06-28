@@ -234,8 +234,7 @@ const BooksList = () => {
       if (!result.isConfirmed) return;
 
       const book = books.find((b) => b.id === bookId);
-      const type = book.originalPrice ? "rent" : "buy";
-
+      const type = "buy";
       await api.addToCart(book.id, { type });
       await fetchCartItems();
       setAddedToCartIds((prev) => [...prev, bookId]);

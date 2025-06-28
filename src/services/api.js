@@ -46,7 +46,7 @@ const apiService = {
 
         const payload = {
             book_id: bookId,
-            type: data.type,
+            type: data.type ?? 'buy',
             quantity: 1,
             user_id: user.id
         };
@@ -54,10 +54,12 @@ const apiService = {
         console.log("Sending to cart:", payload);
         return api.post('/cart', payload);
     },
-    updateCartItem: (cartItemId, quantity) => {
-        return api.put(`/cart/${cartItemId}`, {
-            quantity: parseInt(quantity, 10)
-        });
+    updateCartItem: (cartItemId, data) => {
+        // Ensure quantity is parsed as integer
+        if (data.quantity) {
+            data.quantity = parseInt(data.quantity, 10);
+        }
+        return api.put(`/cart/${cartItemId}`, data);
     },
     removeCartItem: (cartItemId) => api.delete(`/cart/${cartItemId}`),
     checkCartStatus: async (bookId) => {
@@ -109,15 +111,21 @@ const apiService = {
     // Payment Endpoints
     createPayment: (paymentData) => api.post('/payments', paymentData),
     getPayment: (paymentId) => api.get(`/payments/${paymentId}`),
-    getOrderPayment: (orderId) => api.get(`/orders/${orderId}/payment`).catch(err => {
-        if (err.response?.status === 404) {
+    getOrderPayment: (orderId) => api.get(`/orders/${orderId}/payment`)
+        .then(response => {
+            if (response.data) {
+                return response;
+            }
             return { data: null };
-        }
-        throw err;
-    }),
+        })
+        .catch(err => {
+            if (err.response?.status === 404) {
+                return { data: null };
+            }
+            throw err;
+        }),
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
     getUserPayments: () => api.get('/payments'),
-
     // Stripe Payment
     createStripePaymentIntent: (orderId) => api.post('/stripe/create-payment-intent', { order_id: orderId }),
     confirmStripePayment: (paymentId) => api.post('/stripe/confirm-payment', { payment_id: paymentId }),
