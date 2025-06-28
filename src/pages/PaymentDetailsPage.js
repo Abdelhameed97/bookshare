@@ -75,11 +75,18 @@ const PaymentDetailsPage = () => {
 
         if (isInitialLoad) {
             fetchData(orderId)
+                .then(() => {
+                    if (payment?.method) {
+                        setSelectedMethod(payment.method);
+                    }
+                })
                 .catch(err => console.error('[PaymentPage] Initial fetch error:', err));
+
             setIsInitialLoad(false);
             return;
         }
-    }, [orderId, fetchData, isInitialLoad]);
+    }, [orderId, fetchData, isInitialLoad, payment?.method]);
+    
 
     const paymentMethods = [
         { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
@@ -326,18 +333,18 @@ const PaymentDetailsPage = () => {
                                 ) : (
                                     <>
                                         <h5 className="mb-4">Select Payment Method</h5>
-                                        <div className="payment-methods mb-4">
-                                            {paymentMethods.map(method => (
-                                                <div
-                                                    key={method.id}
-                                                    className={`payment-method ${selectedMethod === method.id ? 'active' : ''}`}
-                                                    onClick={() => setSelectedMethod(method.id)}
-                                                >
-                                                    {method.icon}
-                                                    {method.label}
-                                                </div>
-                                            ))}
-                                        </div>
+                                            <div className="payment-methods mb-4">
+                                                {paymentMethods.map(method => (
+                                                    <div
+                                                        key={method.id}
+                                                        className={`payment-method ${selectedMethod === method.id ? 'active' : ''}`}
+                                                        onClick={() => setSelectedMethod(method.id)}
+                                                    >
+                                                        {method.icon}
+                                                        {method.label}
+                                                    </div>
+                                                ))}
+                                            </div>
 
                                         {selectedMethod === 'stripe' ? (
                                             <Elements stripe={stripePromise}>
@@ -375,13 +382,17 @@ const PaymentDetailsPage = () => {
                     </Col>
 
                     <Col lg={4}>
-                        <Card className="order-summary-card sticky-top">
+                        <Card className="order-summary-card">
                             <Card.Body>
                                 <h5 className="summary-title mb-3">Order Items</h5>
                                 <ListGroup variant="flush" className="mb-3">
                                     {order.items?.length > 0 ? (
-                                        order.items.map(item => (
-                                            <ListGroup.Item key={item.id} className="px-0">
+                                        order.items.map((item, index) => (
+                                            <ListGroup.Item
+                                                key={item.id}
+                                                className="px-0"
+                                                style={{ animationDelay: `${index * 0.1}s` }}
+                                            >
                                                 <div className="d-flex">
                                                     <img
                                                         src={getBookImage(item.book?.images)}
