@@ -67,6 +67,25 @@ const OrderDetailsPage = () => {
         setProcessing,
     } = usePayment();
 
+    // Function to mark notification as read
+    const markNotificationAsRead = () => {
+        try {
+            const readNotifications = JSON.parse(localStorage.getItem('readNotifications') || '[]');
+            if (!readNotifications.includes(parseInt(id))) {
+                const updated = [...readNotifications, parseInt(id)];
+                localStorage.setItem('readNotifications', JSON.stringify(updated));
+                console.log('Marked order notification as read:', id);
+                
+                // Dispatch custom event to notify navbar
+                window.dispatchEvent(new CustomEvent('notificationRead', {
+                    detail: { orderId: parseInt(id) }
+                }));
+            }
+        } catch (error) {
+            console.error('Error marking notification as read:', error);
+        }
+    };
+
     useEffect(() => {
         const fetchOrderDetails = async () => {
             try {
@@ -100,6 +119,9 @@ const OrderDetailsPage = () => {
 
                 setOrder(enhancedOrder);
                 setError(null);
+
+                // Mark notification as read when order details are loaded
+                markNotificationAsRead();
             } catch (err) {
                 console.error('Error fetching order:', err);
                 if (err.response?.status === 401) {

@@ -231,10 +231,7 @@ const AdminOrders = () => {
                             </>
                           )}
                           {order.status === 'cancelled' && (
-                            <button
-                              className="action-btn restore"
-                              onClick={() => handleStatusChange(order.id, 'restore')}
-                            >Accept</button>
+                            <span className="text-muted">No actions available</span>
                           )}
                           {order.status === 'rejected' && (
                             <button

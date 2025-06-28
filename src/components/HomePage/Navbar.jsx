@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
+import "../../style/Notifications.css";
 import {
   FaSearch,
   FaShoppingCart,
@@ -98,6 +99,26 @@ const Navbar = () => {
     }
   }, []);
 
+  // Listen for changes in readNotifications to update notification count
+  useEffect(() => {
+    const handleStorageChange = () => {
+      const stored = localStorage.getItem('readNotifications');
+      if (stored) {
+        setReadNotifications(JSON.parse(stored));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events
+    window.addEventListener('notificationRead', handleStorageChange);
+    
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('notificationRead', handleStorageChange);
+    };
+  }, []);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -138,6 +159,11 @@ const Navbar = () => {
     const updated = [...readNotifications, orderId];
     setReadNotifications(updated);
     localStorage.setItem('readNotifications', JSON.stringify(updated));
+    
+    // Dispatch custom event to notify other components
+    window.dispatchEvent(new CustomEvent('notificationRead', {
+      detail: { orderId: orderId }
+    }));
   };
 
   return (
@@ -226,29 +252,43 @@ const Navbar = () => {
                     {showClientNotifications && (
                       <div className="client-notification-dropdown">
                         <h4>Order Updates</h4>
-                        {unreadNotifications.length === 0 ? (
-                          <div className="no-notifications">No notifications</div>
-                        ) : (
-                          unreadNotifications.slice(0, 8).map(order => (
-                            <div key={order.id} className="client-notification-item">
-                              <span className="client-notification-message">
-                                Your order for <b>"{order.order_items?.[0]?.book?.title || 'a book'}"</b> was
-                                <span className={order.status === 'accepted' ? 'notif-accepted' : 'notif-rejected'}>
-                                  {order.status === 'accepted' ? ' accepted' : ' rejected'}
-                                </span>
-                              </span>
-                              <div className="client-notification-meta">
-                                <small>{new Date(order.updated_at).toLocaleString()}</small>
-                                <Link
-                                  to={`/orders/${order.id}`}
-                                  className="client-notification-link-btn"
-                                  onClick={() => handleNotificationView(order.id)}
-                                >
-                                  View
-                                </Link>
+                        <div className="client-notifications-scroll-container">
+                          {unreadNotifications.length === 0 ? (
+                            <div className="no-notifications">No notifications</div>
+                          ) : (
+                            unreadNotifications.slice(0, 2).map(order => (
+                              <div key={order.id} className="client-notification-item">
+                                <div className="client-notification-row">
+                                  <span className="client-notif-icon">
+                                    {order.status === 'accepted' ? '✅' : '❌'}
+                                  </span>
+                                  <span className="client-notification-message">
+                                    Your order for <span className="client-notif-book">"{order.order_items?.[0]?.book?.title || 'a book'}"</span> was
+                                    <span className={order.status === 'accepted' ? 'notif-accepted' : 'notif-rejected'}>
+                                      {order.status === 'accepted' ? ' accepted' : ' rejected'}
+                                    </span>
+                                  </span>
+                                </div>
+                                <div className="client-notification-meta">
+                                  <small>{new Date(order.updated_at).toLocaleString()}</small>
+                                  <Link
+                                    to={`/orders/${order.id}`}
+                                    className="client-notification-link-btn"
+                                    onClick={() => handleNotificationView(order.id)}
+                                  >
+                                    View
+                                  </Link>
+                                </div>
                               </div>
-                            </div>
-                          ))
+                            ))
+                          )}
+                        </div>
+                        {unreadNotifications.length > 2 && (
+                          <div className="client-view-all-notifications">
+                            <Link to="/client-notifications" className="client-view-all-link">
+                              View All Notifications ({unreadNotifications.length})
+                            </Link>
+                          </div>
                         )}
                       </div>
                     )}
@@ -498,6 +538,14 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                 >
                   {t('orders')} ({ordersCount})
+                </Link>
+                <Link
+                  to="/client-notifications"
+                  className="mobile-account-link"
+                  onClick={closeMobileMenu}
+                >
+                  <FaBell size={16} style={{ marginRight: "0.5rem" }} />
+                  Notifications ({unreadNotifications.length})
                 </Link>
               </>
             ) : (

@@ -197,6 +197,17 @@
     transform: scale(0.97);
   }
   
+  /* No Actions Available Text */
+  .actions-cell .text-muted {
+    color: #6b7280;
+    font-size: 0.9rem;
+    font-style: italic;
+    padding: 8px 12px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+  }
+  
   /* Books List */
   .orders-books-list {
     margin: 0;
