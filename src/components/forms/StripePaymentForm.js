@@ -36,24 +36,19 @@ const StripePaymentForm = ({ order, onSuccess, onError }) => {
         setError(null);
 
         try {
-            // Verify authentication
             const { user, token } = verifyAuthentication();
 
-            // Step 1: Create payment intent
             const response = await api.post('/stripe/create-payment-intent', {
                 order_id: order.id,
-                amount: Math.round(order.total_price * 100) // Convert to cents
+                amount: Math.round(order.total_price * 100)
             }, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` }
             });
 
             if (!response.data?.success) {
-                throw new Error(response.data?.message || 'Failed to create payment intent');
+                throw new Error(response.data?.message || 'Payment failed');
             }
 
-            // Step 2: Confirm the payment with Stripe
             const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
                 response.data.clientSecret,
                 {
@@ -63,65 +58,38 @@ const StripePaymentForm = ({ order, onSuccess, onError }) => {
                             name: user.name || 'Customer',
                             email: user.email || ''
                         }
-                    },
-                    receipt_email: user.email
+                    }
                 }
             );
 
-            if (stripeError) {
-                throw stripeError;
-            }
+            if (stripeError) throw stripeError;
 
             if (paymentIntent.status === 'succeeded') {
-                // Step 3: Confirm payment with our backend
-                const confirmResponse = await api.post('/stripe/confirm-payment', {
-                    payment_intent_id: paymentIntent.id,
-                    order_id: order.id,
-                    amount: paymentIntent.amount / 100 // Convert back to dollars
-                }, {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                });
-
-                if (!confirmResponse.data?.success) {
-                    throw new Error(confirmResponse.data?.message || 'Payment confirmation failed');
-                }
-
-                // Show success notification
                 await Swal.fire({
                     icon: 'success',
                     title: 'Payment Successful',
-                    text: 'Your payment has been processed successfully',
+                    text: 'Your payment has been processed',
                     timer: 2000
                 });
-
-                onSuccess(paymentIntent);
+                onSuccess?.(paymentIntent);
             }
         } catch (err) {
-            console.error('Stripe payment error:', err);
+            console.error('Payment error:', err);
 
-            let errorMessage = err.response?.data?.message || err.message;
+            const errorMessage = err.response?.data?.message || err.message;
             setError(errorMessage);
-
-            if (err.response?.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                navigate('/login');
-                return;
-            }
 
             await Swal.fire({
                 icon: 'error',
                 title: 'Payment Failed',
-                text: errorMessage,
+                text: errorMessage.includes('Only accepted orders can be paid')
+                    ? 'The order cannot be paid or may have been cancelled'
+                    : errorMessage,
             });
-
-            onError?.(err);
         } finally {
             setLoading(false);
         }
-    };
+      };
 
     return (
         <form onSubmit={handleSubmit}>
@@ -143,11 +111,10 @@ const StripePaymentForm = ({ order, onSuccess, onError }) => {
                     hidePostalCode: true
                 }}
             />
-            {error && <Alert variant="danger" className="mt-2">{error}</Alert>}
             <Button
                 type="submit"
                 disabled={!stripe || loading}
-                className="w-100 py-3 mt-3"
+                className="w-100"
                 variant="success"
             >
                 {loading ? (
@@ -156,7 +123,7 @@ const StripePaymentForm = ({ order, onSuccess, onError }) => {
                         Processing Payment...
                     </>
                 ) : (
-                    `Pay ${order.total_price.toFixed(2)} EGP`
+                    'Pay with Card'
                 )}
             </Button>
         </form>

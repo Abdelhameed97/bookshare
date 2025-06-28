@@ -95,8 +95,9 @@ const apiService = {
     createOrder: (orderData) => api.post('/orders', orderData),
     getOrderDetails: (orderId) => api.get(`/orders/${orderId}`)
         .catch(err => {
-            if (err.response?.status === 500 && err.response?.data?.error?.includes('No query results')) {
-                throw new Error('Order not found or already deleted');
+            if (err.response?.status === 404 ||
+                err.response?.data?.error?.includes('No query results')) {
+                throw new Error('Order not found or already cancelled');
             }
             throw err;
         }),
@@ -131,8 +132,14 @@ const apiService = {
     confirmStripePayment: (paymentId) => api.post('/stripe/confirm-payment', { payment_id: paymentId }),
 
     // PayPal Payment
-    createPayPalPayment: (orderId) => api.post('/paypal/create-payment', { order_id: orderId }),
-
+    createPayPalPayment: (orderId) => api.post('/paypal/create-payment', { order_id: orderId })
+        .catch(err => {
+            if (err.response?.status === 400) {
+                throw new Error(err.response.data?.message || 'Order cannot be paid');
+            }
+            throw err;
+        }),
+    
     // Coupon Endpoints
     applyCoupon: (couponCode) => api.post('/coupons/apply', { code: couponCode }),
 
