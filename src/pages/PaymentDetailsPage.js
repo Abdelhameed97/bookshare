@@ -26,19 +26,15 @@ import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from '../components/HomePage/Footer';
-import { Elements } from '@stripe/react-stripe-js';
-import { loadStripe } from '@stripe/stripe-js';
-import StripePaymentForm from '../components/forms/StripePaymentForm';
-import '../style/PaymentPage.css';
 import StripeWrapper from '../components/StripeWrapper';
-
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLIC_KEY || 'pk_test_51Rdg6iQAnF4Tl5ves23LxuT0PEGKbiCrG5CMA6wutfrDwTy7Db3eOcZCGxitA3v0F7FqlRSPBeCbvwZW62IMZ4Yx00OiCUMXrc');
+import '../style/PaymentPage.css';
 
 const PaymentDetailsPage = () => {
     const { orderId } = useParams();
     const navigate = useNavigate();
     const [selectedMethod, setSelectedMethod] = useState('stripe');
     const [isInitialLoad, setIsInitialLoad] = useState(true);
+    const [isOrderAccepted, setIsOrderAccepted] = useState(false);
 
     const {
         payment,
@@ -58,12 +54,10 @@ const PaymentDetailsPage = () => {
         if (!images || images.length === 0) {
             return 'https://via.placeholder.com/60x90';
         }
-
         const firstImage = images[0];
         if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
             return firstImage;
         }
-
         return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
     };
 
@@ -83,16 +77,30 @@ const PaymentDetailsPage = () => {
                 .catch(err => console.error('[PaymentPage] Initial fetch error:', err));
 
             setIsInitialLoad(false);
-            return;
         }
     }, [orderId, fetchData, isInitialLoad, payment?.method]);
     
+    useEffect(() => {
+        if (order && order.status) {
+            setIsOrderAccepted(order.status === 'accepted');
+        }
+    }, [order]);    
 
-    const paymentMethods = [
-        { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
-        { id: 'cash', label: 'Cash on Delivery', icon: <Wallet size={20} className="me-2" /> },
-        { id: 'paypal', label: 'PayPal', icon: <CreditCard size={20} className="me-2" /> },
-    ];
+    const handlePaymentError = (error) => {
+        let errorMessage = error.response?.data?.message || error.message;
+
+        if (errorMessage.includes('Order not found') ||
+            errorMessage.includes('No query results') ||
+            errorMessage.includes('Only accepted orders can be paid')) {
+            errorMessage = 'The order cannot be paid or may have been cancelled';
+        }
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Payment Failed',
+            text: errorMessage,
+        });
+    };
 
     const handlePaymentSuccess = () => {
         fetchData(orderId);
@@ -105,55 +113,55 @@ const PaymentDetailsPage = () => {
         });
     };
 
-    const handlePaymentError = (error) => {
-        Swal.fire({
-            icon: 'error',
-            title: 'Payment Failed',
-            text: error.message || 'Payment processing failed',
-        });
-    };
-
     const handlePaymentSubmit = async () => {
-        if (!order) {
-            console.error('[PaymentPage] Cannot submit - missing order data');
+        if (!isOrderAccepted) return;
+
+        if (selectedMethod === 'cash') {
             await Swal.fire({
-                icon: 'error',
-                title: 'Order Missing',
-                text: 'Cannot process payment without order details',
-            });
-            return;
-        }
-
-        try {
-            const paymentData = {
-                order_id: order.id,
-                method: selectedMethod,
-                amount: order.total_price || order.total,
-                status: 'pending'
-            };
-
-            const result = await createPayment(paymentData);
-
-            await Swal.fire({
-                icon: 'success',
-                title: 'Payment Successful!',
-                text: 'Your payment has been processed',
-                timer: 2000,
-                showConfirmButton: false
+                icon: 'info',
+                title: 'Payment on Delivery',
+                html: `
+                    <div>
+                        <p>The order will be paid when it's delivered to you.</p>
+                        <p>Our delivery agent will collect the payment upon arrival.</p>
+                    </div>
+                `,
+                confirmButtonText: 'OK'
             });
 
-            navigate(`/orders/${order.id}`);
-        } catch (err) {
-            console.error('[PaymentPage] Payment failed:', err);
-            await Swal.fire({
-                icon: 'error',
-                title: 'Payment Failed',
-                text: err.response?.data?.message || err.message || 'Payment processing failed',
-            });
+            try {
+                const paymentData = {
+                    order_id: order.id,
+                    method: 'cash',
+                    amount: order.total_price || order.total,
+                    status: 'pending'
+                };
+
+                const result = await createPayment(paymentData);
+                navigate(`/orders/${order.id}`);
+            } catch (err) {
+                handlePaymentError(err);
+            }
+        } else {
+            try {
+                const paymentData = {
+                    order_id: order.id,
+                    method: selectedMethod,
+                    amount: order.total_price || order.total,
+                    status: 'pending'
+                };
+
+                const result = await createPayment(paymentData);
+                navigate(`/orders/${order.id}`);
+            } catch (err) {
+                handlePaymentError(err);
+            }
         }
     };
 
     const handlePayPalPayment = async () => {
+        if (!isOrderAccepted) return;
+
         try {
             setProcessing(true);
             const result = await createPayPalPayment(order.id);
@@ -164,22 +172,7 @@ const PaymentDetailsPage = () => {
                 throw new Error(result.message || 'Failed to create PayPal payment');
             }
         } catch (err) {
-            console.error('PayPal payment error:', err);
-            let errorMessage = 'Payment failed';
-
-            if (err.response) {
-                errorMessage = err.response.data?.message ||
-                    err.response.data?.error?.message ||
-                    errorMessage;
-            } else if (err.message) {
-                errorMessage = err.message;
-            }
-
-            await Swal.fire({
-                icon: 'error',
-                title: 'Payment Failed',
-                text: errorMessage,
-            });
+            handlePaymentError(err);
         } finally {
             setProcessing(false);
         }
@@ -333,29 +326,39 @@ const PaymentDetailsPage = () => {
                                 ) : (
                                     <>
                                         <h5 className="mb-4">Select Payment Method</h5>
-                                            <div className="payment-methods mb-4">
-                                                {paymentMethods.map(method => (
-                                                    <div
-                                                        key={method.id}
-                                                        className={`payment-method ${selectedMethod === method.id ? 'active' : ''}`}
-                                                        onClick={() => setSelectedMethod(method.id)}
-                                                    >
-                                                        {method.icon}
-                                                        {method.label}
-                                                    </div>
-                                                ))}
-                                            </div>
+                                        <div className="payment-methods mb-4">
+                                            {[
+                                                { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
+                                                { id: 'cash', label: 'Cash on Delivery', icon: <Wallet size={20} className="me-2" /> },
+                                                { id: 'paypal', label: 'PayPal', icon: <CreditCard size={20} className="me-2" /> },
+                                            ].map(method => (
+                                                <div
+                                                    key={method.id}
+                                                    className={`payment-method ${selectedMethod === method.id ? 'active' : ''} ${!isOrderAccepted ? 'disabled-method' : ''}`}
+                                                    onClick={() => isOrderAccepted && setSelectedMethod(method.id)}
+                                                >
+                                                    {method.icon}
+                                                    {method.label}
+                                                    {!isOrderAccepted && (
+                                                        <div className="text-danger small mt-1 ms-2">
+                                                            Order must be accepted first
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
 
-                                        {selectedMethod === 'stripe' ? (
-                                            <Elements stripe={stripePromise}>
-                                                <StripeWrapper
-                                                    order={order}
-                                                    createStripePayment={createStripePayment}
-                                                    confirmStripePayment={confirmStripePayment}
-                                                    onSuccess={handlePaymentSuccess}
-                                                    onError={handlePaymentError}
-                                                />
-                                            </Elements>
+                                        {!isOrderAccepted ? (
+                                            <Alert variant="warning" className="text-center">
+                                                This order cannot be paid until it's accepted by the system
+                                            </Alert>
+                                        ) : selectedMethod === 'stripe' ? (
+                                                    <StripeWrapper
+                                                        order={order}
+                                                        isOrderAccepted={isOrderAccepted}
+                                                        onSuccess={handlePaymentSuccess}
+                                                        onError={handlePaymentError}
+                                                    />
                                         ) : selectedMethod === 'paypal' ? (
                                             <CustomButton
                                                 variant="success"

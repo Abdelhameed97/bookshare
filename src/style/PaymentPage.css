@@ -273,3 +273,14 @@
 .payment-card tbody tr:nth-child(6) {
     animation-delay: 0.6s;
 }
+
+.payment-method.disabled-method {
+    opacity: 0.6;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.payment-method.disabled-method:hover {
+    background-color: transparent;
+    border-color: #dee2e6;
+}

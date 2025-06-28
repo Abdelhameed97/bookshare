@@ -14,20 +14,22 @@ export const usePayment = () => {
         setLoading(true);
         setError(null);
         try {
-            // First get order details
             const orderResponse = await api.getOrderDetails(orderId);
             const orderData = orderResponse.data?.data || orderResponse.data;
-            if (!orderData) throw new Error('Order not found');
 
-            // Then get payment details if exists
+            if (!orderData) {
+                throw new Error('Order not found or may have been cancelled');
+            }
+
             try {
                 const paymentResponse = await api.getOrderPayment(orderId);
                 const paymentData = paymentResponse.data?.data || paymentResponse.data;
+
                 if (paymentData) {
                     setPayment(paymentData);
                 }
             } catch (paymentError) {
-                console.log('No payment exists yet');
+                console.log('No payment exists yet, will create new one');
             }
 
             setOrder({
@@ -36,7 +38,15 @@ export const usePayment = () => {
             });
 
         } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Failed to load payment details');
+            console.error('Error fetching payment details:', err);
+            let errorMessage = err.response?.data?.message || err.message;
+
+            if (errorMessage.includes('Order not found') ||
+                errorMessage.includes('No query results')) {
+                errorMessage = 'The order was not found or may have been cancelled';
+            }
+
+            setError(errorMessage);
             if (err.response?.status === 401) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
@@ -105,12 +115,34 @@ export const usePayment = () => {
     const createPayPalPayment = async (orderId) => {
         setProcessing(true);
         try {
-            console.log('Sending PayPal payment for orderId:', orderId);
             const response = await api.createPayPalPayment(orderId);
+
+            if (!response.data) {
+                throw new Error('No response from PayPal');
+            }
+
+            if (!response.data.success) {
+                throw new Error(response.data.message || 'Payment failed');
+            }
+
+            if (!response.data.approval_url) {
+                throw new Error('Missing PayPal approval URL');
+            }
+
             return response.data;
         } catch (err) {
-            console.error('PayPal payment creation failed:', err);
-            throw err;
+            console.error('PayPal payment error:', err);
+
+            const errorObj = {
+                ...err,
+                response: err.response || {
+                    data: {
+                        message: err.message || 'Payment processing failed'
+                    }
+                }
+            };
+
+            throw errorObj;
         } finally {
             setProcessing(false);
         }
