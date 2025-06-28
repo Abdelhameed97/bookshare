@@ -25,47 +25,53 @@ import LanguageSwitcher from '../shared/LanguageSwitcher';
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
+
+  const navLocation = useLocation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
 
-  const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
-  const toggleMobileMenu = () => setIsOpen(!isOpen);
-  const closeMobileMenu = () => setIsOpen(false);
-
   const { cartCount } = useCart(user?.id);
   const { wishlistCount } = useWishlist(user?.id);
-  const { orders, fetchOrders } = useOrders(user?.id);
+  const { orders, fetchOrders, ...restOrders } = useOrders(user?.id);
   const ordersCount = orders.length;
 
   const isLibraryOwner = user?.role === "owner";
-  const { t } = useTranslation();
+
+  const { t, language } = useTranslation();
+
   const [showClientNotifications, setShowClientNotifications] = useState(false);
+
+  const [readNotifications, setReadNotifications] = useState(() => {
+    const stored = localStorage.getItem('readNotifications');
+    return stored ? JSON.parse(stored) : [];
+  });
 
   const regularNavLinks = [
     { to: "/", label: "home" },
     { to: "/about", label: "about" },
-    { to: "/categories", label: "categories" },
+    // { to: "/coming-soon", label: "comingSoon" },
+    { to: "/top-seller", label: "topSeller" },
     { to: "/books", label: "books" },
     { to: "/contact", label: "contact" },
   ];
 
   const ownerNavLinks = [
-    { to: "/dashboard", label: "dashboard", icon: FaTachometerAlt },
-    { to: "/categories", label: "categories" },
-    { to: "/edit-profile", label: "editProfile", icon: FaUserEdit },
-    { to: "/add-book", label: "addBook", icon: FaBook },
+    { to: "/dashboard", label: "dashboard" },
+    { to: "/edit-profile", label: "editProfile" },
+    { to: "/add-book", label: "addBook" },
     { to: "/libraries", label: "allLibraries" },
-    { to: "/all-orders", label: "orders", icon: FaBoxOpen },
+    { to: "/all-orders", label: "orders" },
   ];
 
   const adminNavLinks = [
-    { to: "/admin/dashboard", label: "adminDashboard", icon: FaTachometerAlt },
+    { to: "/admin/dashboard", label: "adminDashboard" },
+
     { to: "/admin/users", label: "users" },
     { to: "/admin/categories", label: "categories" },
-    { to: "/admin/books", label: "books", icon: FaBook },
-    { to: "/admin/orders", label: "orders", icon: FaBoxOpen },
+    { to: "/admin/books", label: "books" },
+    { to: "/admin/orders", label: "orders" },
   ];
 
   const navLinks = user?.role === "admin"
@@ -73,11 +79,11 @@ const Navbar = () => {
     : isLibraryOwner
       ? ownerNavLinks
       : regularNavLinks;
+      
 
-  const [readNotifications, setReadNotifications] = useState(() => {
-    const stored = localStorage.getItem('readNotifications');
-    return stored ? JSON.parse(stored) : [];
-  });
+  const toggleMobileMenu = () => setIsOpen(!isOpen);
+  const closeMobileMenu = () => setIsOpen(false);
+  const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
 
   useEffect(() => {
     const storedUser = localStorage.getItem("user");
@@ -93,6 +99,7 @@ const Navbar = () => {
     }
   }, []);
 
+  // Listen for changes in readNotifications to update notification count
   useEffect(() => {
     const handleStorageChange = () => {
       const stored = localStorage.getItem('readNotifications');
@@ -102,6 +109,8 @@ const Navbar = () => {
     };
 
     window.addEventListener('storage', handleStorageChange);
+    
+    // Also listen for custom events
     window.addEventListener('notificationRead', handleStorageChange);
     
     return () => {
@@ -125,8 +134,10 @@ const Navbar = () => {
     navigate(path);
   };
 
+  // Notifications for client
   const clientOrderNotifications = useMemo(() => {
     if (!user || user.role !== 'client' || !orders) return [];
+    // Only show notifications for orders that are not pending
     return orders
       .filter(order => order.status === 'accepted' || order.status === 'rejected')
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
@@ -139,7 +150,7 @@ const Navbar = () => {
 
   const handleShowNotifications = async () => {
     if (!showClientNotifications) {
-      await fetchOrders();
+      await fetchOrders(); // fetch latest orders before showing notifications
     }
     setShowClientNotifications(v => !v);
   };
@@ -148,6 +159,8 @@ const Navbar = () => {
     const updated = [...readNotifications, orderId];
     setReadNotifications(updated);
     localStorage.setItem('readNotifications', JSON.stringify(updated));
+    
+    // Dispatch custom event to notify other components
     window.dispatchEvent(new CustomEvent('notificationRead', {
       detail: { orderId: orderId }
     }));
@@ -176,11 +189,11 @@ const Navbar = () => {
             <div className="navbar-content">
               <div className="nav-links-desktop">
                 {navLinks.map((link) => {
-                  const isActive = location.pathname === link.to;
+                  const isActive = navLocation.pathname === link.to;
                   const IconComponent = link.icon;
                   return (
                     <Link
-                      key={link.to}
+                      key={link.label}
                       to={link.to}
                       className={`nav-link${isActive ? " active" : ""}`}
                       style={{
@@ -193,6 +206,16 @@ const Navbar = () => {
                         display: "flex",
                         alignItems: "center",
                         gap: "0.5rem",
+                      }}
+                      onMouseOver={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "#e3e9f1";
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (!isActive) {
+                          e.currentTarget.style.background = "transparent";
+                        }
                       }}
                     >
                       {IconComponent && <IconComponent size={16} />}
@@ -213,6 +236,7 @@ const Navbar = () => {
 
                 <LanguageSwitcher />
 
+                {/* Client Notifications Bell */}
                 {user?.role === 'client' && (
                   <div className="client-notification-section">
                     <button
@@ -470,11 +494,11 @@ const Navbar = () => {
 
           <div className="mobile-nav-links">
             {navLinks.map((link) => {
-              const isActive = location.pathname === link.to;
+              const isActive = navLocation.pathname === link.to;
               const IconComponent = link.icon;
               return (
                 <Link
-                  key={link.to}
+                  key={link.label}
                   to={link.to}
                   className={`mobile-nav-link${isActive ? " active" : ""}`}
                   onClick={closeMobileMenu}
