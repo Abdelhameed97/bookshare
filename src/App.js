@@ -24,6 +24,8 @@ import LibraryDetails from "./components/Library/LibraryDetails";
 import PaymentsPage from "./pages/PaymentsPage";
 import PaymentDetailsPage from './pages/PaymentDetailsPage';
 import AllOrdersPage from './components/Library/AllOrdersPage';
+import NotificationsPage from './components/Library/NotificationsPage';
+import ClientNotificationsPage from './pages/ClientNotificationsPage';
 
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
@@ -38,6 +40,7 @@ import CategoryList from './components/Admin/CategoryList';
 import UserList from './components/Admin/UserList';
 import BookList from './components/Admin/BookList';
 import AdminOrders from './components/Admin/AdminOrders';
+import AdminNotificationsPage from './components/Admin/NotificationsPage';
 import AdminRoute from './components/GuestRoute/AdminRoute';
 import OwnerRoute from './components/GuestRoute/OwnerRoute';
 import EditBookPage from './components/Library/EditBookPage';
@@ -98,6 +101,8 @@ function App() {
         <Route path="/library/:id" element={<OwnerRoute><LibraryDetails /></OwnerRoute>} />
         <Route path="/all-orders" element={<OwnerRoute><AllOrdersPage /></OwnerRoute>} />
         <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
+        <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
+        <Route path="/client-notifications" element={<ClientNotificationsPage />} />
         
 
         {/* Admin Routes */}
@@ -107,6 +112,7 @@ function App() {
         <Route path="/admin/users" element={<AdminRoute><UserList /></AdminRoute>} />
         <Route path="/admin/books" element={<AdminRoute><BookList /></AdminRoute>} />
         <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+        <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
 
         <Route path='*' element={<NotFound />} />
 
