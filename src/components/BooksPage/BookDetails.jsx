@@ -24,7 +24,8 @@ import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "animate.css";
 import Swal from "sweetalert2";
-import { useCart } from "../../hooks/useCart";
+import { useCartContext } from "../../contexts/CartContext";
+import { useWishlistContext } from "../../contexts/WishlistContext";
 import StarRating from "./StarRating";
 
 const BookDetails = () => {
@@ -48,9 +49,11 @@ const BookDetails = () => {
   const [avgRating, setAvgRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
+  const [newCommentId, setNewCommentId] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const { addToCart, removeFromCart, checkCartStatus } = useCart(user?.id);
+  const { addToCart, removeFromCart, checkCartStatus } = useCartContext();
+  const { addToWishlist, removeItem } = useWishlistContext();
 
   useEffect(() => {
     return () => {
@@ -163,7 +166,7 @@ const BookDetails = () => {
     }
 
     try {
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:8000/api/comment",
         {
           user_id: user.id,
@@ -178,14 +181,70 @@ const BookDetails = () => {
         }
       );
 
+      // Create new comment object
+      const newComment = {
+        id: response.data.id,
+        comment: commentInput,
+        user_id: user.id,
+        user: response.data.user || {
+          id: user.id,
+          name: user.name
+        },
+        book_id: id,
+        parent_id: parentId,
+        created_at: response.data.created_at || new Date().toISOString(),
+        updated_at: response.data.updated_at || new Date().toISOString(),
+        replies: []
+      };
+
+      // Update local state immediately
+      setBook(prevBook => {
+        const updatedBook = { ...prevBook };
+        
+        if (!updatedBook.comments) {
+          updatedBook.comments = [];
+        }
+
+        if (parentId) {
+          // Add reply to parent comment
+          const addReplyToComment = (comments) => {
+            return comments.map(comment => {
+              if (comment.id === parentId) {
+                return {
+                  ...comment,
+                  replies: [...(comment.replies || []), newComment]
+                };
+              }
+              if (comment.replies && comment.replies.length > 0) {
+                return {
+                  ...comment,
+                  replies: addReplyToComment(comment.replies)
+                };
+              }
+              return comment;
+            });
+          };
+          updatedBook.comments = addReplyToComment(updatedBook.comments);
+        } else {
+          // Add new top-level comment
+          updatedBook.comments = [newComment, ...updatedBook.comments];
+        }
+        
+        return updatedBook;
+      });
+
       setCommentInput("");
       setParentId(null);
       setReplyingTo(null);
-      await fetchBookWithComments();
+      
+      // Scroll to new comment with highlight
+      scrollToComment(newComment.id);
+      
       toast.success("Comment added successfully!");
     } catch (error) {
       console.error("Error submitting comment:", error);
-      toast.error(error.response?.data?.message || "Failed to add comment");
+      console.error("Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to add comment");
     }
   };
 
@@ -225,9 +284,35 @@ const BookDetails = () => {
         }
       );
 
+      // Update local state immediately
+      setBook(prevBook => {
+        const updatedBook = { ...prevBook };
+        
+        const updateCommentInArray = (comments) => {
+          return comments.map(comment => {
+            if (comment.id === editingComment) {
+              return {
+                ...comment,
+                comment: editCommentText,
+                updated_at: new Date().toISOString()
+              };
+            }
+            if (comment.replies && comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateCommentInArray(comment.replies)
+              };
+            }
+            return comment;
+          });
+        };
+        
+        updatedBook.comments = updateCommentInArray(updatedBook.comments);
+        return updatedBook;
+      });
+
       setEditingComment(null);
       setEditCommentText("");
-      await fetchBookWithComments();
       toast.success("Comment updated successfully!");
     } catch (error) {
       console.error("Error updating comment:", error);
@@ -253,7 +338,30 @@ const BookDetails = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        await fetchBookWithComments();
+
+        // Update local state immediately
+        setBook(prevBook => {
+          const updatedBook = { ...prevBook };
+          
+          const removeCommentFromArray = (comments) => {
+            return comments.filter(comment => {
+              if (comment.id === commentId) {
+                return false; // Remove this comment
+              }
+              if (comment.replies && comment.replies.length > 0) {
+                return {
+                  ...comment,
+                  replies: removeCommentFromArray(comment.replies)
+                };
+              }
+              return true; // Keep this comment
+            });
+          };
+          
+          updatedBook.comments = removeCommentFromArray(updatedBook.comments);
+          return updatedBook;
+        });
+
         toast.success("Comment deleted successfully!");
       }
     } catch (error) {
@@ -271,23 +379,11 @@ const BookDetails = () => {
     setLoadingStatus(true);
     try {
       if (isWishlisted) {
-        await axios.delete(`http://localhost:8000/api/wishlist/${book.id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        await removeItem(book.id);
         setIsWishlisted(false);
         toast.success("Removed from wishlist");
       } else {
-        await axios.post(
-          `http://localhost:8000/api/wishlist`,
-          { book_id: book.id },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await addToWishlist(book.id);
         setIsWishlisted(true);
         toast.success("Added to wishlist");
       }
@@ -394,12 +490,33 @@ const BookDetails = () => {
     }
   };
 
+  const scrollToComment = (commentId) => {
+    setTimeout(() => {
+      const commentElement = document.getElementById(`comment-${commentId}`);
+      if (commentElement) {
+        commentElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Add highlight effect
+        commentElement.classList.add('comment-highlight');
+        
+        // Remove highlight class after animation
+        setTimeout(() => {
+          commentElement.classList.remove('comment-highlight');
+        }, 3000);
+      }
+    }, 100);
+  };
+
   const renderComments = (comments, depth = 0) => {
     if (!comments || !Array.isArray(comments)) return null;
 
     return comments.map((comment) => (
       <div
         key={comment.id}
+        id={`comment-${comment.id}`}
         className={`mb-3 ${
           depth > 0 ? "ms-4 ps-3 border-start border-2 border-primary" : ""
         } animate__animated animate__fadeIn`}
@@ -1007,6 +1124,69 @@ const BookDetails = () => {
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        @keyframes commentHighlight {
+          0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+          }
+          50% {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+          }
+          100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+          }
+        }
+        
+        .comment-highlight {
+          animation: commentHighlight 3s ease-in-out;
+          border: 2px solid #3b82f6 !important;
+        }
+        
+        @media (max-width: 768px) {
+          .form-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .form-container {
+            padding: 20px !important;
+          }
+          
+          .header-container {
+            padding: 20px !important;
+          }
+          
+          .back-link {
+            position: static !important;
+            transform: none !important;
+            margin-bottom: 15px !important;
+            justify-content: center !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .form-container {
+            padding: 15px !important;
+          }
+          
+          .header-container {
+            padding: 15px !important;
+          }
+          
+          h1 {
+            font-size: 1.5rem !important;
+          }
+        }
+      `}</style>
     </>
   );
 };

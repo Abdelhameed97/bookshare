@@ -32,7 +32,7 @@ import api from '../services/api';
 import '../style/CartPage.css';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
-import { useCart } from '../hooks/useCart';
+import { useCartContext } from '../contexts/CartContext';
 
 const CartPage = () => {
     const getBookImage = (images) => {
@@ -54,8 +54,10 @@ const CartPage = () => {
         loading,
         error,
         fetchCartItems,
-        setCartItems
-    } = useCart(user?.id);
+        setCartItems,
+        removeFromCart,
+        updateCartItemQuantity
+    } = useCartContext();
 
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');

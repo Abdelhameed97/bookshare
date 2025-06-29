@@ -17,8 +17,8 @@ import {
   FaUserEdit,
   FaBell,
 } from "react-icons/fa";
-import { useCart } from "../../hooks/useCart";
-import { useWishlist } from "../../hooks/useWishlist";
+import { useCartContext } from "../../contexts/CartContext";
+import { useWishlistContext } from "../../contexts/WishlistContext";
 import { useOrders } from "../../hooks/useOrders";
 import useTranslation from '../../hooks/useTranslation';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
@@ -32,8 +32,8 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { cartCount } = useCart(user?.id);
-  const { wishlistCount } = useWishlist(user?.id);
+  const { cartCount } = useCartContext(user?.id);
+  const { wishlistCount } = useWishlistContext(user?.id);
   const { orders, fetchOrders, ...restOrders } = useOrders(user?.id);
   const ordersCount = orders.length;
 

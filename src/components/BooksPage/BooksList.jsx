@@ -17,8 +17,8 @@ import HomePageButton from "../shared/HomePageButton";
 import "../../style/BooksList.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import { useCart } from "../../hooks/useCart";
-import { useWishlist } from "../../hooks/useWishlist";
+import { useCartContext } from "../../contexts/CartContext";
+import { useWishlistContext } from "../../contexts/WishlistContext";
 import api from "../../services/api";
 
 const BooksList = () => {
@@ -36,9 +36,8 @@ const BooksList = () => {
   const location = useLocation();
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const userId = currentUser?.id;
-  const { cartItems, fetchCartItems } = useCart(userId);
-  const { wishlistItems, fetchWishlist, addToWishlist, removeItem } =
-    useWishlist(userId);  
+  const { cartItems, fetchCartItems } = useCartContext();
+  const { wishlistItems, fetchWishlist, addToWishlist, removeItem } = useWishlistContext();
   const [addedToCartIds, setAddedToCartIds] = useState([]);
   const [justAddedBookId, setJustAddedBookId] = useState(null);
 
