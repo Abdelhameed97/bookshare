@@ -256,8 +256,8 @@ const Navbar = () => {
                           {unreadNotifications.length === 0 ? (
                             <div className="no-notifications">No notifications</div>
                           ) : (
-                            unreadNotifications.slice(0, 2).map(order => (
-                              <div key={order.id} className="client-notification-item">
+                            unreadNotifications.slice(0, 2).map((order, index) => (
+                              <div key={order.id} className={`client-notification-item ${index === 0 ? 'first-notification' : ''}`}>
                                 <div className="client-notification-row">
                                   <span className="client-notif-icon">
                                     {order.status === 'accepted' ? '✅' : '❌'}
@@ -268,6 +268,9 @@ const Navbar = () => {
                                       {order.status === 'accepted' ? ' accepted' : ' rejected'}
                                     </span>
                                   </span>
+                                  {index === 0 && (
+                                    <span className="new-badge">new</span>
+                                  )}
                                 </div>
                                 <div className="client-notification-meta">
                                   <small>{new Date(order.updated_at).toLocaleString()}</small>
@@ -283,7 +286,7 @@ const Navbar = () => {
                             ))
                           )}
                         </div>
-                        {unreadNotifications.length > 2 && (
+                        {unreadNotifications.length > 0 && (
                           <div className="client-view-all-notifications">
                             <Link to="/client-notifications" className="client-view-all-link">
                               View All Notifications ({unreadNotifications.length})
