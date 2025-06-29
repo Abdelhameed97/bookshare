@@ -123,7 +123,7 @@ const Navbar = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
-    navigate("/");
+    navigate("/login");
   };
 
   const handleProtectedAction = (path) => {
