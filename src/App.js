@@ -31,7 +31,7 @@ import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
 import CategoryPage from "./pages/CategoryPage";
- import RagChat from "./pages/RagChat";
+import RagChat from "./pages/RagChat";
 import FloatingChatButton from "./components/FloatingChatButton";
 import ForgotPassword from './components/forms/ForgotPassword';
 import ResetPassword from './components/forms/ResetPassword';
@@ -57,7 +57,7 @@ function RedirectToDashboardOrHome() {
   }
   if (user && user.role === "admin") {
     return <Navigate to="/admin/dashboard" replace />;
-  } 
+  }
   return <Home />;
 }
 
@@ -85,8 +85,8 @@ function App() {
             </GuestRoute>
           }
         />
-        <Route 
-          path="/get-started" 
+        <Route
+          path="/get-started"
           element={
             <GuestRoute>
               <GetStartedPage />
@@ -106,7 +106,7 @@ function App() {
         <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
         <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
         <Route path="/client-notifications" element={<ClientNotificationsPage />} />
-        
+
 
         {/* Admin Routes */}
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -120,7 +120,7 @@ function App() {
         <Route path='*' element={<NotFound />} />
 
       </Routes>
-       <FloatingChatButton />
+      <FloatingChatButton />
 
     </Router>
   );

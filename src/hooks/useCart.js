@@ -44,10 +44,9 @@ export const useCart = (userId) => {
             return true;
         } catch (error) {
             console.error("Error adding to cart:", error);
-            throw error;
+            throw error.response?.data?.message || 'Failed to add item to cart';
         }
     };
-    
 
     const removeFromCart = async (bookId) => {
         try {
@@ -59,7 +58,7 @@ export const useCart = (userId) => {
             return true;
         } catch (error) {
             console.error("Error removing from cart:", error);
-            throw error;
+            throw error.response?.data?.message || 'Failed to remove item from cart';
         }
     };
 
@@ -74,6 +73,33 @@ export const useCart = (userId) => {
         }
     };
 
+    const applyCoupon = async (couponCode, subtotal) => {
+        try {
+            const response = await api.applyCoupon(couponCode, subtotal);
+
+            return {
+                success: true,
+                coupon: response.coupon,
+                discount: response.discount,
+                newSubtotal: response.newSubtotal
+            };
+        } catch (error) {
+            return {
+                success: false,
+                error: error.response?.data?.message || error.message || 'Failed to apply coupon'
+            };
+        }
+    };
+    
+    const updateCartItem = async (cartItemId, quantity) => {
+        try {
+            await api.updateCartItem(cartItemId, { quantity });
+            await fetchCartItems();
+            return true;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to update cart item';
+        }
+    };
 
     useEffect(() => {
         fetchCartItems();
@@ -91,7 +117,9 @@ export const useCart = (userId) => {
         fetchCartItems,
         addToCart,
         removeFromCart,
+        updateCartItem,
         checkCartStatus,
+        applyCoupon,
         setCartItems
     };
 };
