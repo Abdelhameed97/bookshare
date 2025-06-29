@@ -11,32 +11,40 @@ import {
     Button
 } from 'react-bootstrap';
 import {
-    ChevronLeft,
-    Truck,
-    CheckCircle,
-    XCircle,
-    Clock,
-    RefreshCw,
-    Package,
-    FileText,
-    AlertCircle,
-    ThumbsUp,
-    ThumbsDown,
-    CreditCard
-} from 'lucide-react';
+    FaChevronLeft,
+    FaTruck,
+    FaCheckCircle,
+    FaTimesCircle,
+    FaClock,
+    FaRedo,
+    FaBox,
+    FaFileAlt,
+    FaExclamationCircle,
+    FaThumbsUp,
+    FaThumbsDown,
+    FaCreditCard
+} from 'react-icons/fa';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../services/api';
-import Title from '../components/shared/Title';
+import Swal from 'sweetalert2';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
-import Swal from 'sweetalert2';
-import CustomButton from '../components/shared/CustomButton.js';
-import { usePayment } from '../hooks/usePayment';
 
 const OrderDetailsPage = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [order, setOrder] = useState(null);
+    const [payment, setPayment] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [processing, setProcessing] = useState(false);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
+    const [paymentAttempted, setPaymentAttempted] = useState(false);
+
+    // Helper function to get book image URL
     const getBookImage = (images) => {
         if (!images || images.length === 0) {
-            return 'https://via.placeholder.com/300x450';
+            return 'https://via.placeholder.com/300x450?text=Book+Image';
         }
 
         const firstImage = images[0];
@@ -47,23 +55,11 @@ const OrderDetailsPage = () => {
         return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
     };
 
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [order, setOrder] = useState(null);
-    const [payment, setPayment] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [paymentCompleted, setPaymentCompleted] = useState(false);
-    const [paymentAttempted, setPaymentAttempted] = useState(false);
-
-    const {
-        processing,
-        setProcessing,
-    } = usePayment();
-
+    // Fetch order and payment details
     const fetchOrderAndPayment = async () => {
         try {
             setLoading(true);
+            setError(null);
 
             // Fetch order details
             const orderResponse = await api.getOrderDetails(id);
@@ -84,12 +80,17 @@ const OrderDetailsPage = () => {
                 console.log('No payment record found');
             }
 
+            // Format order items with prices
             setOrder({
                 ...orderData,
                 order_items: orderData.order_items?.map(item => ({
                     ...item,
-                    unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
-                    total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
+                    unit_price: item.type === 'rent' ?
+                        (item.book?.rental_price || 0) :
+                        (item.price || item.book?.price || 0),
+                    total_price: (item.type === 'rent' ?
+                        (item.book?.rental_price || 0) :
+                        (item.price || item.book?.price || 0)) * item.quantity
                 }))
             });
 
@@ -109,6 +110,7 @@ const OrderDetailsPage = () => {
         fetchOrderAndPayment();
     }, [id]);
 
+    // Handle order cancellation
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
             title: 'Cancel Order?',
@@ -136,8 +138,6 @@ const OrderDetailsPage = () => {
                 'Your order has been cancelled successfully.',
                 'success'
             );
-
-            navigate('/orders', { state: { activeTab: 'cancelled' } });
         } catch (err) {
             console.error('Error cancelling order:', err);
             let errorMessage = err.response?.data?.message || 'Failed to cancel order';
@@ -150,31 +150,64 @@ const OrderDetailsPage = () => {
         }
     };
 
-    const handlePayment = async () => {
+    // Navigate to payment page
+    const handlePayment = () => {
         setPaymentAttempted(true);
         navigate(`/payment/${id}`);
     };
 
+    // Format dates consistently
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch {
+            return 'Invalid Date';
+        }
+    };
+
+    // Format prices consistently
+    const formatPrice = (price) => {
+        const num = parseFloat(price);
+        return isNaN(num) ? '0.00' : num.toFixed(2);
+    };
+
+    // Get price for an item based on its type
+    const getItemPrice = (item) => {
+        return item.type === 'rent' ?
+            (item.book?.rental_price || 0) :
+            (item.price || item.book?.price || 0);
+    };
+
+    // Status icons for visual indication
     const getStatusIcon = (status) => {
-        if (!status) return <Clock size={20} className="text-secondary me-2" />;
+        if (!status) return <FaClock size={20} className="text-secondary me-2" />;
         switch (status.toLowerCase()) {
             case 'accepted':
             case 'completed':
             case 'delivered':
-                return <ThumbsUp size={20} className="text-success me-2" />;
+                return <FaThumbsUp size={20} className="text-success me-2" />;
             case 'rejected':
             case 'cancelled':
-                return <ThumbsDown size={20} className="text-danger me-2" />;
+                return <FaThumbsDown size={20} className="text-danger me-2" />;
             case 'shipped':
-                return <Truck size={20} className="text-primary me-2" />;
+                return <FaTruck size={20} className="text-primary me-2" />;
             case 'processing':
             case 'pending':
-                return <RefreshCw size={20} className="text-warning me-2" />;
+                return <FaRedo size={20} className="text-warning me-2" />;
             default:
-                return <AlertCircle size={20} className="text-secondary me-2" />;
+                return <FaExclamationCircle size={20} className="text-secondary me-2" />;
         }
     };
 
+    // Status badges with appropriate colors
     const getStatusBadge = (status) => {
         if (!status) return 'secondary';
         switch (status.toLowerCase()) {
@@ -195,6 +228,7 @@ const OrderDetailsPage = () => {
         }
     };
 
+    // Card variants based on status
     const getStatusCardVariant = (status) => {
         if (!status) return 'light';
         switch (status.toLowerCase()) {
@@ -215,11 +249,12 @@ const OrderDetailsPage = () => {
         }
     };
 
+    // Payment status badge with icon
     const getPaymentStatusBadge = () => {
         if (!payment) {
             return (
                 <Badge bg="secondary" className="custom-badge">
-                    <Clock size={16} className="me-1" /> Not Paid
+                    <FaClock size={16} className="me-1" /> Not Paid
                 </Badge>
             );
         }
@@ -228,79 +263,67 @@ const OrderDetailsPage = () => {
             case 'paid':
                 return (
                     <Badge bg="success" className="custom-badge">
-                        <CheckCircle size={16} className="me-1" /> Paid
+                        <FaCheckCircle size={16} className="me-1" /> Paid
                     </Badge>
                 );
             case 'pending':
                 return (
                     <Badge bg="warning" text="dark" className="custom-badge">
-                        <Clock size={16} className="me-1" /> Pending
+                        <FaClock size={16} className="me-1" /> Pending
                     </Badge>
                 );
             case 'failed':
                 return (
                     <Badge bg="danger" className="custom-badge">
-                        <XCircle size={16} className="me-1" /> Failed
+                        <FaTimesCircle size={16} className="me-1" /> Failed
                     </Badge>
                 );
             default:
                 return (
                     <Badge bg="secondary" className="custom-badge">
-                        <Clock size={16} className="me-1" /> Not Paid
+                        <FaClock size={16} className="me-1" /> Not Paid
                     </Badge>
                 );
         }
     };
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch {
-            return 'Invalid Date';
-        }
-    };
-
-    const formatPrice = (price) => {
-        const num = parseFloat(price);
-        return isNaN(num) ? '0.00' : num.toFixed(2);
-    };
-
-    const getItemPrice = (item) => {
-        return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
-    };
-
+    // Get current user info
     const user = JSON.parse(localStorage.getItem('user'));
     const isClient = user?.id === order?.client_id;
+
+    // Determine if order can be cancelled
     const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+
+    // Determine if payment can be made
     const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
         !paymentCompleted &&
         (!payment || payment.status !== 'paid') &&
         isClient;
 
+    // Loading state
     if (loading) {
         return (
-            <div className="text-center py-5">
-                <Spinner animation="border" variant="primary" />
-                <p className="mt-2">Loading order details...</p>
+            <div className="d-flex flex-column min-vh-100">
+                <Navbar />
+                <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                    <div className="text-center">
+                        <Spinner animation="border" variant="primary" />
+                        <p className="mt-3">Loading order details...</p>
+                    </div>
+                </div>
+                <Footer />
             </div>
         );
     }
 
+    // Error state
     if (error) {
         return (
-            <>
+            <div className="d-flex flex-column min-vh-100">
                 <Navbar />
-                <Container className="py-5">
+                <Container className="flex-grow-1 py-5">
                     <Alert variant="danger" className="d-flex align-items-center">
-                        <AlertCircle size={24} className="me-2" />
+                        <FaExclamationCircle size={24} className="me-2" />
                         <div>
                             <h5>Order Loading Error</h5>
                             <p className="mb-0">{error}</p>
@@ -308,82 +331,84 @@ const OrderDetailsPage = () => {
                     </Alert>
                     <div className="d-flex justify-content-center mt-4 gap-3">
                         {error.includes('not found') || error.includes('deleted') ? (
-                            <CustomButton
+                            <Button
                                 variant="primary"
                                 onClick={() => navigate('/orders')}
                             >
                                 Back to Orders
-                            </CustomButton>
+                            </Button>
                         ) : (
                             <>
-                                <CustomButton
+                                <Button
                                     variant="primary"
                                     onClick={() => window.location.reload()}
                                 >
                                     Retry
-                                </CustomButton>
-                                <CustomButton
+                                </Button>
+                                <Button
                                     variant="outline-primary"
                                     onClick={() => navigate('/orders')}
                                 >
                                     My Orders
-                                </CustomButton>
+                                </Button>
                             </>
                         )}
                     </div>
                 </Container>
                 <Footer />
-            </>
+            </div>
         );
     }
 
+    // Order not found state
     if (!order) {
         return (
-            <>
+            <div className="d-flex flex-column min-vh-100">
                 <Navbar />
-                <Container className="py-5">
+                <Container className="flex-grow-1 py-5">
                     <Alert variant="warning" className="d-flex align-items-center">
-                        <AlertCircle size={24} className="me-2" />
+                        <FaExclamationCircle size={24} className="me-2" />
                         <div>
                             <h5>Order Not Found</h5>
                             <p className="mb-0">The requested order could not be found.</p>
                         </div>
                     </Alert>
                     <div className="d-flex justify-content-center mt-4 gap-3">
-                        <CustomButton
+                        <Button
                             variant="primary"
                             onClick={() => navigate('/orders')}
                         >
                             View Orders
-                        </CustomButton>
-                        <CustomButton
+                        </Button>
+                        <Button
                             variant="outline-primary"
                             onClick={() => navigate('/books')}
                         >
                             Browse Books
-                        </CustomButton>
+                        </Button>
                     </div>
                 </Container>
                 <Footer />
-            </>
+            </div>
         );
     }
 
+    // Main render
     return (
-        <>
+        <div className="d-flex flex-column min-vh-100">
             <Navbar />
 
-            <Container className="order-details-container py-5">
+            <Container className="flex-grow-1 py-5">
                 <div className="d-flex align-items-center mb-4">
                     <Button
                         variant="outline-primary"
                         className="me-3"
                         onClick={() => navigate(-1)}
                     >
-                        <ChevronLeft size={20} className="me-1" />
+                        <FaChevronLeft size={20} className="me-1" />
                         Back
                     </Button>
-                    <Title>Order Details</Title>
+                    <h2 className="mb-0">Order Details</h2>
                 </div>
 
                 <Card className="mb-4 border-0 shadow-sm">
@@ -419,19 +444,15 @@ const OrderDetailsPage = () => {
                                     <div className="mb-2">
                                         <strong>Payment Method:</strong> {order.payment_method || 'Not Specified'}
                                     </div>
-
-                                    <div className="fs-5 fw-bold">
-                                        <strong>Total:</strong> {formatPrice(order.total_price)} EGP
-                                    </div>
                                 </div>
                             </Col>
                         </Row>
 
                         <Row>
-                            <Col md={6} className="mb-4">
-                                <Card className="h-100">
+                            <Col md={4}>
+                                <Card className="h-100 mb-4">
                                     <Card.Header className="d-flex align-items-center bg-light">
-                                        <Package size={18} className="me-2" />
+                                        <FaBox size={18} className="me-2" />
                                         <span>Shipping Information</span>
                                     </Card.Header>
                                     <Card.Body>
@@ -451,10 +472,49 @@ const OrderDetailsPage = () => {
                                 </Card>
                             </Col>
 
-                            <Col md={6}>
+                            <Col md={4}>
+                                <Card className="h-100 mb-4">
+                                    <Card.Header className="d-flex align-items-center bg-light">
+                                        <FaFileAlt size={18} className="me-2" />
+                                        <span>Order Summary</span>
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <ListGroup variant="flush">
+                                            <ListGroup.Item className="d-flex justify-content-between">
+                                                <span>Subtotal:</span>
+                                                <span>{formatPrice(order.subtotal)} EGP</span>
+                                            </ListGroup.Item>
+
+                                            {order.discount > 0 && (
+                                                <ListGroup.Item className="d-flex justify-content-between text-success">
+                                                    <span>Discount ({order.coupon_code}):</span>
+                                                    <span>-{formatPrice(order.discount)} EGP</span>
+                                                </ListGroup.Item>
+                                            )}
+
+                                            <ListGroup.Item className="d-flex justify-content-between">
+                                                <span>Tax (10%):</span>
+                                                <span>{formatPrice(order.tax)} EGP</span>
+                                            </ListGroup.Item>
+
+                                            <ListGroup.Item className="d-flex justify-content-between">
+                                                <span>Shipping:</span>
+                                                <span>{formatPrice(order.shipping_fee)} EGP</span>
+                                            </ListGroup.Item>
+
+                                            <ListGroup.Item className="d-flex justify-content-between fw-bold">
+                                                <span>Total Amount:</span>
+                                                <span>{formatPrice(order.total_price)} EGP</span>
+                                            </ListGroup.Item>
+                                        </ListGroup>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+
+                            <Col md={4}>
                                 <Card className="h-100">
                                     <Card.Header className="d-flex align-items-center bg-light">
-                                        <FileText size={18} className="me-2" />
+                                        <FaFileAlt size={18} className="me-2" />
                                         <span>Order Items ({order.order_items?.length || 0})</span>
                                     </Card.Header>
                                     <Card.Body className="p-0">
@@ -473,7 +533,7 @@ const OrderDetailsPage = () => {
                                                             className="me-3 object-fit-cover rounded"
                                                             onError={(e) => {
                                                                 e.target.onerror = null;
-                                                                e.target.src = 'https://via.placeholder.com/300x450';
+                                                                e.target.src = 'https://via.placeholder.com/300x450?text=Book+Image';
                                                             }}
                                                         />
                                                         <div>
@@ -521,7 +581,7 @@ const OrderDetailsPage = () => {
                                     {canPay && (
                                         paymentCompleted || payment?.status === 'paid' ? (
                                             <Button variant="success" className="px-4 py-2" disabled>
-                                                <CheckCircle size={18} className="me-2" />
+                                                <FaCheckCircle size={18} className="me-2" />
                                                 Payment Completed
                                             </Button>
                                         ) : (
@@ -540,7 +600,7 @@ const OrderDetailsPage = () => {
                                                     'Payment in progress'
                                                 ) : (
                                                     <>
-                                                        <CreditCard size={18} className="me-2" />
+                                                        <FaCreditCard size={18} className="me-2" />
                                                         Pay Now
                                                     </>
                                                 )}
@@ -555,7 +615,7 @@ const OrderDetailsPage = () => {
             </Container>
 
             <Footer />
-        </>
+        </div>
     );
 };
 
