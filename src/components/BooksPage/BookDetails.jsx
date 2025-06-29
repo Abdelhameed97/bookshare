@@ -728,10 +728,29 @@ const BookDetails = () => {
                         justifyContent: "center",
                       }}
                     >
-                      {book.user?.name?.charAt(0) || "A"}
+                      {book.author?.charAt(0) || "A"}
                     </div>
                     <div>
                       <h6 className="mb-0 fw-bold">Author</h6>
+                      <p className="mb-0">{book.author || "Unknown"}</p>
+                    </div>
+                  </div>
+
+                  <div className="d-flex align-items-center mb-4">
+                    <div
+                      className="bg-success text-white rounded-circle me-3"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {book.user?.name?.charAt(0) || "L"}
+                    </div>
+                    <div>
+                      <h6 className="mb-0 fw-bold">Library Owner</h6>
                       <p className="mb-0">{book.user?.name || "Unknown"}</p>
                     </div>
                   </div>
