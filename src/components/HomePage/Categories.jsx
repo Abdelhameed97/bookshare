@@ -3,6 +3,7 @@ import { Book, Heart, Palette, Clock } from "lucide-react"
 import HomePageTitle from "../shared/HomePageTitle"
 import "../../style/Homepagestyle.css"
 import { useEffect, useState } from "react"
+import { useNavigate } from "react-router-dom"
 
 const BookCategories = () => {
     const [categories, setCategories] = useState([])
@@ -100,6 +101,16 @@ const BookCategories = () => {
         },
     ]
 
+    const navigate = useNavigate()
+    // Define the new color palette
+    const categoryColors = [
+        "#FFC0CB",
+        "#FFA500",
+        "#FF0000",
+        "#FFFF00",
+        "#D2B48C",
+    ]
+
     if (loading) {
         return (
             <div className="text-center py-20">
@@ -120,12 +131,28 @@ const BookCategories = () => {
                         curated collection of genres
                     </p>
                     <div className="section-divider"></div>
+                    <button
+                        className="view-all-categories-btn"
+                        style={{
+                            background:
+                                "linear-gradient(90deg, #FFC0CB, #FFA500, #FF0000, #FFFF00, #D2B48C)",
+                            color: "#fff",
+                            border: "none",
+                            borderRadius: 8,
+                            padding: "8px 20px",
+                            fontWeight: 600,
+                            marginTop: 12,
+                            cursor: "pointer",
+                        }}
+                        onClick={() => navigate("/categories")}
+                    >
+                        View All Categories
+                    </button>
                 </div>
                 <div className="categories-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {categories.map((category, idx) => {
                         const IconComponent = getIconComponent(category.icon)
                         const books = categoryBooks[category.id] || []
-                        // لا حاجة للون ثابت، الكارت سيأخذ لونه من CSS حسب الثيم
                         return (
                             <div
                                 key={category.id}
@@ -133,6 +160,10 @@ const BookCategories = () => {
                                 style={{
                                     borderRadius: 16,
                                     overflow: "hidden",
+                                    background:
+                                        categoryColors[
+                                            idx % categoryColors.length
+                                        ],
                                 }}
                             >
                                 <div className="card-overlay"></div>

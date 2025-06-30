@@ -785,33 +785,6 @@ const BookDetails = () => {
             : `http://localhost:8000/storage/${bookImagePath}`
         : "/placeholder.svg?height=300&width=200"
 
-    const categoryColors = [
-        "#6f42c1", // بنفسجي
-        "#b49a7d", // كافي
-        "#0dcaf0", // أزرق فاتح
-        "#a084ee", // بنفسجي فاتح
-        "#20c997", // تركواز
-        "#fd7e14", // برتقالي
-        "#adb5bd", // رمادي فاتح
-    ]
-    const getCategoryColor = (category, idx = 0) => {
-        if (!category) return categoryColors[0]
-        const normalized = category.toLowerCase()
-        if (normalized.includes("رواية") || normalized.includes("novel"))
-            return categoryColors[0]
-        if (normalized.includes("كافي") || normalized.includes("coffee"))
-            return categoryColors[1]
-        if (normalized.includes("أزرق") || normalized.includes("blue"))
-            return categoryColors[2]
-        if (normalized.includes("بنفسجي") || normalized.includes("purple"))
-            return categoryColors[3]
-        if (normalized.includes("تركواز") || normalized.includes("turquoise"))
-            return categoryColors[4]
-        if (normalized.includes("برتقالي") || normalized.includes("orange"))
-            return categoryColors[5]
-        return categoryColors[idx % categoryColors.length]
-    }
-
     return (
         <>
             <ToastContainer position="top-right" autoClose={3000} />
@@ -895,9 +868,7 @@ const BookDetails = () => {
                                                 className="badge text-white"
                                                 style={{
                                                     background:
-                                                        getCategoryColor(
-                                                            book.category?.name
-                                                        ),
+                                                        book.category?.color || "#6B7280", // Use existing category color or a default
                                                 }}
                                             >
                                                 {book.category?.name ||
