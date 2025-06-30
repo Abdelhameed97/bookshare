@@ -65,6 +65,7 @@ const BooksList = () => {
         setLoading(true);
         setError(null);
         const response = await fetch("http://localhost:8000/api/books");
+        
         if (!response.ok) throw new Error("Failed to fetch books");
 
         const data = await response.json();
