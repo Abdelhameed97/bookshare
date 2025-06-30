@@ -295,25 +295,35 @@ const PaymentDetailsPage = () => {
                                         <span>Order Date:</span>
                                         <strong>{formatDate(order.created_at)}</strong>
                                     </div>
+
                                     <div className="d-flex justify-content-between mb-2">
                                         <span>Subtotal:</span>
-                                        <strong>{formatPrice(order.total_price || order.subtotal || 0)} EGP</strong>
+                                        <strong>{formatPrice(order.subtotal)} EGP</strong>
                                     </div>
+
                                     {order.discount > 0 && (
                                         <div className="d-flex justify-content-between mb-2 text-success">
-                                            <span>Discount:</span>
-                                            <strong>-{formatPrice(order.discount || 0)} EGP</strong>
+                                            <span>Discount ({order.coupon_code}):</span>
+                                            <strong>-{formatPrice(order.discount)} EGP</strong>
                                         </div>
                                     )}
+
+                                    <div className="d-flex justify-content-between mb-2">
+                                        <span>Tax (10%):</span>
+                                        <strong>{formatPrice(order.tax)} EGP</strong>
+                                    </div>
+
                                     <div className="d-flex justify-content-between mb-2">
                                         <span>Shipping:</span>
-                                        <strong>{formatPrice(order.shipping || 0)} EGP</strong>
+                                        <strong>{formatPrice(order.shipping_fee)} EGP</strong>
                                     </div>
+
                                     <hr />
+
                                     <div className="d-flex justify-content-between mb-2 total-summary">
                                         <span>Total Amount:</span>
                                         <strong className="total-price">
-                                            {formatPrice(order.total_price || order.total || 0)} EGP
+                                            {formatPrice(order.total_price)} EGP
                                         </strong>
                                     </div>
                                 </div>
