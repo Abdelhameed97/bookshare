@@ -1,5 +1,5 @@
-import Swal from 'sweetalert2';
-import React, { useState } from 'react';
+import Swal from "sweetalert2"
+import React, { useState } from "react"
 import {
     Container,
     Row,
@@ -11,8 +11,8 @@ import {
     Spinner,
     Badge,
     Button,
-    Dropdown
-} from 'react-bootstrap';
+    Dropdown,
+} from "react-bootstrap"
 import {
     Trash2,
     ChevronLeft,
@@ -23,263 +23,283 @@ import {
     Minus,
     AlertCircle,
     CreditCard,
-    Wallet
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Title from '../components/shared/Title';
-import CustomButton from '../components/shared/CustomButton';
-import api from '../services/api';
-import '../style/CartPage.css';
-import Navbar from '../components/HomePage/Navbar';
-import Footer from "../components/HomePage/Footer.jsx";
-import { useCart } from '../hooks/useCart';
+    Wallet,
+} from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import Title from "../components/shared/Title"
+import CustomButton from "../components/shared/CustomButton"
+import api from "../services/api"
+import "../style/CartPage.css"
+import Navbar from "../components/HomePage/Navbar"
+import Footer from "../components/HomePage/Footer.jsx"
+import { useCart } from "../hooks/useCart"
 
 const CartPage = () => {
-    const getBookImage = (images) => {
+    const getBookImage = images => {
         if (!images || images.length === 0) {
-            return 'https://via.placeholder.com/300x450';
+            return "https://via.placeholder.com/300x450"
         }
 
-        const firstImage = images[0];
-        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
-            return firstImage;
+        const firstImage = images[0]
+        if (typeof firstImage === "string" && firstImage.startsWith("http")) {
+            return firstImage
         }
 
-        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
-    };
+        return `${
+            process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"
+        }/storage/${firstImage}`
+    }
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    const {
-        cartItems,
-        loading,
-        error,
-        fetchCartItems,
-        setCartItems
-    } = useCart(user?.id);
+    const user = JSON.parse(localStorage.getItem("user"))
+    const { cartItems, loading, error, fetchCartItems, setCartItems } = useCart(
+        user?.id
+    )
 
-    const [showAlert, setShowAlert] = useState(false);
-    const [alertMessage, setAlertMessage] = useState('');
-    const [alertVariant, setAlertVariant] = useState('success');
-    const [discount, setDiscount] = useState(0);
-    const [couponCode, setCouponCode] = useState('');
-    const [appliedCoupon, setAppliedCoupon] = useState(null);
-    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-    const navigate = useNavigate();
+    const [showAlert, setShowAlert] = useState(false)
+    const [alertMessage, setAlertMessage] = useState("")
+    const [alertVariant, setAlertVariant] = useState("success")
+    const [discount, setDiscount] = useState(0)
+    const [couponCode, setCouponCode] = useState("")
+    const [appliedCoupon, setAppliedCoupon] = useState(null)
+    const [isApplyingCoupon, setIsApplyingCoupon] = useState(false)
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null)
+    const navigate = useNavigate()
 
     const paymentMethods = [
-        { id: '', label: 'Select Payment Method', icon: null },
-        { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
-        { id: 'cash', label: 'Cash on Delivery', icon: <Wallet size={20} className="me-2" /> },
-        { id: 'paypal', label: 'PayPal', icon: <CreditCard size={20} className="me-2" /> },
-    ];
+        { id: "", label: "Select Payment Method", icon: null },
+        {
+            id: "stripe",
+            label: "Credit/Debit Card",
+            icon: <CreditCard size={20} className="me-2" />,
+        },
+        {
+            id: "cash",
+            label: "Cash on Delivery",
+            icon: <Wallet size={20} className="me-2" />,
+        },
+        {
+            id: "paypal",
+            label: "PayPal",
+            icon: <CreditCard size={20} className="me-2" />,
+        },
+    ]
 
     const subtotal = cartItems.reduce((sum, item) => {
-        const price = item.type === 'rent' ?
-            (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0)) :
-            parseFloat(item.book?.price || 0);
-        return sum + (price * (item.quantity || 1));
-    }, 0);
+        const price =
+            item.type === "rent"
+                ? parseFloat(item.book?.rental_price || 0) ||
+                  parseFloat(item.book?.price || 0)
+                : parseFloat(item.book?.price || 0)
+        return sum + price * (item.quantity || 1)
+    }, 0)
 
-    const shippingFee = subtotal > 200 ? 0 : 25;
-    const total = subtotal + shippingFee - discount;
+    const shippingFee = subtotal > 200 ? 0 : 25
+    const total = subtotal + shippingFee - discount
 
     const applyCoupon = async () => {
-        if (!couponCode.trim()) return;
+        if (!couponCode.trim()) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
-        setIsApplyingCoupon(true);
+        setIsApplyingCoupon(true)
         try {
-            const response = await api.applyCoupon(couponCode);
-            setDiscount(response.data.discount);
-            setAppliedCoupon(response.data.coupon);
+            const response = await api.applyCoupon(couponCode)
+            setDiscount(response.data.discount)
+            setAppliedCoupon(response.data.coupon)
             await Swal.fire({
-                icon: 'success',
-                title: 'Coupon Applied!',
-                text: 'Your discount has been applied successfully',
-                timer: 2000
-            });
+                icon: "success",
+                title: "Coupon Applied!",
+                text: "Your discount has been applied successfully",
+                timer: 2000,
+            })
         } catch (err) {
-            setDiscount(0);
-            setAppliedCoupon(null);
+            setDiscount(0)
+            setAppliedCoupon(null)
             await Swal.fire({
-                icon: 'error',
-                title: 'Invalid Coupon',
-                text: err.response?.data?.message || 'This coupon code is not valid',
-            });
+                icon: "error",
+                title: "Invalid Coupon",
+                text:
+                    err.response?.data?.message ||
+                    "This coupon code is not valid",
+            })
         } finally {
-            setIsApplyingCoupon(false);
+            setIsApplyingCoupon(false)
         }
-    };
+    }
 
     const removeCoupon = async () => {
-        setDiscount(0);
-        setCouponCode('');
-        setAppliedCoupon(null);
+        setDiscount(0)
+        setCouponCode("")
+        setAppliedCoupon(null)
         await Swal.fire({
-            icon: 'info',
-            title: 'Coupon Removed',
-            text: 'The coupon has been removed from your order',
-            timer: 1500
-        });
-    };
+            icon: "info",
+            title: "Coupon Removed",
+            text: "The coupon has been removed from your order",
+            timer: 1500,
+        })
+    }
 
     const handleQuantityChange = async (itemId, newQuantity) => {
-        const parsedQuantity = parseInt(newQuantity, 10);
+        const parsedQuantity = parseInt(newQuantity, 10)
 
         if (isNaN(parsedQuantity) || parsedQuantity < 1) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Invalid Quantity',
-                text: 'Please enter a whole number 1 or greater'
-            });
-            return;
+                icon: "error",
+                title: "Invalid Quantity",
+                text: "Please enter a whole number 1 or greater",
+            })
+            return
         }
 
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         try {
-            await api.updateCartItem(itemId, { quantity: parsedQuantity });
+            await api.updateCartItem(itemId, { quantity: parsedQuantity })
 
             const updatedItems = cartItems.map(item =>
-                item.id === itemId ? { ...item, quantity: parsedQuantity } : item
-            );
-            setCartItems(updatedItems);
+                item.id === itemId
+                    ? { ...item, quantity: parsedQuantity }
+                    : item
+            )
+            setCartItems(updatedItems)
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Update Failed',
-                text: err.response?.data?.message || 'Failed to update quantity',
-            });
+                icon: "error",
+                title: "Update Failed",
+                text:
+                    err.response?.data?.message || "Failed to update quantity",
+            })
         }
-    };
+    }
 
     const handleChangeType = async (itemId, newType) => {
         try {
-            await api.updateCartItem(itemId, { type: newType });
+            await api.updateCartItem(itemId, { type: newType })
 
             const updatedItems = cartItems.map(item =>
                 item.id === itemId ? { ...item, type: newType } : item
-            );
-            setCartItems(updatedItems);
+            )
+            setCartItems(updatedItems)
 
             await Swal.fire({
-                icon: 'success',
-                title: 'Type Changed',
+                icon: "success",
+                title: "Type Changed",
                 text: `Item changed to ${newType}`,
-                timer: 1500
-            });
+                timer: 1500,
+            })
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Failed to Change Type',
-                text: err.response?.data?.message || 'Failed to update item type',
-            });
+                icon: "error",
+                title: "Failed to Change Type",
+                text:
+                    err.response?.data?.message || "Failed to update item type",
+            })
         }
-    };
+    }
 
-    const handleRemoveItem = async (itemId) => {
+    const handleRemoveItem = async itemId => {
         const result = await Swal.fire({
-            title: 'Remove Item?',
-            text: 'This will remove the item from your cart',
-            icon: 'question',
+            title: "Remove Item?",
+            text: "This will remove the item from your cart",
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-        });
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         try {
-            await api.removeCartItem(itemId);
-            const updatedItems = cartItems.filter(item => item.id !== itemId);
-            setCartItems(updatedItems);
+            await api.removeCartItem(itemId)
+            const updatedItems = cartItems.filter(item => item.id !== itemId)
+            setCartItems(updatedItems)
             await Swal.fire({
-                icon: 'success',
-                title: 'Item Removed',
-                timer: 1500
-            });
+                icon: "success",
+                title: "Item Removed",
+                timer: 1500,
+            })
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Removal Failed',
-                text: err.response?.data?.message || 'Failed to remove item',
-            });
+                icon: "error",
+                title: "Removal Failed",
+                text: err.response?.data?.message || "Failed to remove item",
+            })
         }
-    };
+    }
 
     const handleClearCart = async () => {
         const result = await Swal.fire({
-            title: 'Clear Entire Cart?',
-            text: 'This will remove all items from your cart',
-            icon: 'warning',
+            title: "Clear Entire Cart?",
+            text: "This will remove all items from your cart",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, clear it!'
-        });
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, clear it!",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         try {
-            await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
-            setCartItems([]);
+            await Promise.all(
+                cartItems.map(item => api.removeCartItem(item.id))
+            )
+            setCartItems([])
             await Swal.fire({
-                icon: 'success',
-                title: 'Cart Cleared!',
-                text: 'All items have been removed from your cart',
-                timer: 2000
-            });
+                icon: "success",
+                title: "Cart Cleared!",
+                text: "All items have been removed from your cart",
+                timer: 2000,
+            })
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Clear Failed',
-                text: err.response?.data?.message || 'Failed to clear cart',
-            });
+                icon: "error",
+                title: "Clear Failed",
+                text: err.response?.data?.message || "Failed to clear cart",
+            })
         }
-    };
+    }
 
     const handleOrderNow = async () => {
-        if (cartItems.length === 0) return;
+        if (cartItems.length === 0) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         if (!selectedPaymentMethod) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Payment Method Required',
-                text: 'Please select a payment method before proceeding',
-            });
-            return;
+                icon: "error",
+                title: "Payment Method Required",
+                text: "Please select a payment method before proceeding",
+            })
+            return
         }
 
         const result = await Swal.fire({
-            title: 'Proceed to Checkout?',
-            text: 'You will be redirected to complete your order',
-            icon: 'question',
+            title: "Proceed to Checkout?",
+            text: "You will be redirected to complete your order",
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Continue to Order'
-        });
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Continue to Order",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
 
         try {
             const orderData = {
@@ -287,52 +307,62 @@ const CartPage = () => {
                     book_id: item.book_id,
                     quantity: item.quantity,
                     type: item.type,
-                    price: item.type === 'rent' ?
-                        (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0)) :
-                        parseFloat(item.book?.price || 0)
+                    price:
+                        item.type === "rent"
+                            ? parseFloat(item.book?.rental_price || 0) ||
+                              parseFloat(item.book?.price || 0)
+                            : parseFloat(item.book?.price || 0),
                 })),
                 subtotal: parseFloat(subtotal.toFixed(2)),
                 discount: parseFloat(discount.toFixed(2)),
                 shipping: parseFloat(shippingFee.toFixed(2)),
                 total: parseFloat(total.toFixed(2)),
                 coupon_code: appliedCoupon?.code || null,
-                payment_method: selectedPaymentMethod 
-            };
+                payment_method: selectedPaymentMethod,
+            }
 
-            const response = await api.createOrder(orderData);
-            const orderList = response.data?.data;
-            const orderId = Array.isArray(orderList) && orderList.length > 0 ? orderList[0].id : null;
+            const response = await api.createOrder(orderData)
+            const orderList = response.data?.data
+            const orderId =
+                Array.isArray(orderList) && orderList.length > 0
+                    ? orderList[0].id
+                    : null
 
             if (!orderId) {
-                throw new Error("Order ID not found in response");
+                throw new Error("Order ID not found in response")
             }
 
             try {
-                await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
-                setCartItems([]);
-                setDiscount(0);
-                setCouponCode('');
-                setAppliedCoupon(null);
+                await Promise.all(
+                    cartItems.map(item => api.removeCartItem(item.id))
+                )
+                setCartItems([])
+                setDiscount(0)
+                setCouponCode("")
+                setAppliedCoupon(null)
             } catch (clearError) {
-                console.error("Error clearing cart:", clearError);
+                console.error("Error clearing cart:", clearError)
             }
 
-            navigate(`/orders/${orderId}`);
+            navigate(`/orders/${orderId}`)
         } catch (err) {
-            console.error("Checkout error:", err);
+            console.error("Checkout error:", err)
             await Swal.fire({
-                icon: 'error',
-                title: 'Checkout Failed',
-                text: err.response?.data?.message || err.message || 'Unable to process your order',
-            });
+                icon: "error",
+                title: "Checkout Failed",
+                text:
+                    err.response?.data?.message ||
+                    err.message ||
+                    "Unable to process your order",
+            })
         }
-    };
+    }
 
     const showAlertMessage = (message, variant) => {
-        setAlertMessage(message);
-        setAlertVariant(variant);
-        setShowAlert(true);
-    };
+        setAlertMessage(message)
+        setAlertVariant(variant)
+        setShowAlert(true)
+    }
 
     if (loading) {
         return (
@@ -340,7 +370,7 @@ const CartPage = () => {
                 <Spinner animation="border" variant="primary" />
                 <p className="mt-2">Loading your cart...</p>
             </div>
-        );
+        )
     }
 
     if (error) {
@@ -348,7 +378,10 @@ const CartPage = () => {
             <>
                 <Navbar />
                 <Container className="py-5">
-                    <Alert variant="danger" className="d-flex align-items-center">
+                    <Alert
+                        variant="danger"
+                        className="d-flex align-items-center"
+                    >
                         <AlertCircle size={24} className="me-2" />
                         <div>
                             <h5>Failed to load your cart</h5>
@@ -364,7 +397,7 @@ const CartPage = () => {
                         </CustomButton>
                         <CustomButton
                             variant="outline-primary"
-                            onClick={() => navigate('/books')}
+                            onClick={() => navigate("/books")}
                         >
                             Browse Books
                         </CustomButton>
@@ -372,7 +405,7 @@ const CartPage = () => {
                 </Container>
                 <Footer />
             </>
-        );
+        )
     }
 
     return (
@@ -399,7 +432,12 @@ const CartPage = () => {
                         <ChevronLeft size={20} className="me-1" />
                         Back
                     </CustomButton>
-                    <Title className="page-title">Shopping Cart <Badge bg="primary" className="ms-2">{cartItems.length}</Badge></Title>
+                    <Title className="page-title">
+                        Shopping Cart{" "}
+                        <Badge bg="primary" className="ms-2">
+                            {cartItems.length}
+                        </Badge>
+                    </Title>
                 </div>
 
                 <Row>
@@ -408,14 +446,18 @@ const CartPage = () => {
                             <Card.Body>
                                 {cartItems.length === 0 ? (
                                     <div className="text-center py-4 empty-cart">
-                                        <ShoppingCart size={48} className="text-muted mb-3" />
+                                        <ShoppingCart
+                                            size={48}
+                                            className="text-muted mb-3"
+                                        />
                                         <h4>Your cart is empty</h4>
                                         <p className="text-muted mb-3">
-                                            Looks like you haven't added any items to your cart yet
+                                            Looks like you haven't added any
+                                            items to your cart yet
                                         </p>
                                         <CustomButton
                                             variant="primary"
-                                            onClick={() => navigate('/books')}
+                                            onClick={() => navigate("/books")}
                                             className="browse-btn"
                                         >
                                             Browse Books
@@ -423,7 +465,10 @@ const CartPage = () => {
                                     </div>
                                 ) : (
                                     <>
-                                        <Table responsive className="cart-table">
+                                        <Table
+                                            responsive
+                                            className="cart-table"
+                                        >
                                             <thead>
                                                 <tr>
                                                     <th>Book</th>
@@ -440,44 +485,119 @@ const CartPage = () => {
                                                         <td>
                                                             <div className="d-flex align-items-center">
                                                                 <img
-                                                                    src={getBookImage(item.book.images)}
-                                                                    alt={item.book?.title}
+                                                                    src={getBookImage(
+                                                                        item
+                                                                            .book
+                                                                            .images
+                                                                    )}
+                                                                    alt={
+                                                                        item
+                                                                            .book
+                                                                            ?.title
+                                                                    }
                                                                     className="book-cover me-3"
-                                                                    onError={(e) => {
-                                                                        e.target.onerror = null;
-                                                                        e.target.src = 'https://via.placeholder.com/300x450';
+                                                                    onError={e => {
+                                                                        e.target.onerror =
+                                                                            null
+                                                                        e.target.src =
+                                                                            "https://via.placeholder.com/300x450"
                                                                     }}
                                                                 />
                                                                 <div>
-                                                                    <h6 className="mb-1">{item.book?.title}</h6>
-                                                                    <small className="text-muted">By {item.book?.author || item.book?.genre}</small>
+                                                                    <h6 className="mb-1">
+                                                                        {
+                                                                            item
+                                                                                .book
+                                                                                ?.title
+                                                                        }
+                                                                    </h6>
+                                                                    <small className="text-muted">
+                                                                        By{" "}
+                                                                        {item
+                                                                            .book
+                                                                            ?.author ||
+                                                                            item
+                                                                                .book
+                                                                                ?.genre}
+                                                                    </small>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td className="align-middle">
                                                             <Dropdown>
                                                                 <Dropdown.Toggle
-                                                                    variant={(item.type ?? 'buy') === 'rent' ? 'warning' : 'success'}
+                                                                    variant={
+                                                                        (item.type ??
+                                                                            "buy") ===
+                                                                        "rent"
+                                                                            ? "warning"
+                                                                            : "success"
+                                                                    }
                                                                     size="sm"
                                                                     id="dropdown-type"
-                                                                    disabled={!item.book?.rental_price && (item.type ?? 'buy') === 'rent'}
+                                                                    disabled={
+                                                                        !item
+                                                                            .book
+                                                                            ?.rental_price &&
+                                                                        (item.type ??
+                                                                            "buy") ===
+                                                                            "rent"
+                                                                    }
                                                                     className="type-toggle"
                                                                 >
-                                                                    {(item.type ?? 'buy') === 'rent' ? 'Rent' : 'Buy'}
+                                                                    {(item.type ??
+                                                                        "buy") ===
+                                                                    "rent"
+                                                                        ? "Rent"
+                                                                        : "Buy"}
                                                                 </Dropdown.Toggle>
                                                                 <Dropdown.Menu>
                                                                     <Dropdown.Item
-                                                                        onClick={() => handleChangeType(item.id, 'buy')}
-                                                                        active={(item.type ?? 'buy') !== 'rent'}
-                                                                        className={(item.type ?? 'buy') !== 'rent' ? 'fw-bold' : ''}
+                                                                        onClick={() =>
+                                                                            handleChangeType(
+                                                                                item.id,
+                                                                                "buy"
+                                                                            )
+                                                                        }
+                                                                        active={
+                                                                            (item.type ??
+                                                                                "buy") !==
+                                                                            "rent"
+                                                                        }
+                                                                        className={
+                                                                            (item.type ??
+                                                                                "buy") !==
+                                                                            "rent"
+                                                                                ? "fw-bold"
+                                                                                : ""
+                                                                        }
                                                                     >
                                                                         Buy
                                                                     </Dropdown.Item>
                                                                     <Dropdown.Item
-                                                                        onClick={() => handleChangeType(item.id, 'rent')}
-                                                                        active={(item.type ?? 'buy') === 'rent'}
-                                                                        disabled={!item.book?.rental_price}
-                                                                        className={(item.type ?? 'buy') === 'rent' ? 'fw-bold' : ''}
+                                                                        onClick={() =>
+                                                                            handleChangeType(
+                                                                                item.id,
+                                                                                "rent"
+                                                                            )
+                                                                        }
+                                                                        active={
+                                                                            (item.type ??
+                                                                                "buy") ===
+                                                                            "rent"
+                                                                        }
+                                                                        disabled={
+                                                                            !item
+                                                                                .book
+                                                                                ?.rental_price
+                                                                        }
+                                                                        className={
+                                                                            (item.type ??
+                                                                                "buy") ===
+                                                                            "rent"
+                                                                                ? "fw-bold"
+                                                                                : ""
+                                                                        }
                                                                     >
                                                                         Rent
                                                                     </Dropdown.Item>
@@ -490,20 +610,45 @@ const CartPage = () => {
                                                                     variant="outline-secondary"
                                                                     size="sm"
                                                                     className="quantity-btn"
-                                                                    onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                                                    disabled={item.quantity <= 1}
+                                                                    onClick={() =>
+                                                                        handleQuantityChange(
+                                                                            item.id,
+                                                                            item.quantity -
+                                                                                1
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        item.quantity <=
+                                                                        1
+                                                                    }
                                                                 >
-                                                                    <Minus size={14} />
+                                                                    <Minus
+                                                                        size={
+                                                                            14
+                                                                        }
+                                                                    />
                                                                 </CustomButton>
                                                                 <Form.Control
                                                                     type="number"
                                                                     min="1"
                                                                     step="1"
-                                                                    value={item.quantity}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (/^\d*$/.test(value)) {
-                                                                            handleQuantityChange(item.id, value);
+                                                                    value={
+                                                                        item.quantity
+                                                                    }
+                                                                    onChange={e => {
+                                                                        const value =
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        if (
+                                                                            /^\d*$/.test(
+                                                                                value
+                                                                            )
+                                                                        ) {
+                                                                            handleQuantityChange(
+                                                                                item.id,
+                                                                                value
+                                                                            )
                                                                         }
                                                                     }}
                                                                     className="quantity-input mx-2 text-center"
@@ -512,30 +657,77 @@ const CartPage = () => {
                                                                     variant="outline-secondary"
                                                                     size="sm"
                                                                     className="quantity-btn"
-                                                                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                                                    onClick={() =>
+                                                                        handleQuantityChange(
+                                                                            item.id,
+                                                                            item.quantity +
+                                                                                1
+                                                                        )
+                                                                    }
                                                                 >
-                                                                    <Plus size={14} />
+                                                                    <Plus
+                                                                        size={
+                                                                            14
+                                                                        }
+                                                                    />
                                                                 </CustomButton>
                                                             </div>
                                                         </td>
                                                         <td className="align-middle price">
-                                                            {item.type === 'rent' ?
-                                                                (parseFloat(item.book?.rental_price || item.book?.price || 0).toFixed(2)) :
-                                                                parseFloat(item.book?.price || 0).toFixed(2)} EGP
+                                                            {item.type ===
+                                                            "rent"
+                                                                ? parseFloat(
+                                                                      item.book
+                                                                          ?.rental_price ||
+                                                                          item
+                                                                              .book
+                                                                              ?.price ||
+                                                                          0
+                                                                  ).toFixed(2)
+                                                                : parseFloat(
+                                                                      item.book
+                                                                          ?.price ||
+                                                                          0
+                                                                  ).toFixed(
+                                                                      2
+                                                                  )}{" "}
+                                                            EGP
                                                         </td>
                                                         <td className="align-middle price">
-                                                            {(item.type === 'rent' ?
-                                                                (parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity) :
-                                                                parseFloat(item.book?.price || 0) * item.quantity).toFixed(2)} EGP
+                                                            {(item.type ===
+                                                            "rent"
+                                                                ? parseFloat(
+                                                                      item.book
+                                                                          ?.rental_price ||
+                                                                          item
+                                                                              .book
+                                                                              ?.price ||
+                                                                          0
+                                                                  ) *
+                                                                  item.quantity
+                                                                : parseFloat(
+                                                                      item.book
+                                                                          ?.price ||
+                                                                          0
+                                                                  ) *
+                                                                  item.quantity
+                                                            ).toFixed(2)}{" "}
+                                                            EGP
                                                         </td>
                                                         <td className="align-middle text-center">
                                                             <CustomButton
                                                                 variant="outline-danger"
                                                                 size="sm"
-                                                                onClick={() => handleRemoveItem(item.id)}
+                                                                onClick={() =>
+                                                                    handleRemoveItem(
+                                                                        item.id
+                                                                    )
+                                                                }
                                                                 className="remove-btn"
                                                             >
-                                                                <Trash2 size={16} />
+                                                                <Trash2
+                                                                    size={16}
+                                                                />
                                                             </CustomButton>
                                                         </td>
                                                     </tr>
@@ -546,10 +738,15 @@ const CartPage = () => {
                                         <div className="d-flex justify-content-between mt-4 cart-actions">
                                             <CustomButton
                                                 variant="outline-primary"
-                                                onClick={() => navigate('/books')}
+                                                onClick={() =>
+                                                    navigate("/books")
+                                                }
                                                 className="continue-btn"
                                             >
-                                                <ChevronLeft size={18} className="me-1" />
+                                                <ChevronLeft
+                                                    size={18}
+                                                    className="me-1"
+                                                />
                                                 Continue Shopping
                                             </CustomButton>
                                             <CustomButton
@@ -569,16 +766,28 @@ const CartPage = () => {
                             <Card.Body>
                                 <Row>
                                     <Col md={4} className="benefit-item">
-                                        <Truck size={24} className="me-2 text-primary" />
+                                        <Truck
+                                            size={24}
+                                            className="me-2 text-primary"
+                                        />
                                         <div>
-                                            <h6 className="mb-0">Free Shipping</h6>
-                                            <small>On orders over 200 EGP</small>
+                                            <h6 className="mb-0">
+                                                Free Shipping
+                                            </h6>
+                                            <small>
+                                                On orders over 200 EGP
+                                            </small>
                                         </div>
                                     </Col>
                                     <Col md={4} className="benefit-item">
-                                        <Shield size={24} className="me-2 text-primary" />
+                                        <Shield
+                                            size={24}
+                                            className="me-2 text-primary"
+                                        />
                                         <div>
-                                            <h6 className="mb-0">Secure Checkout</h6>
+                                            <h6 className="mb-0">
+                                                Secure Checkout
+                                            </h6>
                                             <small>100% Protected</small>
                                         </div>
                                     </Col>
@@ -590,20 +799,34 @@ const CartPage = () => {
                     <Col lg={4}>
                         <Card className="summary-card">
                             <Card.Body>
-                                <h5 className="summary-title mb-3">Order Summary</h5>
+                                <h5 className="summary-title mb-3">
+                                    Order Summary
+                                </h5>
 
                                 <div className="cart-items-summary mb-3">
                                     {cartItems.map(item => (
-                                        <div key={item.id} className="d-flex justify-content-between mb-2 small summary-item">
+                                        <div
+                                            key={item.id}
+                                            className="d-flex justify-content-between mb-2 small summary-item"
+                                        >
                                             <span className="text-muted">
-                                                {item.book?.title} ({item.type}) × {item.quantity}
+                                                {item.book?.title} ({item.type})
+                                                × {item.quantity}
                                             </span>
                                             <span className="price">
-                                                {(
-                                                    item.type === 'rent'
-                                                        ? parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity
-                                                        : parseFloat(item.book?.price || 0) * item.quantity
-                                                ).toFixed(2)} EGP
+                                                {(item.type === "rent"
+                                                    ? parseFloat(
+                                                          item.book
+                                                              ?.rental_price ||
+                                                              item.book
+                                                                  ?.price ||
+                                                              0
+                                                      ) * item.quantity
+                                                    : parseFloat(
+                                                          item.book?.price || 0
+                                                      ) * item.quantity
+                                                ).toFixed(2)}{" "}
+                                                EGP
                                             </span>
                                         </div>
                                     ))}
@@ -611,7 +834,9 @@ const CartPage = () => {
 
                                 <div className="d-flex justify-content-between mb-2 summary-item">
                                     <span>Subtotal:</span>
-                                    <span className="price">{subtotal.toFixed(2)} EGP</span>
+                                    <span className="price">
+                                        {subtotal.toFixed(2)} EGP
+                                    </span>
                                 </div>
 
                                 {appliedCoupon ? (
@@ -627,7 +852,9 @@ const CartPage = () => {
                                                 Remove
                                             </Button>
                                         </span>
-                                        <span className="price">-{discount.toFixed(2)} EGP</span>
+                                        <span className="price">
+                                            -{discount.toFixed(2)} EGP
+                                        </span>
                                     </div>
                                 ) : (
                                     <div className="coupon-section mb-3">
@@ -636,18 +863,27 @@ const CartPage = () => {
                                                 type="text"
                                                 placeholder="Coupon code"
                                                 value={couponCode}
-                                                onChange={(e) => setCouponCode(e.target.value)}
+                                                onChange={e =>
+                                                    setCouponCode(
+                                                        e.target.value
+                                                    )
+                                                }
                                                 size="sm"
                                                 className="coupon-input"
                                             />
                                             <Button
                                                 variant="outline-secondary"
                                                 onClick={applyCoupon}
-                                                disabled={isApplyingCoupon || !couponCode.trim()}
+                                                disabled={
+                                                    isApplyingCoupon ||
+                                                    !couponCode.trim()
+                                                }
                                                 size="sm"
                                                 className="apply-btn"
                                             >
-                                                {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                                                {isApplyingCoupon
+                                                    ? "Applying..."
+                                                    : "Apply"}
                                             </Button>
                                         </Form.Group>
                                     </div>
@@ -655,8 +891,16 @@ const CartPage = () => {
 
                                 <div className="d-flex justify-content-between mb-2 summary-item">
                                     <span>Shipping:</span>
-                                    <span className={shippingFee === 0 ? 'text-success price' : 'price'}>
-                                        {shippingFee === 0 ? 'FREE' : `${shippingFee.toFixed(2)} EGP`}
+                                    <span
+                                        className={
+                                            shippingFee === 0
+                                                ? "text-success price"
+                                                : "price"
+                                        }
+                                    >
+                                        {shippingFee === 0
+                                            ? "FREE"
+                                            : `${shippingFee.toFixed(2)} EGP`}
                                     </span>
                                 </div>
 
@@ -664,19 +908,30 @@ const CartPage = () => {
 
                                 <div className="d-flex justify-content-between mb-4 total-summary">
                                     <strong>Total:</strong>
-                                    <strong className="total-price">{total.toFixed(2)} EGP</strong>
+                                    <strong className="total-price">
+                                        {total.toFixed(2)} EGP
+                                    </strong>
                                 </div>
 
                                 <div className="payment-methods mb-4">
                                     <Form.Group>
-                                        <Form.Label className="fw-bold">Payment Method</Form.Label>
+                                        <Form.Label className="fw-bold">
+                                            Payment Method
+                                        </Form.Label>
                                         <Form.Select
-                                            value={selectedPaymentMethod || ''}
-                                            onChange={(e) => setSelectedPaymentMethod(e.target.value || null)}
+                                            value={selectedPaymentMethod || ""}
+                                            onChange={e =>
+                                                setSelectedPaymentMethod(
+                                                    e.target.value || null
+                                                )
+                                            }
                                             className="payment-select"
                                         >
                                             {paymentMethods.map(method => (
-                                                <option key={method.id} value={method.id}>
+                                                <option
+                                                    key={method.id}
+                                                    value={method.id}
+                                                >
                                                     {method.label}
                                                 </option>
                                             ))}
@@ -688,10 +943,16 @@ const CartPage = () => {
                                     variant="primary"
                                     className="w-100 checkout-btn mb-3"
                                     onClick={handleOrderNow}
-                                    disabled={cartItems.length === 0 || !selectedPaymentMethod}
+                                    disabled={
+                                        cartItems.length === 0 ||
+                                        !selectedPaymentMethod
+                                    }
                                 >
-                                    {cartItems.length === 0 ? 'Cart is Empty' :
-                                        !selectedPaymentMethod ? 'Select Payment Method' : 'Place Order'}
+                                    {cartItems.length === 0
+                                        ? "Cart is Empty"
+                                        : !selectedPaymentMethod
+                                        ? "Select Payment Method"
+                                        : "Place Order"}
                                 </CustomButton>
                             </Card.Body>
                         </Card>
@@ -700,7 +961,7 @@ const CartPage = () => {
             </Container>
             <Footer />
         </>
-    );
-};
+    )
+}
 
-export default CartPage;
+export default CartPage

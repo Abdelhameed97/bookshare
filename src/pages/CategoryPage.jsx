@@ -9,14 +9,15 @@ import {
     Star,
     Check,
 } from "lucide-react"
-import notFoundImage from "../images/Pasted image.png"
 import "../style/category.css"
 import Swal from "sweetalert2"
 import api from "../services/api"
 import { useCart } from "../hooks/useCart"
 import { useWishlist } from "../hooks/useWishlist"
-import Navebar from "../components/HomePage/Navbar.jsx"
-<Navebar />
+import Navbar from "../components/HomePage/Navbar"
+import axios from "axios"
+import NotFound from "./NotFound"
+;<Navbar />
 const CategoryPage = () => {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -50,7 +51,7 @@ const CategoryPage = () => {
     useEffect(() => {
         const fetchCategoryBooks = async () => {
             try {
-                const res = await fetch(
+                const res = await axios.get(
                     `http://localhost:8000/api/categories/${id}`,
                     {
                         headers: {
@@ -61,13 +62,12 @@ const CategoryPage = () => {
                         },
                     }
                 )
-                if (!res.ok) {
+                if (!res.status || res.status !== 200) {
                     setApiError(true)
                     setLoading(false)
                     return
                 }
-
-                const data = await res.json()
+                const data = res.data
                 if (!data || (!data.books && !data.name)) {
                     setCategoryFound(false)
                 } else {
@@ -104,8 +104,6 @@ const CategoryPage = () => {
                                 ? "Sale"
                                 : "New",
                         category: book.category?.name || "Uncategorized",
-                        description:
-                            book.description || "No description available",
                     }))
 
                     setBooks(processedBooks)
@@ -242,6 +240,36 @@ const CategoryPage = () => {
         }
     }
 
+    // دالة لإرجاع لون متغير لكل كاتيجوري (بنفسجي، كافي، أزرق فاتح...)
+    const categoryColors = [
+        "#6f42c1", // بنفسجي
+        "#b49a7d", // كافي
+        "#0dcaf0", // أزرق فاتح
+        "#a084ee", // بنفسجي فاتح
+        "#20c997", // تركواز
+        "#fd7e14", // برتقالي
+        "#adb5bd", // رمادي فاتح
+    ]
+    const getCategoryColor = (category, idx = 0) => {
+        if (!category) return categoryColors[0]
+        // حاول تعيين لون حسب اسم التصنيف أو استخدم ترتيب الكارت
+        const normalized = category.toLowerCase()
+        if (normalized.includes("رواية") || normalized.includes("novel"))
+            return categoryColors[0]
+        if (normalized.includes("كافي") || normalized.includes("coffee"))
+            return categoryColors[1]
+        if (normalized.includes("أزرق") || normalized.includes("blue"))
+            return categoryColors[2]
+        if (normalized.includes("بنفسجي") || normalized.includes("purple"))
+            return categoryColors[3]
+        if (normalized.includes("تركواز") || normalized.includes("turquoise"))
+            return categoryColors[4]
+        if (normalized.includes("برتقالي") || normalized.includes("orange"))
+            return categoryColors[5]
+        // افتراضي حسب ترتيب الكارت
+        return categoryColors[idx % categoryColors.length]
+    }
+
     // Filtering and pagination
     const filteredBooks = books.filter(
         book =>
@@ -287,208 +315,268 @@ const CategoryPage = () => {
         )
     }
 
-    // Error state
-    if (apiError || !categoryFound) {
-        return (
-            <section className="bg-[#F5F8FF] py-16 min-h-screen flex items-center justify-center">
-                <div className="text-center max-w-md">
-                    <img
-                        src={notFoundImage}
-                        alt="Error or Not Found"
-                        className="mx-auto mb-6 w-72 opacity-80 rounded-xl shadow-md"
-                    />
-                    <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                        {apiError
-                            ? "Oops! Something went wrong"
-                            : "Category not found"}
-                    </h3>
-                    <p className="text-lg text-gray-600 mb-6">
-                        {apiError
-                            ? "We're unable to load the category right now. Please try again later."
-                            : "The category you're looking for doesn't exist or has been removed."}
-                    </p>
-                    <button
-                        onClick={() => navigate("/")}
-                        className="bg-[#199A8E] hover:bg-[#157d74] text-white px-6 py-3 rounded-full shadow-lg transition flex items-center justify-center gap-2 mx-auto"
-                    >
-                        <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            className="h-5 w-5"
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                        >
-                            <path
-                                fillRule="evenodd"
-                                d="M9.707 16.707a1 1 0 01-1.414 0l-6-6a1 1 0 010-1.414l6-6a1 1 0 011.414 1.414L5.414 9H17a1 1 0 110 2H5.414l4.293 4.293a1 1 0 010 1.414z"
-                                clipRule="evenodd"
-                            />
-                        </svg>
-                        Back to Home
-                    </button>
-                </div>
-            </section>
-        )
+    if (apiError || !categoryFound || books.length === 0) {
+        return <NotFound />
     }
 
     return (
-        <section className="bg-[#F5F8FF] py-16 min-h-screen">
-            <div className="container mx-auto px-4">
-                {/* Category Header */}
-                <div className="text-center mb-12">
-                    <h2 className="text-4xl font-bold text-[#101623] mb-3">
-                        {category} Books
-                    </h2>
-                    <p className="text-gray-600 max-w-2xl mx-auto">
-                        Browse our collection of {category.toLowerCase()} books.
-                        Find your next favorite read!
-                    </p>
-                </div>
-
-                {/* Filters */}
-                <div className="mb-10 bg-white p-4 rounded-xl shadow-sm">
-                    <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                        <div className="relative w-full md:w-1/2">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Search className="text-gray-400" size={18} />
-                            </div>
-                            <input
-                                type="text"
-                                placeholder="Search books by title..."
-                                onChange={handleSearchChange}
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
-                            />
-                            {searchLoading && (
-                                <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#199A8E]"></div>
-                                </div>
-                            )}
-                        </div>
-
-                        <div className="relative w-full md:w-1/3">
-                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                <Filter className="text-gray-400" size={18} />
-                            </div>
-                            <input
-                                type="number"
-                                placeholder="Max price"
-                                min="0"
-                                value={priceFilter}
-                                onChange={handlePriceChange}
-                                className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Results info */}
-                <div className="mb-6 flex justify-between items-center">
-                    <span className="text-gray-600">
-                        {filteredBooks.length} book
-                        {filteredBooks.length !== 1 ? "s" : ""} found
-                        {searchTerm && ` for "${searchTerm}"`}
-                    </span>
-                    {(searchTerm || priceFilter) && (
-                        <button
-                            onClick={clearFilters}
-                            className="text-[#199A8E] hover:text-[#157d74] text-sm font-medium"
-                        >
-                            Clear Filters
-                        </button>
-                    )}
-                </div>
-
-                {/* Books List */}
-                {filteredBooks.length === 0 ? (
-                    <div className="text-center bg-white p-10 rounded-xl shadow-sm">
-                        <img
-                            src={notFoundImage}
-                            alt="No books found"
-                            className="mx-auto mb-6 w-72 opacity-80 rounded-xl shadow-md"
-                        />
-                        <h3 className="text-2xl font-bold text-gray-800 mb-2">
-                            No books found
-                        </h3>
-                        <p className="text-lg text-gray-600 mb-6">
-                            Try adjusting your search or filter to find what
-                            you're looking for.
+        <>
+            <Navbar />
+            <section className="bg-[#F5F8FF] py-16 min-h-screen">
+                <div className="container mx-auto px-4">
+                    {/* Category Header */}
+                    <div className="text-center mb-12">
+                        <h2 className="text-4xl font-bold text-[#101623] mb-3">
+                            {category} Books
+                        </h2>
+                        <p className="text-gray-600 max-w-2xl mx-auto">
+                            Browse our collection of {category.toLowerCase()}{" "}
+                            books. Find your next favorite read!
                         </p>
-                        <button
-                            onClick={clearFilters}
-                            className="bg-[#199A8E] hover:bg-[#157d74] text-white px-6 py-3 rounded-full shadow-lg transition"
-                        >
-                            Clear Filters
-                        </button>
                     </div>
-                ) : (
-                    <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {currentBooks.map((book, index) => (
-                                <div
-                                    key={book.id}
-                                    className="book-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300"
-                                    style={{
-                                        animationDelay: `${index * 0.1}s`,
-                                        opacity: 0,
-                                        animation: "fadeIn 0.5s forwards",
-                                    }}
-                                >
+
+                    {/* Filters */}
+                    <div className="mb-10 bg-white p-4 rounded-xl shadow-sm">
+                        <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                            <div className="relative w-full md:w-1/2">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Search
+                                        className="text-gray-400"
+                                        size={18}
+                                    />
+                                </div>
+                                <input
+                                    type="text"
+                                    placeholder="Search books by title..."
+                                    onChange={handleSearchChange}
+                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
+                                />
+                                {searchLoading && (
+                                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                        <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-[#199A8E]"></div>
+                                    </div>
+                                )}
+                            </div>
+
+                            <div className="relative w-full md:w-1/3">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <Filter
+                                        className="text-gray-400"
+                                        size={18}
+                                    />
+                                </div>
+                                <input
+                                    type="number"
+                                    placeholder="Max price"
+                                    min="0"
+                                    value={priceFilter}
+                                    onChange={handlePriceChange}
+                                    className="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-[#199A8E]"
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Results info */}
+                    <div className="mb-6 flex justify-between items-center">
+                        <span className="text-gray-600">
+                            {filteredBooks.length} book
+                            {filteredBooks.length !== 1 ? "s" : ""} found
+                            {searchTerm && ` for "${searchTerm}"`}
+                        </span>
+                        {(searchTerm || priceFilter) && (
+                            <button
+                                onClick={clearFilters}
+                                className="text-[#199A8E] hover:text-[#157d74] text-sm font-medium"
+                            >
+                                Clear Filters
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Books List */}
+                    {filteredBooks.length === 0 ? (
+                        <div className="text-center bg-white p-10 rounded-xl shadow-sm">
+                            <h3 className="text-2xl font-bold text-gray-800 mb-2">
+                                No books found
+                            </h3>
+                            <p className="text-lg text-gray-600 mb-6">
+                                Try adjusting your search or filter to find what
+                                you're looking for.
+                            </p>
+                            <button
+                                onClick={clearFilters}
+                                className="bg-[#199A8E] hover:bg-[#157d74] text-white px-6 py-3 rounded-full shadow-lg transition"
+                            >
+                                Clear Filters
+                            </button>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                                {currentBooks.map((book, index) => (
                                     <div
-                                        className="book-badge absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded"
+                                        key={book.id}
+                                        className="book-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300"
                                         style={{
-                                            backgroundColor: getStatusColor(
-                                                book.status
-                                            ),
+                                            animationDelay: `${index * 0.1}s`,
+                                            opacity: 0,
+                                            animation: "fadeIn 0.5s forwards",
                                         }}
                                     >
-                                        {book.badge}
-                                    </div>
-
-                                    <div className="book-image-container relative">
-                                        <img
-                                            src={book.image}
-                                            alt={book.title}
-                                            className="w-full h-48 object-cover"
-                                            loading="lazy"
-                                            onError={e => {
-                                                e.currentTarget.src =
-                                                    "/placeholder.svg?height=300&width=200"
+                                        <div
+                                            className="book-badge absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded"
+                                            style={{
+                                                backgroundColor: getStatusColor(
+                                                    book.status
+                                                ),
                                             }}
-                                        />
-                                        <div className="image-overlay absolute inset-0 bg-black opacity-0 hover:opacity-10 transition duration-300"></div>
+                                        >
+                                            {book.badge}
+                                        </div>
 
-                                        <div className="hover-actions absolute top-2 right-2 flex flex-col gap-2 opacity-0 hover:opacity-100 transition duration-300">
-                                            <button
-                                                className={`action-button favorite ${
-                                                    isInWishlist(book.id)
-                                                        ? "active"
-                                                        : ""
-                                                }`}
-                                                onClick={() =>
-                                                    handleAddToWishlist(book.id)
-                                                }
-                                            >
-                                                <Heart
-                                                    size={18}
-                                                    fill={
+                                        <div className="book-image-container relative">
+                                            <img
+                                                src={book.image}
+                                                alt={book.title}
+                                                className="w-full h-48 object-cover"
+                                                loading="lazy"
+                                                onError={e => {
+                                                    e.currentTarget.src =
+                                                        "/placeholder.svg?height=300&width=200"
+                                                }}
+                                            />
+                                            <div className="image-overlay absolute inset-0 bg-black opacity-0 hover:opacity-10 transition duration-300"></div>
+
+                                            <div className="hover-actions absolute top-2 right-2 flex flex-col gap-2 opacity-0 hover:opacity-100 transition duration-300">
+                                                <button
+                                                    className={`action-button favorite ${
                                                         isInWishlist(book.id)
-                                                            ? "currentColor"
-                                                            : "none"
+                                                            ? "active"
+                                                            : ""
+                                                    }`}
+                                                    onClick={() =>
+                                                        handleAddToWishlist(
+                                                            book.id
+                                                        )
                                                     }
-                                                />
-                                            </button>
-                                            <button
-                                                className="action-button view"
-                                                onClick={() =>
-                                                    handleQuickView(book.id)
-                                                }
+                                                >
+                                                    <Heart
+                                                        size={18}
+                                                        fill={
+                                                            isInWishlist(
+                                                                book.id
+                                                            )
+                                                                ? "currentColor"
+                                                                : "none"
+                                                        }
+                                                    />
+                                                </button>
+                                                <button
+                                                    className="action-button view"
+                                                    onClick={() =>
+                                                        handleQuickView(book.id)
+                                                    }
+                                                >
+                                                    <Eye size={18} />
+                                                </button>
+                                                <button
+                                                    className={`action-button cart ${
+                                                        isInCart(book.id)
+                                                            ? "disabled"
+                                                            : ""
+                                                    }`}
+                                                    onClick={
+                                                        !isInCart(book.id)
+                                                            ? () =>
+                                                                  handleAddToCart(
+                                                                      book.id
+                                                                  )
+                                                            : undefined
+                                                    }
+                                                    disabled={
+                                                        isInCart(book.id) ||
+                                                        book.status !==
+                                                            "available"
+                                                    }
+                                                >
+                                                    {isInCart(book.id) ? (
+                                                        <Check size={18} />
+                                                    ) : (
+                                                        <ShoppingCart
+                                                            size={18}
+                                                        />
+                                                    )}
+                                                </button>
+                                            </div>
+
+                                            <div
+                                                className="category-tag absolute bottom-2 left-2 bg-white text-xs px-2 py-1 rounded text-gray-700"
+                                                style={{
+                                                    background:
+                                                        getCategoryColor(
+                                                            book.category,
+                                                            index
+                                                        ),
+                                                    color: "#fff",
+                                                    fontWeight: "bold",
+                                                    borderRadius: "0.5em",
+                                                    padding: "2px 10px",
+                                                }}
                                             >
-                                                <Eye size={18} />
-                                            </button>
+                                                {book.category}
+                                            </div>
+                                        </div>
+
+                                        <div className="p-4">
+                                            <div className="book-rating flex items-center mb-2">
+                                                <div className="stars flex">
+                                                    {[...Array(5)].map(
+                                                        (_, i) => (
+                                                            <Star
+                                                                key={i}
+                                                                size={14}
+                                                                className={
+                                                                    i <
+                                                                    Math.floor(
+                                                                        book.rating
+                                                                    )
+                                                                        ? "text-yellow-400 fill-current"
+                                                                        : "text-gray-300"
+                                                                }
+                                                            />
+                                                        )
+                                                    )}
+                                                </div>
+                                                <span className="rating-text text-xs text-gray-500 ml-1">
+                                                    {book.rating} (
+                                                    {book.reviews} reviews)
+                                                </span>
+                                            </div>
+
+                                            <h3 className="book-title font-semibold text-lg mb-1 line-clamp-1">
+                                                {book.title}
+                                            </h3>
+                                            <p className="book-author text-sm text-gray-500 mb-3">
+                                                {book.author}
+                                            </p>
+
+                                            <div className="book-price flex items-center gap-2 mb-3">
+                                                {book.originalPrice && (
+                                                    <span className="original-price text-sm text-gray-400 line-through">
+                                                        {book.originalPrice}
+                                                    </span>
+                                                )}
+                                                <span className="current-price font-bold text-[#199A8E]">
+                                                    {book.price}
+                                                </span>
+                                            </div>
+
                                             <button
-                                                className={`action-button cart ${
+                                                className={`w-full py-2 rounded-md flex items-center justify-center gap-2 ${
                                                     isInCart(book.id)
-                                                        ? "disabled"
-                                                        : ""
+                                                        ? "bg-gray-200 text-gray-600 cursor-not-allowed"
+                                                        : "bg-[#199A8E] hover:bg-[#157d74] text-white"
                                                 }`}
                                                 onClick={
                                                     !isInCart(book.id)
@@ -504,180 +592,111 @@ const CategoryPage = () => {
                                                 }
                                             >
                                                 {isInCart(book.id) ? (
-                                                    <Check size={18} />
+                                                    <Check size={16} />
                                                 ) : (
-                                                    <ShoppingCart size={18} />
+                                                    <ShoppingCart size={16} />
                                                 )}
+                                                <span>
+                                                    {isInCart(book.id)
+                                                        ? "In Cart"
+                                                        : "Add to Cart"}
+                                                </span>
                                             </button>
                                         </div>
-
-                                        <div className="category-tag absolute bottom-2 left-2 bg-white text-xs px-2 py-1 rounded text-gray-700">
-                                            {book.category}
-                                        </div>
                                     </div>
-
-                                    <div className="p-4">
-                                        <div className="book-rating flex items-center mb-2">
-                                            <div className="stars flex">
-                                                {[...Array(5)].map((_, i) => (
-                                                    <Star
-                                                        key={i}
-                                                        size={14}
-                                                        className={
-                                                            i <
-                                                            Math.floor(
-                                                                book.rating
-                                                            )
-                                                                ? "text-yellow-400 fill-current"
-                                                                : "text-gray-300"
-                                                        }
-                                                    />
-                                                ))}
-                                            </div>
-                                            <span className="rating-text text-xs text-gray-500 ml-1">
-                                                {book.rating} ({book.reviews}{" "}
-                                                reviews)
-                                            </span>
-                                        </div>
-
-                                        <h3 className="book-title font-semibold text-lg mb-1 line-clamp-1">
-                                            {book.title}
-                                        </h3>
-                                        <p className="book-author text-sm text-gray-500 mb-3">
-                                            {book.author}
-                                        </p>
-
-                                        <div className="book-price flex items-center gap-2 mb-3">
-                                            {book.originalPrice && (
-                                                <span className="original-price text-sm text-gray-400 line-through">
-                                                    {book.originalPrice}
-                                                </span>
-                                            )}
-                                            <span className="current-price font-bold text-[#199A8E]">
-                                                {book.price}
-                                            </span>
-                                        </div>
-
-                                        <button
-                                            className={`w-full py-2 rounded-md flex items-center justify-center gap-2 ${
-                                                isInCart(book.id)
-                                                    ? "bg-gray-200 text-gray-600 cursor-not-allowed"
-                                                    : "bg-[#199A8E] hover:bg-[#157d74] text-white"
-                                            }`}
-                                            onClick={
-                                                !isInCart(book.id)
-                                                    ? () =>
-                                                          handleAddToCart(
-                                                              book.id
-                                                          )
-                                                    : undefined
-                                            }
-                                            disabled={
-                                                isInCart(book.id) ||
-                                                book.status !== "available"
-                                            }
-                                        >
-                                            {isInCart(book.id) ? (
-                                                <Check size={16} />
-                                            ) : (
-                                                <ShoppingCart size={16} />
-                                            )}
-                                            <span>
-                                                {isInCart(book.id)
-                                                    ? "In Cart"
-                                                    : "Add to Cart"}
-                                            </span>
-                                        </button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex justify-center items-center gap-2 mt-12">
-                                <button
-                                    onClick={goToPreviousPage}
-                                    disabled={currentPage === 1}
-                                    className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition flex items-center gap-1"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-4 w-4"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                    Previous
-                                </button>
-
-                                <div className="flex gap-1">
-                                    {Array.from(
-                                        { length: Math.min(5, totalPages) },
-                                        (_, i) => {
-                                            let pageNum
-                                            if (totalPages <= 5) {
-                                                pageNum = i + 1
-                                            } else if (currentPage <= 3) {
-                                                pageNum = i + 1
-                                            } else if (
-                                                currentPage >=
-                                                totalPages - 2
-                                            ) {
-                                                pageNum = totalPages - 4 + i
-                                            } else {
-                                                pageNum = currentPage - 2 + i
-                                            }
-
-                                            return (
-                                                <button
-                                                    key={pageNum}
-                                                    onClick={() =>
-                                                        setCurrentPage(pageNum)
-                                                    }
-                                                    className={`px-4 py-2 border rounded-lg text-sm ${
-                                                        currentPage === pageNum
-                                                            ? "bg-[#199A8E] text-white border-[#199A8E]"
-                                                            : "text-gray-600 hover:bg-gray-50"
-                                                    }`}
-                                                >
-                                                    {pageNum}
-                                                </button>
-                                            )
-                                        }
-                                    )}
-                                </div>
-
-                                <button
-                                    onClick={goToNextPage}
-                                    disabled={currentPage === totalPages}
-                                    className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition flex items-center gap-1"
-                                >
-                                    Next
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="h-4 w-4"
-                                        viewBox="0 0 20 20"
-                                        fill="currentColor"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                            clipRule="evenodd"
-                                        />
-                                    </svg>
-                                </button>
+                                ))}
                             </div>
-                        )}
-                    </>
-                )}
-            </div>
-        </section>
+
+                            {/* Pagination */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center items-center gap-2 mt-12">
+                                    <button
+                                        onClick={goToPreviousPage}
+                                        disabled={currentPage === 1}
+                                        className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition flex items-center gap-1"
+                                    >
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-4 w-4"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                        Previous
+                                    </button>
+
+                                    <div className="flex gap-1">
+                                        {Array.from(
+                                            { length: Math.min(5, totalPages) },
+                                            (_, i) => {
+                                                let pageNum
+                                                if (totalPages <= 5) {
+                                                    pageNum = i + 1
+                                                } else if (currentPage <= 3) {
+                                                    pageNum = i + 1
+                                                } else if (
+                                                    currentPage >=
+                                                    totalPages - 2
+                                                ) {
+                                                    pageNum = totalPages - 4 + i
+                                                } else {
+                                                    pageNum =
+                                                        currentPage - 2 + i
+                                                }
+
+                                                return (
+                                                    <button
+                                                        key={pageNum}
+                                                        onClick={() =>
+                                                            setCurrentPage(
+                                                                pageNum
+                                                            )
+                                                        }
+                                                        className={`px-4 py-2 border rounded-lg text-sm ${
+                                                            currentPage ===
+                                                            pageNum
+                                                                ? "bg-[#199A8E] text-white border-[#199A8E]"
+                                                                : "text-gray-600 hover:bg-gray-50"
+                                                        }`}
+                                                    >
+                                                        {pageNum}
+                                                    </button>
+                                                )
+                                            }
+                                        )}
+                                    </div>
+
+                                    <button
+                                        onClick={goToNextPage}
+                                        disabled={currentPage === totalPages}
+                                        className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition flex items-center gap-1"
+                                    >
+                                        Next
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            className="h-4 w-4"
+                                            viewBox="0 0 20 20"
+                                            fill="currentColor"
+                                        >
+                                            <path
+                                                fillRule="evenodd"
+                                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                                clipRule="evenodd"
+                                            />
+                                        </svg>
+                                    </button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </div>
+            </section>
+        </>
     )
 }
 

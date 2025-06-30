@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react"
 import {
     Container,
     Row,
@@ -8,8 +8,8 @@ import {
     ListGroup,
     Spinner,
     Alert,
-    Button
-} from 'react-bootstrap';
+    Button,
+} from "react-bootstrap"
 import {
     ChevronLeft,
     Truck,
@@ -22,198 +22,213 @@ import {
     AlertCircle,
     ThumbsUp,
     ThumbsDown,
-    CreditCard
-} from 'lucide-react';
-import { useParams, useNavigate } from 'react-router-dom';
-import api from '../services/api';
-import Title from '../components/shared/Title';
-import Navbar from '../components/HomePage/Navbar';
-import Footer from "../components/HomePage/Footer.jsx";
-import Swal from 'sweetalert2';
-import CustomButton from '../components/shared/CustomButton.js';
-import { usePayment } from '../hooks/usePayment';
+    CreditCard,
+} from "lucide-react"
+import { useParams, useNavigate } from "react-router-dom"
+import api from "../services/api"
+import Title from "../components/shared/Title"
+import Navbar from "../components/HomePage/Navbar"
+import Footer from "../components/HomePage/Footer.jsx"
+import Swal from "sweetalert2"
+import CustomButton from "../components/shared/CustomButton.js"
+import { usePayment } from "../hooks/usePayment"
 
 const OrderDetailsPage = () => {
-    const getBookImage = (images) => {
+    const getBookImage = images => {
         if (!images || images.length === 0) {
-            return 'https://via.placeholder.com/300x450';
+            return "https://via.placeholder.com/300x450"
         }
 
-        const firstImage = images[0];
-        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
-            return firstImage;
+        const firstImage = images[0]
+        if (typeof firstImage === "string" && firstImage.startsWith("http")) {
+            return firstImage
         }
 
-        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
-    };
+        return `${
+            process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"
+        }/storage/${firstImage}`
+    }
 
-    const { id } = useParams();
-    const navigate = useNavigate();
-    const [order, setOrder] = useState(null);
-    const [payment, setPayment] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [paymentCompleted, setPaymentCompleted] = useState(false);
-    const [paymentAttempted, setPaymentAttempted] = useState(false);
+    const { id } = useParams()
+    const navigate = useNavigate()
+    const [order, setOrder] = useState(null)
+    const [payment, setPayment] = useState(null)
+    const [loading, setLoading] = useState(true)
+    const [error, setError] = useState(null)
+    const [paymentCompleted, setPaymentCompleted] = useState(false)
+    const [paymentAttempted, setPaymentAttempted] = useState(false)
 
-    const {
-        processing,
-        setProcessing,
-    } = usePayment();
+    const { processing, setProcessing } = usePayment()
 
     const fetchOrderAndPayment = async () => {
         try {
-            setLoading(true);
+            setLoading(true)
 
             // Fetch order details
-            const orderResponse = await api.getOrderDetails(id);
-            let orderData = orderResponse.data?.data || orderResponse.data;
-            if (!orderData) throw new Error('Order not found');
+            const orderResponse = await api.getOrderDetails(id)
+            let orderData = orderResponse.data?.data || orderResponse.data
+            if (!orderData) throw new Error("Order not found")
 
             // Fetch payment details
             try {
-                const paymentResponse = await api.getOrderPayment(id);
-                const paymentData = paymentResponse.data?.data || paymentResponse.data;
+                const paymentResponse = await api.getOrderPayment(id)
+                const paymentData =
+                    paymentResponse.data?.data || paymentResponse.data
                 if (paymentData) {
-                    setPayment(paymentData);
-                    if (paymentData.status === 'paid') {
-                        setPaymentCompleted(true);
+                    setPayment(paymentData)
+                    if (paymentData.status === "paid") {
+                        setPaymentCompleted(true)
                     }
                 }
             } catch (paymentError) {
-                console.log('No payment record found');
+                console.log("No payment record found")
             }
 
             setOrder({
                 ...orderData,
                 order_items: orderData.order_items?.map(item => ({
                     ...item,
-                    unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
-                    total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
-                }))
-            });
-
+                    unit_price:
+                        item.type === "rent"
+                            ? item.book?.rental_price || 0
+                            : item.price || item.book?.price || 0,
+                    total_price:
+                        (item.type === "rent"
+                            ? item.book?.rental_price || 0
+                            : item.price || item.book?.price || 0) *
+                        item.quantity,
+                })),
+            })
         } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Failed to load order details');
+            setError(
+                err.response?.data?.message ||
+                    err.message ||
+                    "Failed to load order details"
+            )
             if (err.response?.status === 401) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                navigate('/login');
+                localStorage.removeItem("token")
+                localStorage.removeItem("user")
+                navigate("/login")
             }
         } finally {
-            setLoading(false);
+            setLoading(false)
         }
-    };
+    }
 
     useEffect(() => {
-        fetchOrderAndPayment();
-    }, [id]);
+        fetchOrderAndPayment()
+    }, [id])
 
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
-            title: 'Cancel Order?',
-            text: 'Are you sure you want to cancel this order?',
-            icon: 'warning',
+            title: "Cancel Order?",
+            text: "Are you sure you want to cancel this order?",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, cancel it!'
-        });
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, cancel it!",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
 
         try {
-            setProcessing(true);
-            await api.cancelOrder(id);
+            setProcessing(true)
+            await api.cancelOrder(id)
 
             setOrder(prevOrder => ({
                 ...prevOrder,
-                status: 'cancelled'
-            }));
+                status: "cancelled",
+            }))
 
             await Swal.fire(
-                'Cancelled!',
-                'Your order has been cancelled successfully.',
-                'success'
-            );
+                "Cancelled!",
+                "Your order has been cancelled successfully.",
+                "success"
+            )
 
-            navigate('/orders', { state: { activeTab: 'cancelled' } });
+            navigate("/orders", { state: { activeTab: "cancelled" } })
         } catch (err) {
-            console.error('Error cancelling order:', err);
-            let errorMessage = err.response?.data?.message || 'Failed to cancel order';
-            if (err.response?.status === 500 && err.response?.data?.error?.includes('No query results')) {
-                errorMessage = 'This order may have already been cancelled or deleted.';
+            console.error("Error cancelling order:", err)
+            let errorMessage =
+                err.response?.data?.message || "Failed to cancel order"
+            if (
+                err.response?.status === 500 &&
+                err.response?.data?.error?.includes("No query results")
+            ) {
+                errorMessage =
+                    "This order may have already been cancelled or deleted."
             }
-            Swal.fire('Error!', errorMessage, 'error');
+            Swal.fire("Error!", errorMessage, "error")
         } finally {
-            setProcessing(false);
+            setProcessing(false)
         }
-    };
+    }
 
     const handlePayment = async () => {
-        setPaymentAttempted(true);
-        navigate(`/payment/${id}`);
-    };
+        setPaymentAttempted(true)
+        navigate(`/payment/${id}`)
+    }
 
-    const getStatusIcon = (status) => {
-        if (!status) return <Clock size={20} className="text-secondary me-2" />;
+    const getStatusIcon = status => {
+        if (!status) return <Clock size={20} className="text-secondary me-2" />
         switch (status.toLowerCase()) {
-            case 'accepted':
-            case 'completed':
-            case 'delivered':
-                return <ThumbsUp size={20} className="text-success me-2" />;
-            case 'rejected':
-            case 'cancelled':
-                return <ThumbsDown size={20} className="text-danger me-2" />;
-            case 'shipped':
-                return <Truck size={20} className="text-primary me-2" />;
-            case 'processing':
-            case 'pending':
-                return <RefreshCw size={20} className="text-warning me-2" />;
+            case "accepted":
+            case "completed":
+            case "delivered":
+                return <ThumbsUp size={20} className="text-success me-2" />
+            case "rejected":
+            case "cancelled":
+                return <ThumbsDown size={20} className="text-danger me-2" />
+            case "shipped":
+                return <Truck size={20} className="text-primary me-2" />
+            case "processing":
+            case "pending":
+                return <RefreshCw size={20} className="text-warning me-2" />
             default:
-                return <AlertCircle size={20} className="text-secondary me-2" />;
+                return <AlertCircle size={20} className="text-secondary me-2" />
         }
-    };
+    }
 
-    const getStatusBadge = (status) => {
-        if (!status) return 'secondary';
+    const getStatusBadge = status => {
+        if (!status) return "secondary"
         switch (status.toLowerCase()) {
-            case 'accepted':
-            case 'completed':
-            case 'delivered':
-                return 'success';
-            case 'rejected':
-            case 'cancelled':
-                return 'danger';
-            case 'shipped':
-                return 'primary';
-            case 'processing':
-            case 'pending':
-                return 'warning';
+            case "accepted":
+            case "completed":
+            case "delivered":
+                return "success"
+            case "rejected":
+            case "cancelled":
+                return "danger"
+            case "shipped":
+                return "primary"
+            case "processing":
+            case "pending":
+                return "warning"
             default:
-                return 'secondary';
+                return "secondary"
         }
-    };
+    }
 
-    const getStatusCardVariant = (status) => {
-        if (!status) return 'light';
+    const getStatusCardVariant = status => {
+        if (!status) return "light"
         switch (status.toLowerCase()) {
-            case 'accepted':
-            case 'completed':
-            case 'delivered':
-                return 'success';
-            case 'rejected':
-            case 'cancelled':
-                return 'danger';
-            case 'shipped':
-                return 'primary';
-            case 'processing':
-            case 'pending':
-                return 'warning';
+            case "accepted":
+            case "completed":
+            case "delivered":
+                return "success"
+            case "rejected":
+            case "cancelled":
+                return "danger"
+            case "shipped":
+                return "primary"
+            case "processing":
+            case "pending":
+                return "warning"
             default:
-                return 'light';
+                return "light"
         }
-    };
+    }
 
     const getPaymentStatusBadge = () => {
         if (!payment) {
@@ -221,69 +236,78 @@ const OrderDetailsPage = () => {
                 <Badge bg="secondary" className="custom-badge">
                     <Clock size={16} className="me-1" /> Not Paid
                 </Badge>
-            );
+            )
         }
 
         switch (payment.status) {
-            case 'paid':
+            case "paid":
                 return (
                     <Badge bg="success" className="custom-badge">
                         <CheckCircle size={16} className="me-1" /> Paid
                     </Badge>
-                );
-            case 'pending':
+                )
+            case "pending":
                 return (
                     <Badge bg="warning" text="dark" className="custom-badge">
                         <Clock size={16} className="me-1" /> Pending
                     </Badge>
-                );
-            case 'failed':
+                )
+            case "failed":
                 return (
                     <Badge bg="danger" className="custom-badge">
                         <XCircle size={16} className="me-1" /> Failed
                     </Badge>
-                );
+                )
             default:
                 return (
                     <Badge bg="secondary" className="custom-badge">
                         <Clock size={16} className="me-1" /> Not Paid
                     </Badge>
-                );
+                )
         }
-    };
+    }
 
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
+    const formatDate = dateString => {
+        if (!dateString) return "N/A"
         try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
+            const date = new Date(dateString)
+            return date.toLocaleDateString("en-US", {
+                year: "numeric",
+                month: "long",
+                day: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+            })
         } catch {
-            return 'Invalid Date';
+            return "Invalid Date"
         }
-    };
+    }
 
-    const formatPrice = (price) => {
-        const num = parseFloat(price);
-        return isNaN(num) ? '0.00' : num.toFixed(2);
-    };
+    const formatPrice = price => {
+        const num = parseFloat(price)
+        return isNaN(num) ? "0.00" : num.toFixed(2)
+    }
 
-    const getItemPrice = (item) => {
-        return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
-    };
+    const getItemPrice = item => {
+        return item.type === "rent"
+            ? item.book?.rental_price || 0
+            : item.price || item.book?.price || 0
+    }
 
-    const user = JSON.parse(localStorage.getItem('user'));
-    const isClient = user?.id === order?.client_id;
-    const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
-    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
+    const user = JSON.parse(localStorage.getItem("user"))
+    const isClient = user?.id === order?.client_id
+    const canCancel =
+        order &&
+        ["pending", "processing", "accepted"].includes(
+            order.status?.toLowerCase()
+        ) &&
+        isClient
+    const canPay =
+        order &&
+        ["accepted"].includes(order.status?.toLowerCase()) &&
         !paymentCompleted &&
-        (!payment || payment.status !== 'paid') &&
-        isClient;
+        (!payment || payment.status !== "paid") &&
+        isClient
 
     if (loading) {
         return (
@@ -291,7 +315,7 @@ const OrderDetailsPage = () => {
                 <Spinner animation="border" variant="primary" />
                 <p className="mt-2">Loading order details...</p>
             </div>
-        );
+        )
     }
 
     if (error) {
@@ -299,7 +323,10 @@ const OrderDetailsPage = () => {
             <>
                 <Navbar />
                 <Container className="py-5">
-                    <Alert variant="danger" className="d-flex align-items-center">
+                    <Alert
+                        variant="danger"
+                        className="d-flex align-items-center"
+                    >
                         <AlertCircle size={24} className="me-2" />
                         <div>
                             <h5>Order Loading Error</h5>
@@ -307,10 +334,11 @@ const OrderDetailsPage = () => {
                         </div>
                     </Alert>
                     <div className="d-flex justify-content-center mt-4 gap-3">
-                        {error.includes('not found') || error.includes('deleted') ? (
+                        {error.includes("not found") ||
+                        error.includes("deleted") ? (
                             <CustomButton
                                 variant="primary"
-                                onClick={() => navigate('/orders')}
+                                onClick={() => navigate("/orders")}
                             >
                                 Back to Orders
                             </CustomButton>
@@ -324,7 +352,7 @@ const OrderDetailsPage = () => {
                                 </CustomButton>
                                 <CustomButton
                                     variant="outline-primary"
-                                    onClick={() => navigate('/orders')}
+                                    onClick={() => navigate("/orders")}
                                 >
                                     My Orders
                                 </CustomButton>
@@ -334,7 +362,7 @@ const OrderDetailsPage = () => {
                 </Container>
                 <Footer />
             </>
-        );
+        )
     }
 
     if (!order) {
@@ -342,23 +370,28 @@ const OrderDetailsPage = () => {
             <>
                 <Navbar />
                 <Container className="py-5">
-                    <Alert variant="warning" className="d-flex align-items-center">
+                    <Alert
+                        variant="warning"
+                        className="d-flex align-items-center"
+                    >
                         <AlertCircle size={24} className="me-2" />
                         <div>
                             <h5>Order Not Found</h5>
-                            <p className="mb-0">The requested order could not be found.</p>
+                            <p className="mb-0">
+                                The requested order could not be found.
+                            </p>
                         </div>
                     </Alert>
                     <div className="d-flex justify-content-center mt-4 gap-3">
                         <CustomButton
                             variant="primary"
-                            onClick={() => navigate('/orders')}
+                            onClick={() => navigate("/orders")}
                         >
                             View Orders
                         </CustomButton>
                         <CustomButton
                             variant="outline-primary"
-                            onClick={() => navigate('/books')}
+                            onClick={() => navigate("/books")}
                         >
                             Browse Books
                         </CustomButton>
@@ -366,7 +399,7 @@ const OrderDetailsPage = () => {
                 </Container>
                 <Footer />
             </>
-        );
+        )
     }
 
     return (
@@ -387,7 +420,11 @@ const OrderDetailsPage = () => {
                 </div>
 
                 <Card className="mb-4 border-0 shadow-sm">
-                    <Card.Header className={`bg-${getStatusCardVariant(order.status)} text-white`}>
+                    <Card.Header
+                        className={`bg-${getStatusCardVariant(
+                            order.status
+                        )} text-white`}
+                    >
                         <h5 className="mb-0 d-flex align-items-center">
                             {getStatusIcon(order.status)}
                             <span>Order #{order.id}</span>
@@ -397,18 +434,23 @@ const OrderDetailsPage = () => {
                         <Row className="mb-4">
                             <Col md={6}>
                                 <div className="d-flex align-items-center mb-3">
-                                    <Badge bg={getStatusBadge(order.status)} className="fs-6">
+                                    <Badge
+                                        bg={getStatusBadge(order.status)}
+                                        className="fs-6"
+                                    >
                                         {order.status}
                                     </Badge>
                                     <small className="text-muted ms-3">
                                         Placed on {formatDate(order.created_at)}
                                     </small>
                                 </div>
-                                {order.updated_at && order.status !== 'pending' && (
-                                    <div className="text-muted small">
-                                        Last updated: {formatDate(order.updated_at)}
-                                    </div>
-                                )}
+                                {order.updated_at &&
+                                    order.status !== "pending" && (
+                                        <div className="text-muted small">
+                                            Last updated:{" "}
+                                            {formatDate(order.updated_at)}
+                                        </div>
+                                    )}
                             </Col>
                             <Col md={6} className="text-md-end">
                                 <div className="d-flex flex-column">
@@ -417,11 +459,14 @@ const OrderDetailsPage = () => {
                                         {getPaymentStatusBadge()}
                                     </div>
                                     <div className="mb-2">
-                                        <strong>Payment Method:</strong> {order.payment_method || 'Not Specified'}
+                                        <strong>Payment Method:</strong>{" "}
+                                        {order.payment_method ||
+                                            "Not Specified"}
                                     </div>
 
                                     <div className="fs-5 fw-bold">
-                                        <strong>Total:</strong> {formatPrice(order.total_price)} EGP
+                                        <strong>Total:</strong>{" "}
+                                        {formatPrice(order.total_price)} EGP
                                     </div>
                                 </div>
                             </Col>
@@ -437,15 +482,29 @@ const OrderDetailsPage = () => {
                                     <Card.Body>
                                         <div className="mb-3">
                                             <h6>Client</h6>
-                                            <div>{order.client?.name || 'N/A'}</div>
-                                            <div>{order.client?.email || 'N/A'}</div>
-                                            <div>{order.client?.phone_number || 'N/A'}</div>
+                                            <div>
+                                                {order.client?.name || "N/A"}
+                                            </div>
+                                            <div>
+                                                {order.client?.email || "N/A"}
+                                            </div>
+                                            <div>
+                                                {order.client?.phone_number ||
+                                                    "N/A"}
+                                            </div>
                                         </div>
                                         <div>
                                             <h6>Owner</h6>
-                                            <div>{order.owner?.name || 'N/A'}</div>
-                                            <div>{order.owner?.email || 'N/A'}</div>
-                                            <div>{order.owner?.phone_number || 'N/A'}</div>
+                                            <div>
+                                                {order.owner?.name || "N/A"}
+                                            </div>
+                                            <div>
+                                                {order.owner?.email || "N/A"}
+                                            </div>
+                                            <div>
+                                                {order.owner?.phone_number ||
+                                                    "N/A"}
+                                            </div>
                                         </div>
                                     </Card.Body>
                                 </Card>
@@ -455,7 +514,10 @@ const OrderDetailsPage = () => {
                                 <Card className="h-100">
                                     <Card.Header className="d-flex align-items-center bg-light">
                                         <FileText size={18} className="me-2" />
-                                        <span>Order Items ({order.order_items?.length || 0})</span>
+                                        <span>
+                                            Order Items (
+                                            {order.order_items?.length || 0})
+                                        </span>
                                     </Card.Header>
                                     <Card.Body className="p-0">
                                         <ListGroup variant="flush">
@@ -466,30 +528,59 @@ const OrderDetailsPage = () => {
                                                 >
                                                     <div className="d-flex align-items-center">
                                                         <img
-                                                            src={getBookImage(item.book?.images)}
-                                                            alt={item.book?.title}
+                                                            src={getBookImage(
+                                                                item.book
+                                                                    ?.images
+                                                            )}
+                                                            alt={
+                                                                item.book?.title
+                                                            }
                                                             width="60"
                                                             height="80"
                                                             className="me-3 object-fit-cover rounded"
-                                                            onError={(e) => {
-                                                                e.target.onerror = null;
-                                                                e.target.src = 'https://via.placeholder.com/300x450';
+                                                            onError={e => {
+                                                                e.target.onerror =
+                                                                    null
+                                                                e.target.src =
+                                                                    "https://via.placeholder.com/300x450"
                                                             }}
                                                         />
                                                         <div>
-                                                            <div className="fw-bold">{item.book?.title || 'N/A'}</div>
-                                                            <small className="text-muted">Qty: {item.quantity || 0}</small>
+                                                            <div className="fw-bold">
+                                                                {item.book
+                                                                    ?.title ||
+                                                                    "N/A"}
+                                                            </div>
+                                                            <small className="text-muted">
+                                                                Qty:{" "}
+                                                                {item.quantity ||
+                                                                    0}
+                                                            </small>
                                                             <small className="d-block text-muted text-capitalize">
-                                                                Type: {item.type || 'buy'}
+                                                                Type:{" "}
+                                                                {item.type ||
+                                                                    "buy"}
                                                             </small>
                                                         </div>
                                                     </div>
                                                     <div className="text-end">
                                                         <div className="fw-bold">
-                                                            {formatPrice(getItemPrice(item))} EGP
+                                                            {formatPrice(
+                                                                getItemPrice(
+                                                                    item
+                                                                )
+                                                            )}{" "}
+                                                            EGP
                                                         </div>
                                                         <small className="text-muted">
-                                                            Total: {formatPrice(getItemPrice(item) * item.quantity)} EGP
+                                                            Total:{" "}
+                                                            {formatPrice(
+                                                                getItemPrice(
+                                                                    item
+                                                                ) *
+                                                                    item.quantity
+                                                            )}{" "}
+                                                            EGP
                                                         </small>
                                                     </div>
                                                 </ListGroup.Item>
@@ -512,41 +603,64 @@ const OrderDetailsPage = () => {
                                         >
                                             {processing ? (
                                                 <>
-                                                    <Spinner animation="border" size="sm" className="me-2" />
+                                                    <Spinner
+                                                        animation="border"
+                                                        size="sm"
+                                                        className="me-2"
+                                                    />
                                                     Cancelling...
                                                 </>
-                                            ) : 'Cancel Order'}
+                                            ) : (
+                                                "Cancel Order"
+                                            )}
                                         </Button>
                                     )}
-                                    {canPay && (
-                                        paymentCompleted || payment?.status === 'paid' ? (
-                                            <Button variant="success" className="px-4 py-2" disabled>
-                                                <CheckCircle size={18} className="me-2" />
+                                    {canPay &&
+                                        (paymentCompleted ||
+                                        payment?.status === "paid" ? (
+                                            <Button
+                                                variant="success"
+                                                className="px-4 py-2"
+                                                disabled
+                                            >
+                                                <CheckCircle
+                                                    size={18}
+                                                    className="me-2"
+                                                />
                                                 Payment Completed
                                             </Button>
                                         ) : (
                                             <Button
                                                 variant="success"
                                                 onClick={handlePayment}
-                                                disabled={processing || paymentAttempted}
+                                                disabled={
+                                                    processing ||
+                                                    paymentAttempted
+                                                }
                                                 className="px-4 py-2"
                                             >
                                                 {processing ? (
                                                     <>
-                                                        <Spinner animation="border" size="sm" className="me-2" />
+                                                        <Spinner
+                                                            animation="border"
+                                                            size="sm"
+                                                            className="me-2"
+                                                        />
                                                         Processing...
                                                     </>
                                                 ) : paymentAttempted ? (
-                                                    'Payment in progress'
+                                                    "Payment in progress"
                                                 ) : (
                                                     <>
-                                                        <CreditCard size={18} className="me-2" />
+                                                        <CreditCard
+                                                            size={18}
+                                                            className="me-2"
+                                                        />
                                                         Pay Now
                                                     </>
                                                 )}
                                             </Button>
-                                        )
-                                    )}
+                                        ))}
                                 </Col>
                             </Row>
                         )}
@@ -556,7 +670,7 @@ const OrderDetailsPage = () => {
 
             <Footer />
         </>
-    );
-};
+    )
+}
 
-export default OrderDetailsPage;
+export default OrderDetailsPage
