@@ -46,6 +46,8 @@ import AdminNotificationsPage from './components/Admin/NotificationsPage';
 import AdminRoute from './components/GuestRoute/AdminRoute';
 import OwnerRoute from './components/GuestRoute/OwnerRoute';
 import EditBookPage from './components/Library/EditBookPage';
+import VerifyEmailReminder from "./pages/form/VerifyEmailReminder";
+import EmailVerified from "./pages/form/EmailVerified";
 
 // import Users from './components/admin/Users';
 // import Categories from './components/admin/Categories';
@@ -93,6 +95,8 @@ function App() {
             </GuestRoute>
           }
         />
+        <Route path="/verify-email" element={<VerifyEmailReminder />} />
+        <Route path="/email-verified" element={<EmailVerified />} />
         <Route path="/social-callback" element={<SocialCallback />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
