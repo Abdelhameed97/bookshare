@@ -1,31 +1,38 @@
+import Swal from 'sweetalert2';
 import React, { useState } from 'react';
 import {
-    Container, Row, Col, Card, Table, Form, Alert, Spinner, Badge,
-    Button, Dropdown
+    Container,
+    Row,
+    Col,
+    Card,
+    Table,
+    Form,
+    Alert,
+    Spinner,
+    Badge,
+    Button,
+    Dropdown
 } from 'react-bootstrap';
 import {
-    FaTrashAlt,
-    FaChevronLeft,
-    FaTruck,
-    FaShieldAlt,
-    FaShoppingCart,
-    FaPlus,
-    FaMinus,
-    FaExclamationCircle,
-    FaCreditCard,
-    FaWallet,
-    FaMoneyBillWave,
-    FaPaypal
-} from 'react-icons/fa';
+    Trash2,
+    ChevronLeft,
+    Truck,
+    Shield,
+    ShoppingCart,
+    Plus,
+    Minus,
+    AlertCircle,
+    CreditCard,
+    Wallet
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import Swal from 'sweetalert2';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
 import api from '../services/api';
-import { useCart } from '../hooks/useCart';
+import '../style/CartPage.css';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
-import '../style/CartPage.css';
+import { useCartContext } from '../contexts/CartContext';
 
 const CartPage = () => {
     const getBookImage = (images) => {
@@ -47,8 +54,10 @@ const CartPage = () => {
         loading,
         error,
         fetchCartItems,
-        setCartItems
-    } = useCart(user?.id);
+        setCartItems,
+        removeFromCart,
+        updateCartItemQuantity
+    } = useCartContext();
 
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
@@ -58,23 +67,24 @@ const CartPage = () => {
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [isApplyingCoupon, setIsApplyingCoupon] = useState(false);
     const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
-    const [processing, setProcessing] = useState(false);
     const navigate = useNavigate();
 
     const paymentMethods = [
         { id: '', label: 'Select Payment Method', icon: null },
-        { id: 'stripe', label: 'Credit/Debit Card', icon: <FaCreditCard size={20} className="me-2" /> },
-        { id: 'cash', label: 'Cash on Delivery', icon: <FaWallet size={20} className="me-2" /> },
-        { id: 'paypal', label: 'PayPal', icon: <FaCreditCard size={20} className="me-2" /> },
+        { id: 'stripe', label: 'Credit/Debit Card', icon: <CreditCard size={20} className="me-2" /> },
+        { id: 'cash', label: 'Cash on Delivery', icon: <Wallet size={20} className="me-2" /> },
+        { id: 'paypal', label: 'PayPal', icon: <CreditCard size={20} className="me-2" /> },
     ];
 
     const subtotal = cartItems.reduce((sum, item) => {
-        return sum + (item.price * (item.quantity || 1));
+        const price = item.type === 'rent' ?
+            (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0)) :
+            parseFloat(item.book?.price || 0);
+        return sum + (price * (item.quantity || 1));
     }, 0);
 
     const shippingFee = subtotal > 200 ? 0 : 25;
-    const tax = subtotal * 0.10;
-    const total = subtotal + shippingFee + tax - discount;
+    const total = subtotal + shippingFee - discount;
 
     const applyCoupon = async () => {
         if (!couponCode.trim()) return;
@@ -85,27 +95,22 @@ const CartPage = () => {
 
         setIsApplyingCoupon(true);
         try {
-            const result = await api.applyCoupon(couponCode, subtotal);
-
-            if (result.success) {
-                setDiscount(result.discount);
-                setAppliedCoupon(result.coupon);
-                await Swal.fire({
-                    icon: 'success',
-                    title: 'Coupon Applied!',
-                    text: `Discount of ${result.discount} EGP has been applied`,
-                    timer: 2000
-                });
-            } else {
-                throw new Error(result.error);
-            }
+            const response = await api.applyCoupon(couponCode);
+            setDiscount(response.data.discount);
+            setAppliedCoupon(response.data.coupon);
+            await Swal.fire({
+                icon: 'success',
+                title: 'Coupon Applied!',
+                text: 'Your discount has been applied successfully',
+                timer: 2000
+            });
         } catch (err) {
             setDiscount(0);
             setAppliedCoupon(null);
             await Swal.fire({
                 icon: 'error',
                 title: 'Invalid Coupon',
-                text: err.message || 'This coupon code is not valid',
+                text: err.response?.data?.message || 'This coupon code is not valid',
             });
         } finally {
             setIsApplyingCoupon(false);
@@ -143,6 +148,7 @@ const CartPage = () => {
 
         try {
             await api.updateCartItem(itemId, { quantity: parsedQuantity });
+
             const updatedItems = cartItems.map(item =>
                 item.id === itemId ? { ...item, quantity: parsedQuantity } : item
             );
@@ -159,6 +165,7 @@ const CartPage = () => {
     const handleChangeType = async (itemId, newType) => {
         try {
             await api.updateCartItem(itemId, { type: newType });
+
             const updatedItems = cartItems.map(item =>
                 item.id === itemId ? { ...item, type: newType } : item
             );
@@ -276,16 +283,22 @@ const CartPage = () => {
 
         if (!result.isConfirmed) return;
 
-        setProcessing(true);
         try {
             const orderData = {
                 items: cartItems.map(item => ({
                     book_id: item.book_id,
                     quantity: item.quantity,
-                    type: item.type
+                    type: item.type,
+                    price: item.type === 'rent' ?
+                        (parseFloat(item.book?.rental_price || 0) || parseFloat(item.book?.price || 0)) :
+                        parseFloat(item.book?.price || 0)
                 })),
-                payment_method: selectedPaymentMethod,
-                coupon_code: appliedCoupon?.code || null
+                subtotal: parseFloat(subtotal.toFixed(2)),
+                discount: parseFloat(discount.toFixed(2)),
+                shipping: parseFloat(shippingFee.toFixed(2)),
+                total: parseFloat(total.toFixed(2)),
+                coupon_code: appliedCoupon?.code || null,
+                payment_method: selectedPaymentMethod 
             };
 
             const response = await api.createOrder(orderData);
@@ -296,6 +309,16 @@ const CartPage = () => {
                 throw new Error("Order ID not found in response");
             }
 
+            try {
+                await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
+                setCartItems([]);
+                setDiscount(0);
+                setCouponCode('');
+                setAppliedCoupon(null);
+            } catch (clearError) {
+                console.error("Error clearing cart:", clearError);
+            }
+
             navigate(`/orders/${orderId}`);
         } catch (err) {
             console.error("Checkout error:", err);
@@ -304,9 +327,13 @@ const CartPage = () => {
                 title: 'Checkout Failed',
                 text: err.response?.data?.message || err.message || 'Unable to process your order',
             });
-        } finally {
-            setProcessing(false);
         }
+    };
+
+    const showAlertMessage = (message, variant) => {
+        setAlertMessage(message);
+        setAlertVariant(variant);
+        setShowAlert(true);
     };
 
     if (loading) {
@@ -324,7 +351,7 @@ const CartPage = () => {
                 <Navbar />
                 <Container className="py-5">
                     <Alert variant="danger" className="d-flex align-items-center">
-                        <FaExclamationCircle size={24} className="me-2" />
+                        <AlertCircle size={24} className="me-2" />
                         <div>
                             <h5>Failed to load your cart</h5>
                             <p className="mb-0">{error}</p>
@@ -371,7 +398,7 @@ const CartPage = () => {
                         className="me-3 back-btn"
                         onClick={() => navigate(-1)}
                     >
-                        <FaChevronLeft size={20} className="me-1" />
+                        <ChevronLeft size={20} className="me-1" />
                         Back
                     </CustomButton>
                     <Title className="page-title">Shopping Cart <Badge bg="primary" className="ms-2">{cartItems.length}</Badge></Title>
@@ -383,7 +410,7 @@ const CartPage = () => {
                             <Card.Body>
                                 {cartItems.length === 0 ? (
                                     <div className="text-center py-4 empty-cart">
-                                        <FaShoppingCart size={48} className="text-muted mb-3" />
+                                        <ShoppingCart size={48} className="text-muted mb-3" />
                                         <h4>Your cart is empty</h4>
                                         <p className="text-muted mb-3">
                                             Looks like you haven't added any items to your cart yet
@@ -468,7 +495,7 @@ const CartPage = () => {
                                                                     onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
                                                                     disabled={item.quantity <= 1}
                                                                 >
-                                                                    <FaMinus size={14} />
+                                                                    <Minus size={14} />
                                                                 </CustomButton>
                                                                 <Form.Control
                                                                     type="number"
@@ -489,7 +516,7 @@ const CartPage = () => {
                                                                     className="quantity-btn"
                                                                     onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
                                                                 >
-                                                                    <FaPlus size={14} />
+                                                                    <Plus size={14} />
                                                                 </CustomButton>
                                                             </div>
                                                         </td>
@@ -510,7 +537,7 @@ const CartPage = () => {
                                                                 onClick={() => handleRemoveItem(item.id)}
                                                                 className="remove-btn"
                                                             >
-                                                                <FaTrashAlt size={16} />
+                                                                <Trash2 size={16} />
                                                             </CustomButton>
                                                         </td>
                                                     </tr>
@@ -524,7 +551,7 @@ const CartPage = () => {
                                                 onClick={() => navigate('/books')}
                                                 className="continue-btn"
                                             >
-                                                <FaChevronLeft size={18} className="me-1" />
+                                                <ChevronLeft size={18} className="me-1" />
                                                 Continue Shopping
                                             </CustomButton>
                                             <CustomButton
@@ -544,14 +571,14 @@ const CartPage = () => {
                             <Card.Body>
                                 <Row>
                                     <Col md={4} className="benefit-item">
-                                        <FaTruck size={24} className="me-2 text-primary" />
+                                        <Truck size={24} className="me-2 text-primary" />
                                         <div>
                                             <h6 className="mb-0">Free Shipping</h6>
                                             <small>On orders over 200 EGP</small>
                                         </div>
                                     </Col>
                                     <Col md={4} className="benefit-item">
-                                        <FaShieldAlt size={24} className="me-2 text-primary" />
+                                        <Shield size={24} className="me-2 text-primary" />
                                         <div>
                                             <h6 className="mb-0">Secure Checkout</h6>
                                             <small>100% Protected</small>
@@ -629,11 +656,6 @@ const CartPage = () => {
                                 )}
 
                                 <div className="d-flex justify-content-between mb-2 summary-item">
-                                    <span>Tax (10%):</span>
-                                    <span className="price">{tax.toFixed(2)} EGP</span>
-                                </div>
-
-                                <div className="d-flex justify-content-between mb-2 summary-item">
                                     <span>Shipping:</span>
                                     <span className={shippingFee === 0 ? 'text-success price' : 'price'}>
                                         {shippingFee === 0 ? 'FREE' : `${shippingFee.toFixed(2)} EGP`}
@@ -652,21 +674,15 @@ const CartPage = () => {
                                         <Form.Label className="fw-bold">Payment Method</Form.Label>
                                         <Form.Select
                                             value={selectedPaymentMethod || ''}
-                                            onChange={(e) => setSelectedPaymentMethod(e.target.value)}
+                                            onChange={(e) => setSelectedPaymentMethod(e.target.value || null)}
                                             className="payment-select"
                                         >
-                                            <option value="">Select Payment Method</option>
-                                            <option value="cash">Cash on Delivery</option>
-                                            <option value="stripe">Credit/Debit Card</option>
-                                            <option value="paypal">PayPal</option>
+                                            {paymentMethods.map(method => (
+                                                <option key={method.id} value={method.id}>
+                                                    {method.label}
+                                                </option>
+                                            ))}
                                         </Form.Select>
-
-                                        {/* عرض الأيقونات خارج الـ select */}
-                                        <div className="payment-icons mt-2">
-                                            <FaCreditCard className="me-2" />
-                                            <FaMoneyBillWave className="me-2" />
-                                            <FaPaypal className="me-2" />
-                                        </div>
                                     </Form.Group>
                                 </div>
 
@@ -674,14 +690,9 @@ const CartPage = () => {
                                     variant="primary"
                                     className="w-100 checkout-btn mb-3"
                                     onClick={handleOrderNow}
-                                    disabled={cartItems.length === 0 || !selectedPaymentMethod || processing}
+                                    disabled={cartItems.length === 0 || !selectedPaymentMethod}
                                 >
-                                    {processing ? (
-                                        <>
-                                            <Spinner animation="border" size="sm" className="me-2" />
-                                            Processing...
-                                        </>
-                                    ) : cartItems.length === 0 ? 'Cart is Empty' :
+                                    {cartItems.length === 0 ? 'Cart is Empty' :
                                         !selectedPaymentMethod ? 'Select Payment Method' : 'Place Order'}
                                 </CustomButton>
                             </Card.Body>

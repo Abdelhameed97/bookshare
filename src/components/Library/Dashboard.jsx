@@ -136,8 +136,8 @@ const Dashboard = () => {
 
   // Get only pending orders for this library's books
   const pendingOrders = useMemo(() =>
-    allOrders.filter(order => order.status === 'pending'),
-    [allOrders]
+    filteredOrders.filter(order => order.status === 'pending'),
+    [filteredOrders]
   );
 
   const fetchDashboardData = useCallback(async () => {
@@ -424,7 +424,7 @@ const Dashboard = () => {
                       })
                     )}
                   </div>
-                  {pendingOrders.length > 2 && (
+                  {pendingOrders.length > 0 && (
                     <div className="view-all-notifications">
                       <Link to="/notifications" className="view-all-link">
                         View All Notifications ({pendingOrders.length})
