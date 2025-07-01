@@ -88,7 +88,7 @@ const LoginForm = () => {
             });
 
             // نوديه على صفحة فيها رسالة check your inbox
-            navigate("/verify-email-reminder", {
+            navigate("/verify-email", {
               state: { email: form.email },
             });
           } catch (sendErr) {
