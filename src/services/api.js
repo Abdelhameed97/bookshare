@@ -27,6 +27,13 @@ api.interceptors.response.use(
     error => {
         console.error("API Error:", error);
         console.error("Error details:", error.response?.data);
+
+        if (error.response?.status === 401) {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+
         return Promise.reject(error);
     }
 );
@@ -46,8 +53,8 @@ const apiService = {
 
         const payload = {
             book_id: bookId,
-            type: data.type ?? 'buy',
-            quantity: 1,
+            type: data?.type || 'buy',
+            quantity: data?.quantity || 1,
             user_id: user.id
         };
 
@@ -92,7 +99,22 @@ const apiService = {
 
     // Order Endpoints
     getOrders: () => api.get('/orders'),
-    createOrder: (orderData) => api.post('/orders', orderData),
+    createOrder: (orderData) => {
+        const items = orderData.items.map(item => ({
+            book_id: item.book_id,
+            quantity: item.quantity,
+            type: item.type
+        }));
+
+        const payload = {
+            items: items,
+            payment_method: orderData.payment_method,
+            coupon_code: orderData.coupon_code || null,
+            clear_cart: true
+        };
+
+        return api.post('/orders', payload);
+    },
     getOrderDetails: (orderId) => api.get(`/orders/${orderId}`)
         .catch(err => {
             if (err.response?.status === 404 ||
@@ -127,6 +149,7 @@ const apiService = {
         }),
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
     getUserPayments: () => api.get('/payments'),
+
     // Stripe Payment
     createStripePaymentIntent: (orderId) => api.post('/stripe/create-payment-intent', { order_id: orderId }),
     confirmStripePayment: (paymentId) => api.post('/stripe/confirm-payment', { payment_id: paymentId }),
@@ -139,9 +162,30 @@ const apiService = {
             }
             throw err;
         }),
-    
+
     // Coupon Endpoints
-    applyCoupon: (couponCode) => api.post('/coupons/apply', { code: couponCode }),
+    applyCoupon: async (couponCode, subtotal) => {
+        try {
+            const response = await api.post('/coupons/apply', {
+                code: couponCode,
+                subtotal: subtotal
+            });
+
+            if (!response.data.success) {
+                throw new Error(response.data.message || 'Invalid coupon');
+            }
+
+            return {
+                coupon: response.data.coupon,
+                discount: response.data.discount,
+                newSubtotal: subtotal - response.data.discount
+            };
+        } catch (error) {
+            console.error('Error applying coupon:', error);
+            throw error;
+        }
+    },
+    validateCoupon: (couponCode) => api.get(`/coupons/validate/${couponCode}`),
 
     // Book Endpoints
     getBooks: () => api.get('/books'),

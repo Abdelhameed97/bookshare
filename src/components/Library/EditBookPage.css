@@ -100,6 +100,12 @@
   align-items: center;
   gap: 4px;
 }
+.edit-book-field-hint {
+  color: #6b7280;
+  font-size: 0.8em;
+  margin-top: 2px;
+  font-style: italic;
+}
 .edit-book-image-preview-area {
   margin-top: 6px;
 }

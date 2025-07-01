@@ -24,6 +24,8 @@ const AddBookPage = () => {
     category_id: '',
     status: 'available',
     quantity: 1,
+    isbn: '',
+    pages: '',
     images: []
   });
   const [categories, setCategories] = useState([]);
@@ -150,6 +152,10 @@ const AddBookPage = () => {
       newErrors.quantity = 'Valid quantity is required';
     }
 
+    if (formData.pages && parseInt(formData.pages) <= 0) {
+      newErrors.pages = 'Pages must be a positive number';
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -179,6 +185,8 @@ const AddBookPage = () => {
       formDataToSend.append('category_id', formData.category_id);
       formDataToSend.append('status', formData.status);
       formDataToSend.append('quantity', formData.quantity);
+      formDataToSend.append('isbn', formData.isbn);
+      formDataToSend.append('pages', formData.pages);
       formDataToSend.append('user_id', currentUser.id);
 
       // Add images
@@ -214,6 +222,8 @@ const AddBookPage = () => {
         category_id: '',
         status: 'available',
         quantity: 1,
+        isbn: '',
+        pages: '',
         images: []
       });
       setErrors({});
@@ -536,6 +546,78 @@ const AddBookPage = () => {
                     <option value="Adult">Adult</option>
                     <option value="Academic">Academic</option>
                   </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    marginBottom: '8px'
+                  }}>
+                    <BookOpen size={18} />
+                    ISBN
+                  </label>
+                  <input
+                    type="text"
+                    name="isbn"
+                    value={formData.isbn}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      color: '#1f2937',
+                      transition: 'all 0.2s ease'
+                    }}
+                    placeholder="e.g., 978-0-7475-3269-9"
+                  />
+                  <small style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block' }}>
+                    International Standard Book Number (optional)
+                  </small>
+                </div>
+
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    marginBottom: '8px'
+                  }}>
+                    <BookOpen size={18} />
+                    Pages
+                  </label>
+                  <input
+                    type="number"
+                    name="pages"
+                    value={formData.pages}
+                    onChange={handleInputChange}
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: errors.pages ? '1px solid #ef4444' : '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      color: '#1f2937',
+                      transition: 'all 0.2s ease'
+                    }}
+                    placeholder="e.g., 320"
+                    min="1"
+                  />
+                  {errors.pages && <span style={{ color: '#ef4444', fontSize: '0.875rem', marginTop: '5px' }}>{errors.pages}</span>}
+                  <small style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block' }}>
+                    Number of pages (optional)
+                  </small>
                 </div>
               </div>
 

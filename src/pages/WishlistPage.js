@@ -23,7 +23,7 @@ import {
 import { useNavigate } from 'react-router-dom';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
-import { useWishlist } from '../hooks/useWishlist';
+import { useWishlistContext } from '../contexts/WishlistContext';
 import '../style/WishlistPage.css';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
@@ -60,7 +60,7 @@ const WishlistPage = () => {
         removeItem,
         moveToCart,
         moveAllToCart
-    } = useWishlist(userId);
+    } = useWishlistContext();
 
     const filteredItems = wishlistItems.filter(item => {
         if (!item.book) return false;

@@ -17,8 +17,8 @@ import {
   FaUserEdit,
   FaBell,
 } from "react-icons/fa";
-import { useCart } from "../../hooks/useCart";
-import { useWishlist } from "../../hooks/useWishlist";
+import { useCartContext } from "../../contexts/CartContext";
+import { useWishlistContext } from "../../contexts/WishlistContext";
 import { useOrders } from "../../hooks/useOrders";
 import useTranslation from '../../hooks/useTranslation';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
@@ -32,8 +32,8 @@ const Navbar = () => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { cartCount } = useCart(user?.id);
-  const { wishlistCount } = useWishlist(user?.id);
+  const { cartCount } = useCartContext(user?.id);
+  const { wishlistCount } = useWishlistContext(user?.id);
   const { orders, fetchOrders, ...restOrders } = useOrders(user?.id);
   const ordersCount = orders.length;
 
@@ -48,11 +48,32 @@ const Navbar = () => {
     return stored ? JSON.parse(stored) : [];
   });
 
+  // Avatar images based on user role and gender
+  const getAvatarImage = (user) => {
+    if (!user) return null;
+    
+    const isMale = user.gender === 'male' || !user.gender; // Default to male if gender not specified
+    
+    switch (user.role) {
+      case 'admin':
+        return 'https://cdn.vectorstock.com/i/1000v/37/11/man-manager-administrator-consultant-avatar-vector-35753711.jpg';
+      case 'owner':
+        return isMale 
+          ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTslXAW6sPGW_hBPruTQwtsCeLQHqxeJEdiag&s'
+          : 'https://img.freepik.com/premium-vector/business-woman-character-vector-illustration_1133257-2432.jpg?semt=ais_hybrid&w=740';
+      case 'client':
+        return isMale 
+          ? 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png'
+          : 'https://img.freepik.com/premium-vector/woman-spa-client-icon-flat-color-style_755164-819.jpg';
+      default:
+        return 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png';
+    }
+  };
+
   const regularNavLinks = [
     { to: "/", label: "home" },
     { to: "/about", label: "about" },
     // { to: "/coming-soon", label: "comingSoon" },
-    { to: "/top-seller", label: "topSeller" },
     { to: "/books", label: "books" },
     { to: "/contact", label: "contact" },
   ];
@@ -123,7 +144,7 @@ const Navbar = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
-    navigate("/");
+    navigate("/login");
   };
 
   const handleProtectedAction = (path) => {
@@ -165,6 +186,8 @@ const Navbar = () => {
       detail: { orderId: orderId }
     }));
   };
+
+  const avatarImage = getAvatarImage(user);
 
   return (
     <>
@@ -256,8 +279,8 @@ const Navbar = () => {
                           {unreadNotifications.length === 0 ? (
                             <div className="no-notifications">No notifications</div>
                           ) : (
-                            unreadNotifications.slice(0, 2).map(order => (
-                              <div key={order.id} className="client-notification-item">
+                            unreadNotifications.slice(0, 2).map((order, index) => (
+                              <div key={order.id} className={`client-notification-item ${index === 0 ? 'first-notification' : ''}`}>
                                 <div className="client-notification-row">
                                   <span className="client-notif-icon">
                                     {order.status === 'accepted' ? '✅' : '❌'}
@@ -268,6 +291,9 @@ const Navbar = () => {
                                       {order.status === 'accepted' ? ' accepted' : ' rejected'}
                                     </span>
                                   </span>
+                                  {index === 0 && (
+                                    <span className="new-badge">new</span>
+                                  )}
                                 </div>
                                 <div className="client-notification-meta">
                                   <small>{new Date(order.updated_at).toLocaleString()}</small>
@@ -283,7 +309,7 @@ const Navbar = () => {
                             ))
                           )}
                         </div>
-                        {unreadNotifications.length > 2 && (
+                        {unreadNotifications.length > 0 && (
                           <div className="client-view-all-notifications">
                             <Link to="/client-notifications" className="client-view-all-link">
                               View All Notifications ({unreadNotifications.length})
@@ -371,20 +397,45 @@ const Navbar = () => {
                     </>
                   ) : (
                     <>
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: isLibraryOwner ? "#3B82F6" : "#10B981",
-                          fontSize: "1.1rem",
-                        }}
-                      >
-                        {t('welcome')}, {user.name || t('user')}
-                        {isLibraryOwner && (
-                          <span style={{ fontSize: "0.8rem", display: "block", color: "#6B7280" }}>
-                            {t('libraryOwner')}
-                          </span>
-                        )}
-                      </span>
+                      <div className="user-avatar-section">
+                        <img 
+                          src={avatarImage} 
+                          alt="User Avatar" 
+                          className="user-avatar"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: "2px solid #e5e7eb",
+                            cursor: "pointer",
+                            transition: "transform 0.2s ease",
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.transform = "scale(1.1)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.transform = "scale(1)";
+                          }}
+                        />
+                        <div className="user-info">
+                          {isLibraryOwner && (
+                            <span style={{ fontSize: "0.8rem", color: "#3B82F6", fontWeight: 600 }}>
+                              {t('libraryOwner')}
+                            </span>
+                          )}
+                          {user.role === "admin" && (
+                            <span style={{ fontSize: "0.8rem", color: "#EF4444", fontWeight: 600 }}>
+                              Administrator
+                            </span>
+                          )}
+                          {user.role === "client" && (
+                            <span style={{ fontSize: "0.8rem", color: "#10B981", fontWeight: 600 }}>
+                              Client
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <button
                         className="btn"
                         style={{
@@ -456,21 +507,33 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <span
-                  style={{
-                    fontWeight: 600,
-                    color: isLibraryOwner ? "#3B82F6" : "#10B981",
-                    fontSize: "1.1rem",
-                    textAlign: "center",
-                  }}
-                >
-                  {t('welcome')}, {user.name || t('user')}
-                  {isLibraryOwner && (
-                    <span style={{ fontSize: "0.8rem", display: "block", color: "#6B7280" }}>
-                      {t('libraryOwner')}
-                    </span>
-                  )}
-                </span>
+                <div className="mobile-user-avatar-section">
+                  <img 
+                    src={avatarImage} 
+                    alt="User Avatar" 
+                    className="mobile-user-avatar"
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "2px solid #e5e7eb",
+                      marginBottom: "0.5rem",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      color: isLibraryOwner ? "#3B82F6" : user.role === "admin" ? "#EF4444" : "#10B981",
+                      fontSize: "1rem",
+                      textAlign: "center",
+                    }}
+                  >
+                    {isLibraryOwner && t('libraryOwner')}
+                    {user.role === "admin" && "Administrator"}
+                    {user.role === "client" && "Client"}
+                  </span>
+                </div>
                 <button
                   className="btn"
                   style={{
