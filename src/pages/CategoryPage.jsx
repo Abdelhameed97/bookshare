@@ -34,9 +34,10 @@ const CategoryPage = () => {
     const [searchTerm, setSearchTerm] = useState("")
     const [priceFilter, setPriceFilter] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
-    const booksPerPage = 8
+    const booksPerPage = 6
 
-    const debouncedSearch = useCallback((term) => {
+    // Debounced search logic (if it was different before, restore it here)
+    const debouncedSearch = useCallback(term => {
         let timeoutId
         clearTimeout(timeoutId)
         setSearchLoading(true)
@@ -123,21 +124,21 @@ const CategoryPage = () => {
     }, [id, fetchWishlist, fetchCartItems])
 
     // Helper functions
-    const isInCart = (bookId) => {
+    const isInCart = bookId => {
         return (
             Array.isArray(cartItems) &&
             cartItems.some(item => item.book_id === bookId)
         )
     }
 
-    const isInWishlist = (bookId) => {
+    const isInWishlist = bookId => {
         return (
             Array.isArray(wishlistItems) &&
             wishlistItems.some(item => item.book_id === bookId)
         )
     }
 
-    const handleAddToWishlist = async (bookId) => {
+    const handleAddToWishlist = async bookId => {
         try {
             const currentUser = JSON.parse(localStorage.getItem("user"))
             const book = books.find(b => b.id === bookId)
@@ -190,7 +191,7 @@ const CategoryPage = () => {
         }
     }
 
-    const handleAddToCart = async (bookId) => {
+    const handleAddToCart = async bookId => {
         try {
             const result = await Swal.fire({
                 title: "Add to Cart?",
@@ -224,9 +225,9 @@ const CategoryPage = () => {
         }
     }
 
-    const handleQuickView = (bookId) => navigate(`/books/${bookId}`)
+    const handleQuickView = bookId => navigate(`/books/${bookId}`)
 
-    const getStatusColor = (status) => {
+    const getStatusColor = status => {
         switch (status) {
             case "available":
                 return "#10B981"
@@ -240,30 +241,24 @@ const CategoryPage = () => {
     }
 
     const categoryColors = [
-        "#6f42c1", // بنفسجي
-        "#b49a7d", // كافي
-        "#0dcaf0", // أزرق فاتح
-        "#a084ee", // بنفسجي فاتح
-        "#20c997", // تركواز
-        "#fd7e14", // برتقالي
-        "#adb5bd", // رمادي فاتح
+        "#6f42c1", // Purple
+        "#b49a7d", // Coffee
+        "#0dcaf0", // Light Blue
+        "#a084ee", // Light Purple
+        "#20c997", // Turquoise
+        "#fd7e14", // Orange
+        "#adb5bd", // Light Gray
     ]
-    
+
     const getCategoryColor = (category, idx = 0) => {
         if (!category) return categoryColors[0]
         const normalized = category.toLowerCase()
-        if (normalized.includes("رواية") || normalized.includes("novel"))
-            return categoryColors[0]
-        if (normalized.includes("كافي") || normalized.includes("coffee"))
-            return categoryColors[1]
-        if (normalized.includes("أزرق") || normalized.includes("blue"))
-            return categoryColors[2]
-        if (normalized.includes("بنفسجي") || normalized.includes("purple"))
-            return categoryColors[3]
-        if (normalized.includes("تركواز") || normalized.includes("turquoise"))
-            return categoryColors[4]
-        if (normalized.includes("برتقالي") || normalized.includes("orange"))
-            return categoryColors[5]
+        if (normalized.includes("novel")) return categoryColors[0]
+        if (normalized.includes("coffee")) return categoryColors[1]
+        if (normalized.includes("blue")) return categoryColors[2]
+        if (normalized.includes("purple")) return categoryColors[3]
+        if (normalized.includes("turquoise")) return categoryColors[4]
+        if (normalized.includes("orange")) return categoryColors[5]
         return categoryColors[idx % categoryColors.length]
     }
 
@@ -280,12 +275,12 @@ const CategoryPage = () => {
     const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook)
     const totalPages = Math.ceil(filteredBooks.length / booksPerPage)
 
-    const handleSearchChange = (e) => {
+    const handleSearchChange = e => {
         debouncedSearch(e.target.value)
         setCurrentPage(1)
     }
 
-    const handlePriceChange = (e) => {
+    const handlePriceChange = e => {
         setPriceFilter(e.target.value)
         setCurrentPage(1)
     }
@@ -410,78 +405,172 @@ const CategoryPage = () => {
                         </div>
                     ) : (
                         <>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            <div className="row" style={{ rowGap: "1.5rem" }}>
                                 {currentBooks.map((book, index) => (
                                     <div
                                         key={book.id}
-                                        className="book-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300 relative"
-                                        style={{
-                                            animationDelay: `${index * 0.1}s`,
-                                            opacity: 0,
-                                            animation: "fadeIn 0.5s forwards",
-                                        }}
+                                        className="col-12 col-sm-6 col-md-4 mb-4 d-flex align-items-stretch"
                                     >
                                         <div
-                                            className="book-badge absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded"
+                                            className="book-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300 relative w-100 d-flex flex-column"
                                             style={{
-                                                backgroundColor: getStatusColor(
-                                                    book.status
-                                                ),
+                                                animationDelay: `${
+                                                    index * 0.1
+                                                }s`,
+                                                opacity: 0,
+                                                animation:
+                                                    "fadeIn 0.5s forwards",
                                             }}
                                         >
-                                            {book.badge}
-                                        </div>
-
-                                        <div className="book-image-container relative">
-                                            <img
-                                                src={book.image}
-                                                alt={book.title}
-                                                className="w-full h-48 object-cover"
-                                                loading="lazy"
-                                                onError={(e) => {
-                                                    e.currentTarget.src =
-                                                        "/placeholder.svg?height=300&width=200"
+                                            <div
+                                                className="book-badge absolute top-2 left-2 px-2 py-1 text-xs font-bold text-white rounded"
+                                                style={{
+                                                    backgroundColor:
+                                                        getStatusColor(
+                                                            book.status
+                                                        ),
                                                 }}
-                                            />
-                                            <div className="image-overlay absolute inset-0 bg-black opacity-0 hover:opacity-10 transition duration-300"></div>
+                                            >
+                                                {book.badge}
+                                            </div>
+                                            <div className="book-image-container relative">
+                                                <img
+                                                    src={book.image}
+                                                    alt={book.title}
+                                                    className="w-full h-48 object-cover"
+                                                    loading="lazy"
+                                                    onError={e => {
+                                                        e.currentTarget.src =
+                                                            "/placeholder.svg?height=300&width=200"
+                                                    }}
+                                                />
+                                                <div className="image-overlay absolute inset-0 bg-black opacity-0 hover:opacity-10 transition duration-300"></div>
 
-                                            <div className="hover-actions absolute top-2 right-2 flex flex-col gap-2 opacity-0 hover:opacity-100 transition duration-300">
-                                                <button
-                                                    className={`action-button p-2 rounded-full ${
-                                                        isInWishlist(book.id)
-                                                            ? "bg-red-100 text-red-500"
-                                                            : "bg-white text-gray-700"
-                                                    }`}
-                                                    onClick={() =>
-                                                        handleAddToWishlist(
-                                                            book.id
-                                                        )
-                                                    }
-                                                >
-                                                    <Heart
-                                                        size={18}
-                                                        fill={
+                                                <div className="hover-actions absolute top-2 right-2 flex flex-col gap-2 opacity-0 hover:opacity-100 transition duration-300">
+                                                    <button
+                                                        className={`action-button p-2 rounded-full ${
                                                             isInWishlist(
                                                                 book.id
                                                             )
-                                                                ? "currentColor"
-                                                                : "none"
+                                                                ? "bg-red-100 text-red-500"
+                                                                : "bg-white text-gray-700"
+                                                        }`}
+                                                        onClick={() =>
+                                                            handleAddToWishlist(
+                                                                book.id
+                                                            )
                                                         }
-                                                    />
-                                                </button>
-                                                <button
-                                                    className="action-button p-2 rounded-full bg-white text-gray-700"
-                                                    onClick={() =>
-                                                        handleQuickView(book.id)
-                                                    }
+                                                    >
+                                                        <Heart
+                                                            size={18}
+                                                            fill={
+                                                                isInWishlist(
+                                                                    book.id
+                                                                )
+                                                                    ? "currentColor"
+                                                                    : "none"
+                                                            }
+                                                        />
+                                                    </button>
+                                                    <button
+                                                        className="action-button p-2 rounded-full bg-white text-gray-700"
+                                                        onClick={() =>
+                                                            handleQuickView(
+                                                                book.id
+                                                            )
+                                                        }
+                                                    >
+                                                        <Eye size={18} />
+                                                    </button>
+                                                    <button
+                                                        className={`action-button p-2 rounded-full ${
+                                                            isInCart(book.id)
+                                                                ? "bg-gray-200 text-gray-600 cursor-not-allowed"
+                                                                : "bg-white text-gray-700"
+                                                        }`}
+                                                        onClick={
+                                                            !isInCart(book.id)
+                                                                ? () =>
+                                                                      handleAddToCart(
+                                                                          book.id
+                                                                      )
+                                                                : undefined
+                                                        }
+                                                        disabled={
+                                                            isInCart(book.id) ||
+                                                            book.status !==
+                                                                "available"
+                                                        }
+                                                    >
+                                                        {isInCart(book.id) ? (
+                                                            <Check size={18} />
+                                                        ) : (
+                                                            <ShoppingCart
+                                                                size={18}
+                                                            />
+                                                        )}
+                                                    </button>
+                                                </div>
+
+                                                <div
+                                                    className="category-tag absolute bottom-2 left-2 text-xs px-2 py-1 rounded text-white font-bold"
+                                                    style={{
+                                                        backgroundColor:
+                                                            getCategoryColor(
+                                                                book.category,
+                                                                index
+                                                            ),
+                                                    }}
                                                 >
-                                                    <Eye size={18} />
-                                                </button>
+                                                    {book.category}
+                                                </div>
+                                            </div>
+                                            <div className="p-4 flex-grow-1 d-flex flex-column">
+                                                <div className="book-rating flex items-center mb-2">
+                                                    <div className="stars flex">
+                                                        {[...Array(5)].map(
+                                                            (_, i) => (
+                                                                <Star
+                                                                    key={i}
+                                                                    size={14}
+                                                                    className={
+                                                                        i <
+                                                                        Math.floor(
+                                                                            book.rating
+                                                                        )
+                                                                            ? "text-yellow-400 fill-current"
+                                                                            : "text-gray-300"
+                                                                    }
+                                                                />
+                                                            )
+                                                        )}
+                                                    </div>
+                                                    <span className="rating-text text-xs text-gray-500 ml-1">
+                                                        {book.rating} (
+                                                        {book.reviews} reviews)
+                                                    </span>
+                                                </div>
+                                                <h3 className="book-title font-semibold text-lg mb-1 line-clamp-1">
+                                                    {book.title}
+                                                </h3>
+                                                <p className="book-author text-sm text-gray-500 mb-3">
+                                                    {book.author}
+                                                </p>
+                                                <div className="book-price flex items-center gap-2 mb-3">
+                                                    {book.originalPrice && (
+                                                        <span className="original-price text-sm text-gray-400 line-through">
+                                                            {book.originalPrice}
+                                                        </span>
+                                                    )}
+                                                    <span className="current-price font-bold text-[#199A8E]">
+                                                        {book.price}
+                                                    </span>
+                                                </div>
                                                 <button
-                                                    className={`action-button p-2 rounded-full ${
+                                                    className={`w-full py-2 rounded-md flex items-center justify-center gap-2 ${
                                                         isInCart(book.id)
                                                             ? "bg-gray-200 text-gray-600 cursor-not-allowed"
-                                                            : "bg-white text-gray-700"
+                                                            : "bg-[#199A8E] hover:bg-[#157d74] text-white"
                                                     }`}
                                                     onClick={
                                                         !isInCart(book.id)
@@ -498,190 +587,108 @@ const CategoryPage = () => {
                                                     }
                                                 >
                                                     {isInCart(book.id) ? (
-                                                        <Check size={18} />
+                                                        <Check size={16} />
                                                     ) : (
                                                         <ShoppingCart
-                                                            size={18}
+                                                            size={16}
                                                         />
                                                     )}
+                                                    <span>
+                                                        {isInCart(book.id)
+                                                            ? "In Cart"
+                                                            : "Add to Cart"}
+                                                    </span>
                                                 </button>
                                             </div>
-
-                                            <div
-                                                className="category-tag absolute bottom-2 left-2 text-xs px-2 py-1 rounded text-white font-bold"
-                                                style={{
-                                                    backgroundColor:
-                                                        getCategoryColor(
-                                                            book.category,
-                                                            index
-                                                        ),
-                                                }}
-                                            >
-                                                {book.category}
-                                            </div>
-                                        </div>
-
-                                        <div className="p-4">
-                                            <div className="book-rating flex items-center mb-2">
-                                                <div className="stars flex">
-                                                    {[...Array(5)].map(
-                                                        (_, i) => (
-                                                            <Star
-                                                                key={i}
-                                                                size={14}
-                                                                className={
-                                                                    i <
-                                                                    Math.floor(
-                                                                        book.rating
-                                                                    )
-                                                                        ? "text-yellow-400 fill-current"
-                                                                        : "text-gray-300"
-                                                                }
-                                                            />
-                                                        )
-                                                    )}
-                                                </div>
-                                                <span className="rating-text text-xs text-gray-500 ml-1">
-                                                    {book.rating} (
-                                                    {book.reviews} reviews)
-                                                </span>
-                                            </div>
-
-                                            <h3 className="book-title font-semibold text-lg mb-1 line-clamp-1">
-                                                {book.title}
-                                            </h3>
-                                            <p className="book-author text-sm text-gray-500 mb-3">
-                                                {book.author}
-                                            </p>
-
-                                            <div className="book-price flex items-center gap-2 mb-3">
-                                                {book.originalPrice && (
-                                                    <span className="original-price text-sm text-gray-400 line-through">
-                                                        {book.originalPrice}
-                                                    </span>
-                                                )}
-                                                <span className="current-price font-bold text-[#199A8E]">
-                                                    {book.price}
-                                                </span>
-                                            </div>
-
-                                            <button
-                                                className={`w-full py-2 rounded-md flex items-center justify-center gap-2 ${
-                                                    isInCart(book.id)
-                                                        ? "bg-gray-200 text-gray-600 cursor-not-allowed"
-                                                        : "bg-[#199A8E] hover:bg-[#157d74] text-white"
-                                                }`}
-                                                onClick={
-                                                    !isInCart(book.id)
-                                                        ? () =>
-                                                              handleAddToCart(
-                                                                  book.id
-                                                              )
-                                                        : undefined
-                                                }
-                                                disabled={
-                                                    isInCart(book.id) ||
-                                                    book.status !== "available"
-                                                }
-                                            >
-                                                {isInCart(book.id) ? (
-                                                    <Check size={16} />
-                                                ) : (
-                                                    <ShoppingCart size={16} />
-                                                )}
-                                                <span>
-                                                    {isInCart(book.id)
-                                                        ? "In Cart"
-                                                        : "Add to Cart"}
-                                                </span>
-                                            </button>
                                         </div>
                                     </div>
                                 ))}
                             </div>
 
-                            {/* Pagination */}
+                            {/* Pagination Controls (Admin-style) */}
                             {totalPages > 1 && (
-                                <div className="flex justify-center items-center gap-2 mt-12">
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        marginTop: 48,
+                                        gap: 8,
+                                    }}
+                                >
                                     <button
-                                        onClick={goToPreviousPage}
+                                        onClick={() =>
+                                            setCurrentPage(p =>
+                                                Math.max(p - 1, 1)
+                                            )
+                                        }
                                         disabled={currentPage === 1}
-                                        className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition flex items-center gap-1"
+                                        style={{
+                                            padding: "0.5rem 1rem",
+                                            borderRadius: 6,
+                                            border: "1px solid #d1d5db",
+                                            background:
+                                                currentPage === 1
+                                                    ? "#f3f4f6"
+                                                    : "white",
+                                            color: "#222",
+                                            cursor:
+                                                currentPage === 1
+                                                    ? "not-allowed"
+                                                    : "pointer",
+                                        }}
                                     >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-4 w-4"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
-                                        >
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
-                                        Previous
+                                        {"<"}
                                     </button>
-
-                                    <div className="flex gap-1">
-                                        {Array.from(
-                                            { length: Math.min(5, totalPages) },
-                                            (_, i) => {
-                                                let pageNum
-                                                if (totalPages <= 5) {
-                                                    pageNum = i + 1
-                                                } else if (currentPage <= 3) {
-                                                    pageNum = i + 1
-                                                } else if (
-                                                    currentPage >=
-                                                    totalPages - 2
-                                                ) {
-                                                    pageNum = totalPages - 4 + i
-                                                } else {
-                                                    pageNum =
-                                                        currentPage - 2 + i
-                                                }
-
-                                                return (
-                                                    <button
-                                                        key={pageNum}
-                                                        onClick={() =>
-                                                            setCurrentPage(
-                                                                pageNum
-                                                            )
-                                                        }
-                                                        className={`px-4 py-2 border rounded-lg text-sm ${
-                                                            currentPage ===
-                                                            pageNum
-                                                                ? "bg-[#199A8E] text-white border-[#199A8E]"
-                                                                : "text-gray-600 hover:bg-gray-50"
-                                                        }`}
-                                                    >
-                                                        {pageNum}
-                                                    </button>
-                                                )
+                                    {[...Array(totalPages)].map((_, idx) => (
+                                        <button
+                                            key={idx + 1}
+                                            onClick={() =>
+                                                setCurrentPage(idx + 1)
                                             }
-                                        )}
-                                    </div>
-
-                                    <button
-                                        onClick={goToNextPage}
-                                        disabled={currentPage === totalPages}
-                                        className="px-4 py-2 border rounded-lg text-gray-600 hover:bg-gray-50 disabled:opacity-50 transition flex items-center gap-1"
-                                    >
-                                        Next
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            className="h-4 w-4"
-                                            viewBox="0 0 20 20"
-                                            fill="currentColor"
+                                            style={{
+                                                padding: "0.5rem 1rem",
+                                                borderRadius: 6,
+                                                border: "1px solid #d1d5db",
+                                                background:
+                                                    currentPage === idx + 1
+                                                        ? "#3b82f6"
+                                                        : "white",
+                                                color:
+                                                    currentPage === idx + 1
+                                                        ? "white"
+                                                        : "#222",
+                                                fontWeight:
+                                                    currentPage === idx + 1
+                                                        ? 700
+                                                        : 500,
+                                            }}
                                         >
-                                            <path
-                                                fillRule="evenodd"
-                                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
-                                                clipRule="evenodd"
-                                            />
-                                        </svg>
+                                            {idx + 1}
+                                        </button>
+                                    ))}
+                                    <button
+                                        onClick={() =>
+                                            setCurrentPage(p =>
+                                                Math.min(p + 1, totalPages)
+                                            )
+                                        }
+                                        disabled={currentPage === totalPages}
+                                        style={{
+                                            padding: "0.5rem 1rem",
+                                            borderRadius: 6,
+                                            border: "1px solid #d1d5db",
+                                            background:
+                                                currentPage === totalPages
+                                                    ? "#f3f4f6"
+                                                    : "white",
+                                            color: "#222",
+                                            cursor:
+                                                currentPage === totalPages
+                                                    ? "not-allowed"
+                                                    : "pointer",
+                                        }}
+                                    >
+                                        {">"}
                                     </button>
                                 </div>
                             )}
