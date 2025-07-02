@@ -157,11 +157,11 @@ const Dashboard = () => {
         )
     }, [allOrders, allBooks, currentUser])
 
-    // Get only pending orders for this library's books
-    const pendingOrders = useMemo(
-        () => allOrders.filter(order => order.status === "pending"),
-        [allOrders]
-    )
+  // Get only pending orders for this library's books
+  const pendingOrders = useMemo(() =>
+    allOrders.filter(order => order.status === 'pending'),
+    [allOrders]
+  );
 
     const fetchDashboardData = useCallback(async () => {
         if (!currentUser) return
@@ -423,156 +423,87 @@ const Dashboard = () => {
         return `http://localhost:8000/storage/${img}`
     }
 
-    return (
-        <>
-            <Navbar />
-            <div className="dashboard-container">
-                {/* Header */}
-                <div className="dashboard-header">
-                    <div className="dashboard-title">
-                        <h1>Library Dashboard</h1>
-                        <p>
-                            Welcome back, {currentUser?.name || "Library Owner"}
-                        </p>
-                        <div className="dashboard-subtitle">
-                            <Activity size={16} />
-                            <span>
-                                Last updated: {new Date().toLocaleTimeString()}
-                            </span>
-                            {refreshing && (
-                                <span className="updating-indicator">
-                                    {" "}
-                                    • Updating...
-                                </span>
-                            )}
-                        </div>
-                    </div>
-                    <div className="dashboard-actions">
-                        {/* Notification Bell */}
-                        <div className="notification-section">
-                            <button
-                                className="btn-notification"
-                                onClick={() =>
-                                    setShowNotifications(!showNotifications)
-                                }
-                                title="Notifications"
-                            >
-                                <Bell size={24} />
-                                {pendingOrders.length > 0 && (
-                                    <span className="notification-badge">
-                                        {pendingOrders.length}
-                                    </span>
+  return (
+    <>
+      <Navbar />
+      <div className="dashboard-container">
+        {/* Header */}
+        <div className="dashboard-header">
+          <div className="dashboard-title">
+            <h1>Library Dashboard</h1>
+            <p>Welcome back, {currentUser?.name || 'Library Owner'}</p>
+            <div className="dashboard-subtitle">
+              <Activity size={16} />
+              <span>Last updated: {new Date().toLocaleTimeString()}</span>
+              {refreshing && <span className="updating-indicator"> • Updating...</span>}
+            </div>
+          </div>
+          <div className="dashboard-actions">
+            {/* Notification Bell */}
+            <div className="notification-section">
+              <button 
+                className="btn-notification"
+                onClick={() => setShowNotifications(!showNotifications)}
+                title="Notifications"
+              >
+                <Bell size={24} />
+                {pendingOrders.length > 0 && (
+                  <span className="notification-badge">{pendingOrders.length}</span>
+                )}
+              </button>
+              {showNotifications && (
+                <div className="notifications-dropdown">
+                  <h4>New Book Requests</h4>
+                  <div className="notifications-scroll-container">
+                    {pendingOrders.length === 0 ? (
+                      <div className="no-notifications">No new requests</div>
+                    ) : (
+                      pendingOrders.slice(0, 2).map(order => {
+                        const userName = order.user?.name || order.client?.name || 'Someone';
+                        const firstBook = order.order_items?.[0]?.book?.title || 'a book';
+                        const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
+                        return (
+                          <div key={order.id} className="notification-item">
+                            <div className="notification-row">
+                              <span className="notif-icon">📚</span>
+                              <span className="notification-message">
+                                <span className="notif-user">{userName}</span>
+                                <span> requested </span>
+                                <span className="notif-book">"{firstBook}"</span>
+                                {moreCount > 0 && (
+                                  <span> and <span className="notif-more">{moreCount} more</span></span>
                                 )}
-                            </button>
-                            {showNotifications && (
-                                <div className="notifications-dropdown">
-                                    <h4>New Book Requests</h4>
-                                    <div className="notifications-scroll-container">
-                                        {pendingOrders.length === 0 ? (
-                                            <div className="no-notifications">
-                                                No new requests
-                                            </div>
-                                        ) : (
-                                            pendingOrders
-                                                .slice(0, 2)
-                                                .map(order => {
-                                                    const userName =
-                                                        order.user?.name ||
-                                                        order.client?.name ||
-                                                        "Someone"
-                                                    const firstBook =
-                                                        order.order_items?.[0]
-                                                            ?.book?.title ||
-                                                        "a book"
-                                                    const moreCount =
-                                                        order.order_items
-                                                            ?.length > 1
-                                                            ? order.order_items
-                                                                  .length - 1
-                                                            : 0
-                                                    return (
-                                                        <div
-                                                            key={order.id}
-                                                            className="notification-item"
-                                                        >
-                                                            <div className="notification-row">
-                                                                <span className="notif-icon">
-                                                                    📚
-                                                                </span>
-                                                                <span className="notification-message">
-                                                                    <span className="notif-user">
-                                                                        {
-                                                                            userName
-                                                                        }
-                                                                    </span>
-                                                                    <span>
-                                                                        {" "}
-                                                                        requested{" "}
-                                                                    </span>
-                                                                    <span className="notif-book">
-                                                                        "
-                                                                        {
-                                                                            firstBook
-                                                                        }
-                                                                        "
-                                                                    </span>
-                                                                    {moreCount >
-                                                                        0 && (
-                                                                        <span>
-                                                                            {" "}
-                                                                            and{" "}
-                                                                            <span className="notif-more">
-                                                                                {
-                                                                                    moreCount
-                                                                                }{" "}
-                                                                                more
-                                                                            </span>
-                                                                        </span>
-                                                                    )}
-                                                                </span>
-                                                            </div>
-                                                            <div className="notification-meta">
-                                                                <small>
-                                                                    {new Date(
-                                                                        order.created_at
-                                                                    ).toLocaleString()}
-                                                                </small>
-                                                                <Link
-                                                                    to="/all-orders"
-                                                                    className="notification-link-btn"
-                                                                >
-                                                                    View
-                                                                </Link>
-                                                            </div>
-                                                        </div>
-                                                    )
-                                                })
-                                        )}
-                                    </div>
-                                    {pendingOrders.length > 2 && (
-                                        <div className="view-all-notifications">
-                                            <Link
-                                                to="/notifications"
-                                                className="view-all-link"
-                                            >
-                                                View All Notifications (
-                                                {pendingOrders.length})
-                                            </Link>
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                        </div>
-                        <Link to="/edit-profile" className="btn-secondary">
-                            <User size={20} />
-                            Edit Profile
-                        </Link>
-                        <Link to="/add-book" className="btn-primary">
-                            <Plus size={20} />
-                            Add New Book
-                        </Link>
+                              </span>
+                            </div>
+                            <div className="notification-meta">
+                              <small>{new Date(order.created_at).toLocaleString()}</small>
+                              <Link to="/all-orders" className="notification-link-btn">View</Link>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                  {pendingOrders.length > 2 && (
+                    <div className="view-all-notifications">
+                      <Link to="/notifications" className="view-all-link">
+                        View All Notifications ({pendingOrders.length})
+                      </Link>
                     </div>
+                  )}
                 </div>
+              )}
+            </div>
+            <Link to="/edit-profile" className="btn-secondary">
+              <User size={20} />
+              Edit Profile
+            </Link>
+            <Link to="/add-book" className="btn-primary">
+              <Plus size={20} />
+              Add New Book
+            </Link>
+          </div>
+        </div>
 
                 {/* Enhanced Stats Cards */}
                 <div className="stats-grid">

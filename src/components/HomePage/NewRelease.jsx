@@ -289,9 +289,6 @@ const NewReleases = () => {
                                     <button
                                         className="action-button view"
                                         aria-label="Quick view"
-                                        onClick={() =>
-                                            navigate(`/books/${book.id}`)
-                                        }
                                     >
                                         <Eye size={18} />
                                     </button>

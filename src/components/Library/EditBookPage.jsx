@@ -12,6 +12,8 @@ const EditBookPage = () => {
         title: "",
         description: "",
         author: "",
+        isbn: "",
+        pages: "",
         genre: "",
         educational_level: "",
         condition: "new",
@@ -150,6 +152,8 @@ const EditBookPage = () => {
             newErrors.category_id = "Category is required"
         if (!formData.quantity || parseInt(formData.quantity) <= 0)
             newErrors.quantity = "Valid quantity is required"
+        if (formData.pages && parseInt(formData.pages) <= 0) 
+            newErrors.pages = "Pages must be a positive number"
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
@@ -163,6 +167,8 @@ const EditBookPage = () => {
             formDataToSend.append("title", formData.title)
             formDataToSend.append("description", formData.description)
             formDataToSend.append("author", formData.author)
+            formDataToSend.append("isbn", formData.isbn)
+            formDataToSend.append("pages", formData.pages)
             formDataToSend.append("genre", formData.genre)
             formDataToSend.append(
                 "educational_level",
@@ -175,16 +181,14 @@ const EditBookPage = () => {
             formDataToSend.append("status", formData.status)
             formDataToSend.append("quantity", formData.quantity)
             formDataToSend.append("user_id", currentUser.id)
-            // Existing images to keep
             formDataToSend.append(
                 "existingImages",
                 JSON.stringify(formData.existingImages)
             )
-            // New images
             formData.images.forEach((image, index) => {
                 formDataToSend.append(`images[${index}]`, image)
             })
-            formDataToSend.append("_method", "PUT") // Laravel method spoofing
+            formDataToSend.append("_method", "PUT")
             await apiService.post(`/books/${id}`, formDataToSend, {
                 headers: { "Content-Type": "multipart/form-data" },
             })
@@ -276,6 +280,33 @@ const EditBookPage = () => {
                                         {errors.description}
                                     </div>
                                 )}
+                            </div>
+                        </div>
+                        <div className="edit-book-row">
+                            <div className="edit-book-col">
+                                <label>ISBN</label>
+                                <input 
+                                    type="text" 
+                                    name="isbn" 
+                                    value={formData.isbn} 
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 978-0-7475-3269-9"
+                                />
+                                <small className="edit-book-field-hint">International Standard Book Number (optional)</small>
+                            </div>
+                            <div className="edit-book-col">
+                                <label>Pages</label>
+                                <input 
+                                    type="number" 
+                                    name="pages" 
+                                    value={formData.pages} 
+                                    onChange={handleInputChange}
+                                    placeholder="e.g., 320"
+                                    min="1"
+                                    className={errors.pages ? 'error' : ''}
+                                />
+                                {errors.pages && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.pages}</div>}
+                                <small className="edit-book-field-hint">Number of pages (optional)</small>
                             </div>
                         </div>
                         <div className="edit-book-row">

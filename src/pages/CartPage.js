@@ -23,16 +23,16 @@ import {
     Minus,
     AlertCircle,
     CreditCard,
-    Wallet,
-} from "lucide-react"
-import { useNavigate } from "react-router-dom"
-import Title from "../components/shared/Title"
-import CustomButton from "../components/shared/CustomButton"
-import api from "../services/api"
-import "../style/CartPage.css"
-import Navbar from "../components/HomePage/Navbar"
-import Footer from "../components/HomePage/Footer.jsx"
-import { useCart } from "../hooks/useCart"
+    Wallet
+} from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import Title from '../components/shared/Title';
+import CustomButton from '../components/shared/CustomButton';
+import api from '../services/api';
+import '../style/CartPage.css';
+import Navbar from '../components/HomePage/Navbar';
+import Footer from "../components/HomePage/Footer.jsx";
+import { useCart } from '../hooks/useCart';
 
 const CartPage = () => {
     const getBookImage = images => {
@@ -50,10 +50,14 @@ const CartPage = () => {
         }/storage/${firstImage}`
     }
 
-    const user = JSON.parse(localStorage.getItem("user"))
-    const { cartItems, loading, error, fetchCartItems, setCartItems } = useCart(
-        user?.id
-    )
+    const user = JSON.parse(localStorage.getItem('user'));
+    const {
+        cartItems,
+        loading,
+        error,
+        fetchCartItems,
+        setCartItems
+    } = useCart(user?.id);
 
     const [showAlert, setShowAlert] = useState(false)
     const [alertMessage, setAlertMessage] = useState("")

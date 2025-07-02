@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect } from "react";
 import {
     Container,
     Row,
@@ -9,7 +9,7 @@ import {
     Spinner,
     Alert,
     Button,
-} from "react-bootstrap"
+} from "react-bootstrap";
 import {
     ChevronLeft,
     Truck,
@@ -22,103 +22,102 @@ import {
     AlertCircle,
     ThumbsUp,
     ThumbsDown,
-    CreditCard,
-} from "lucide-react"
-import { useParams, useNavigate } from "react-router-dom"
-import api from "../services/api"
-import Title from "../components/shared/Title"
-import Navbar from "../components/HomePage/Navbar"
-import Footer from "../components/HomePage/Footer.jsx"
-import Swal from "sweetalert2"
-import CustomButton from "../components/shared/CustomButton.js"
-import { usePayment } from "../hooks/usePayment"
+    CreditCard
+} from 'lucide-react';
+import { useParams, useNavigate } from 'react-router-dom';
+import api from '../services/api';
+import Title from '../components/shared/Title';
+import Navbar from '../components/HomePage/Navbar';
+import Footer from "../components/HomePage/Footer.jsx";
+import Swal from 'sweetalert2';
+import CustomButton from '../components/shared/CustomButton.js';
+import { usePayment } from '../hooks/usePayment';
 
 const OrderDetailsPage = () => {
-    const getBookImage = images => {
+    const getBookImage = (images) => {
         if (!images || images.length === 0) {
-            return "https://via.placeholder.com/300x450"
+            return 'https://via.placeholder.com/300x450';
         }
 
-        const firstImage = images[0]
+        const firstImage = images[0];
         if (typeof firstImage === "string" && firstImage.startsWith("http")) {
-            return firstImage
+            return firstImage;
         }
 
         return `${
             process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"
-        }/storage/${firstImage}`
-    }
+        }/storage/${firstImage}`;
+    };
 
-    const { id } = useParams()
-    const navigate = useNavigate()
-    const [order, setOrder] = useState(null)
-    const [payment, setPayment] = useState(null)
-    const [loading, setLoading] = useState(true)
-    const [error, setError] = useState(null)
-    const [paymentCompleted, setPaymentCompleted] = useState(false)
-    const [paymentAttempted, setPaymentAttempted] = useState(false)
+    const { id } = useParams();
+    const navigate = useNavigate();
+    const [order, setOrder] = useState(null);
+    const [payment, setPayment] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [paymentCompleted, setPaymentCompleted] = useState(false);
+    const [paymentAttempted, setPaymentAttempted] = useState(false);
 
-    const { processing, setProcessing } = usePayment()
+    const {
+        processing,
+        setProcessing,
+    } = usePayment();
 
     const fetchOrderAndPayment = async () => {
         try {
-            setLoading(true)
+            setLoading(true);
 
             // Fetch order details
-            const orderResponse = await api.getOrderDetails(id)
-            let orderData = orderResponse.data?.data || orderResponse.data
-            if (!orderData) throw new Error("Order not found")
+            const orderResponse = await api.getOrderDetails(id);
+            let orderData = orderResponse.data?.data || orderResponse.data;
+            if (!orderData) throw new Error("Order not found");
 
             // Fetch payment details
             try {
-                const paymentResponse = await api.getOrderPayment(id)
+                const paymentResponse = await api.getOrderPayment(id);
                 const paymentData =
-                    paymentResponse.data?.data || paymentResponse.data
+                    paymentResponse.data?.data || paymentResponse.data;
                 if (paymentData) {
-                    setPayment(paymentData)
+                    setPayment(paymentData);
                     if (paymentData.status === "paid") {
-                        setPaymentCompleted(true)
+                        setPaymentCompleted(true);
                     }
                 }
             } catch (paymentError) {
-                console.log("No payment record found")
+                console.log("No payment record found");
             }
 
+            // Format order items with prices
             setOrder({
                 ...orderData,
                 order_items: orderData.order_items?.map(item => ({
                     ...item,
-                    unit_price:
-                        item.type === "rent"
-                            ? item.book?.rental_price || 0
-                            : item.price || item.book?.price || 0,
-                    total_price:
-                        (item.type === "rent"
-                            ? item.book?.rental_price || 0
-                            : item.price || item.book?.price || 0) *
-                        item.quantity,
-                })),
-            })
+                    unit_price: item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0),
+                    total_price: (item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0)) * item.quantity
+                }))
+            });
+
         } catch (err) {
             setError(
                 err.response?.data?.message ||
                     err.message ||
                     "Failed to load order details"
-            )
+            );
             if (err.response?.status === 401) {
-                localStorage.removeItem("token")
-                localStorage.removeItem("user")
-                navigate("/login")
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+                navigate("/login");
             }
         } finally {
-            setLoading(false)
+            setLoading(false);
         }
-    }
+    };
 
     useEffect(() => {
-        fetchOrderAndPayment()
-    }, [id])
+        fetchOrderAndPayment();
+    }, [id]);
 
+    // Handle order cancellation
     const handleCancelOrder = async () => {
         const result = await Swal.fire({
             title: "Cancel Order?",
@@ -128,115 +127,116 @@ const OrderDetailsPage = () => {
             confirmButtonColor: "#d33",
             cancelButtonColor: "#3085d6",
             confirmButtonText: "Yes, cancel it!",
-        })
+        });
 
-        if (!result.isConfirmed) return
+        if (!result.isConfirmed) return;
 
         try {
-            setProcessing(true)
-            await api.cancelOrder(id)
+            setProcessing(true);
+            await api.cancelOrder(id);
 
             setOrder(prevOrder => ({
                 ...prevOrder,
                 status: "cancelled",
-            }))
+            }));
 
             await Swal.fire(
-                "Cancelled!",
-                "Your order has been cancelled successfully.",
-                "success"
-            )
+                'Cancelled!',
+                'Your order has been cancelled successfully.',
+                'success'
+            );
 
-            navigate("/orders", { state: { activeTab: "cancelled" } })
+            navigate('/orders', { state: { activeTab: 'cancelled' } });
         } catch (err) {
-            console.error("Error cancelling order:", err)
+            console.error("Error cancelling order:", err);
             let errorMessage =
-                err.response?.data?.message || "Failed to cancel order"
+                err.response?.data?.message || "Failed to cancel order";
             if (
                 err.response?.status === 500 &&
                 err.response?.data?.error?.includes("No query results")
             ) {
                 errorMessage =
-                    "This order may have already been cancelled or deleted."
+                    "This order may have already been cancelled or deleted.";
             }
-            Swal.fire("Error!", errorMessage, "error")
+            Swal.fire("Error!", errorMessage, "error");
         } finally {
-            setProcessing(false)
+            setProcessing(false);
         }
-    }
+    };
 
     const handlePayment = async () => {
-        setPaymentAttempted(true)
-        navigate(`/payment/${id}`)
-    }
+        setPaymentAttempted(true);
+        navigate(`/payment/${id}`);
+    };
 
-    const getStatusIcon = status => {
-        if (!status) return <Clock size={20} className="text-secondary me-2" />
+    const getStatusIcon = (status) => {
+        if (!status) return <Clock size={20} className="text-secondary me-2" />;
+        switch (status.toLowerCase()) {
+            case 'accepted':
+            case 'completed':
+            case 'delivered':
+                return <ThumbsUp size={20} className="text-success me-2" />;
+            case 'rejected':
+            case 'cancelled':
+                return <ThumbsDown size={20} className="text-danger me-2" />;
+            case 'shipped':
+                return <Truck size={20} className="text-primary me-2" />;
+            case 'processing':
+            case 'pending':
+                return <RefreshCw size={20} className="text-warning me-2" />;
+            default:
+                return <AlertCircle size={20} className="text-secondary me-2" />;
+        }
+    };
+
+    const getStatusBadge = (status) => {
+        if (!status) return 'secondary';
         switch (status.toLowerCase()) {
             case "accepted":
             case "completed":
             case "delivered":
-                return <ThumbsUp size={20} className="text-success me-2" />
+                return "success";
             case "rejected":
             case "cancelled":
-                return <ThumbsDown size={20} className="text-danger me-2" />
+                return "danger";
             case "shipped":
-                return <Truck size={20} className="text-primary me-2" />
+                return "primary";
             case "processing":
             case "pending":
-                return <RefreshCw size={20} className="text-warning me-2" />
+                return "warning";
             default:
-                return <AlertCircle size={20} className="text-secondary me-2" />
+                return "secondary";
         }
-    }
+    };
 
-    const getStatusBadge = status => {
-        if (!status) return "secondary"
+    const getStatusCardVariant = (status) => {
+        if (!status) return 'light';
         switch (status.toLowerCase()) {
             case "accepted":
             case "completed":
             case "delivered":
-                return "success"
+                return "success";
             case "rejected":
             case "cancelled":
-                return "danger"
+                return "danger";
             case "shipped":
-                return "primary"
+                return "primary";
             case "processing":
             case "pending":
-                return "warning"
+                return "warning";
             default:
-                return "secondary"
+                return "light";
         }
-    }
+    };
 
-    const getStatusCardVariant = status => {
-        if (!status) return "light"
-        switch (status.toLowerCase()) {
-            case "accepted":
-            case "completed":
-            case "delivered":
-                return "success"
-            case "rejected":
-            case "cancelled":
-                return "danger"
-            case "shipped":
-                return "primary"
-            case "processing":
-            case "pending":
-                return "warning"
-            default:
-                return "light"
-        }
-    }
-
+    // Payment status badge with icon
     const getPaymentStatusBadge = () => {
         if (!payment) {
             return (
                 <Badge bg="secondary" className="custom-badge">
                     <Clock size={16} className="me-1" /> Not Paid
                 </Badge>
-            )
+            );
         }
 
         switch (payment.status) {
@@ -245,88 +245,84 @@ const OrderDetailsPage = () => {
                     <Badge bg="success" className="custom-badge">
                         <CheckCircle size={16} className="me-1" /> Paid
                     </Badge>
-                )
+                );
             case "pending":
                 return (
                     <Badge bg="warning" text="dark" className="custom-badge">
                         <Clock size={16} className="me-1" /> Pending
                     </Badge>
-                )
+                );
             case "failed":
                 return (
                     <Badge bg="danger" className="custom-badge">
                         <XCircle size={16} className="me-1" /> Failed
                     </Badge>
-                )
+                );
             default:
                 return (
                     <Badge bg="secondary" className="custom-badge">
                         <Clock size={16} className="me-1" /> Not Paid
                     </Badge>
-                )
+                );
         }
-    }
+    };
 
-    const formatDate = dateString => {
-        if (!dateString) return "N/A"
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
         try {
-            const date = new Date(dateString)
-            return date.toLocaleDateString("en-US", {
-                year: "numeric",
-                month: "long",
-                day: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
-            })
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
         } catch {
-            return "Invalid Date"
+            return 'Invalid Date';
         }
-    }
+    };
 
-    const formatPrice = price => {
-        const num = parseFloat(price)
-        return isNaN(num) ? "0.00" : num.toFixed(2)
-    }
+    const formatPrice = (price) => {
+        const num = parseFloat(price);
+        return isNaN(num) ? '0.00' : num.toFixed(2);
+    };
 
-    const getItemPrice = item => {
-        return item.type === "rent"
-            ? item.book?.rental_price || 0
-            : item.price || item.book?.price || 0
-    }
+    const getItemPrice = (item) => {
+        return item.type === 'rent' ? (item.book?.rental_price || 0) : (item.price || item.book?.price || 0);
+    };
 
-    const user = JSON.parse(localStorage.getItem("user"))
-    const isClient = user?.id === order?.client_id
-    const canCancel =
-        order &&
-        ["pending", "processing", "accepted"].includes(
-            order.status?.toLowerCase()
-        ) &&
-        isClient
-    const canPay =
-        order &&
-        ["accepted"].includes(order.status?.toLowerCase()) &&
+    const user = JSON.parse(localStorage.getItem('user'));
+    const isClient = user?.id === order?.client_id;
+    const canCancel = order && ['pending', 'processing', 'accepted'].includes(order.status?.toLowerCase()) && isClient;
+    const canPay = order && ['accepted'].includes(order.status?.toLowerCase()) &&
         !paymentCompleted &&
         (!payment || payment.status !== "paid") &&
-        isClient
+        isClient;
 
+    // Loading state
     if (loading) {
         return (
-            <div className="text-center py-5">
-                <Spinner animation="border" variant="primary" />
-                <p className="mt-2">Loading order details...</p>
+            <div className="d-flex flex-column min-vh-100">
+                <Navbar />
+                <div className="flex-grow-1 d-flex align-items-center justify-content-center">
+                    <div className="text-center">
+                        <Spinner animation="border" variant="primary" />
+                        <p className="mt-3">Loading order details...</p>
+                    </div>
+                </div>
+                <Footer />
             </div>
-        )
+        );
     }
 
+    // Error state
     if (error) {
         return (
-            <>
+            <div className="d-flex flex-column min-vh-100">
                 <Navbar />
                 <Container className="py-5">
-                    <Alert
-                        variant="danger"
-                        className="d-flex align-items-center"
-                    >
+                    <Alert variant="danger" className="d-flex align-items-center">
                         <AlertCircle size={24} className="me-2" />
                         <div>
                             <h5>Order Loading Error</h5>
@@ -334,8 +330,7 @@ const OrderDetailsPage = () => {
                         </div>
                     </Alert>
                     <div className="d-flex justify-content-center mt-4 gap-3">
-                        {error.includes("not found") ||
-                        error.includes("deleted") ? (
+                        {error.includes('not found') || error.includes('deleted') ? (
                             <CustomButton
                                 variant="primary"
                                 onClick={() => navigate("/orders")}
@@ -344,36 +339,34 @@ const OrderDetailsPage = () => {
                             </CustomButton>
                         ) : (
                             <>
-                                <CustomButton
+                                <Button
                                     variant="primary"
                                     onClick={() => window.location.reload()}
                                 >
                                     Retry
-                                </CustomButton>
-                                <CustomButton
+                                </Button>
+                                <Button
                                     variant="outline-primary"
                                     onClick={() => navigate("/orders")}
                                 >
                                     My Orders
-                                </CustomButton>
+                                </Button>
                             </>
                         )}
                     </div>
                 </Container>
                 <Footer />
-            </>
-        )
+            </div>
+        );
     }
 
+    // Order not found state
     if (!order) {
         return (
-            <>
+            <div className="d-flex flex-column min-vh-100">
                 <Navbar />
                 <Container className="py-5">
-                    <Alert
-                        variant="warning"
-                        className="d-flex align-items-center"
-                    >
+                    <Alert variant="warning" className="d-flex align-items-center">
                         <AlertCircle size={24} className="me-2" />
                         <div>
                             <h5>Order Not Found</h5>
@@ -383,30 +376,31 @@ const OrderDetailsPage = () => {
                         </div>
                     </Alert>
                     <div className="d-flex justify-content-center mt-4 gap-3">
-                        <CustomButton
+                        <Button
                             variant="primary"
                             onClick={() => navigate("/orders")}
                         >
                             View Orders
-                        </CustomButton>
-                        <CustomButton
+                        </Button>
+                        <Button
                             variant="outline-primary"
                             onClick={() => navigate("/books")}
                         >
                             Browse Books
-                        </CustomButton>
+                        </Button>
                     </div>
                 </Container>
                 <Footer />
-            </>
-        )
+            </div>
+        );
     }
 
+    // Main render
     return (
-        <>
+        <div className="d-flex flex-column min-vh-100">
             <Navbar />
 
-            <Container className="order-details-container py-5">
+            <Container className="flex-grow-1 py-5">
                 <div className="d-flex align-items-center mb-4">
                     <Button
                         variant="outline-primary"
@@ -416,7 +410,7 @@ const OrderDetailsPage = () => {
                         <ChevronLeft size={20} className="me-1" />
                         Back
                     </Button>
-                    <Title>Order Details</Title>
+                    <h2 className="mb-0">Order Details</h2>
                 </div>
 
                 <Card className="mb-4 border-0 shadow-sm">
@@ -465,16 +459,15 @@ const OrderDetailsPage = () => {
                                     </div>
 
                                     <div className="fs-5 fw-bold">
-                                        <strong>Total:</strong>{" "}
-                                        {formatPrice(order.total_price)} EGP
+                                        <strong>Total:</strong> {formatPrice(order.total_price)} EGP
                                     </div>
                                 </div>
                             </Col>
                         </Row>
 
                         <Row>
-                            <Col md={6} className="mb-4">
-                                <Card className="h-100">
+                            <Col md={4}>
+                                <Card className="h-100 mb-4">
                                     <Card.Header className="d-flex align-items-center bg-light">
                                         <Package size={18} className="me-2" />
                                         <span>Shipping Information</span>
@@ -510,14 +503,50 @@ const OrderDetailsPage = () => {
                                 </Card>
                             </Col>
 
-                            <Col md={6}>
+                            <Col md={4}>
+                                <Card className="h-100 mb-4">
+                                    <Card.Header className="d-flex align-items-center bg-light">
+                                        <FileText size={18} className="me-2" />
+                                        <span>Order Summary</span>
+                                    </Card.Header>
+                                    <Card.Body>
+                                        <ListGroup variant="flush">
+                                            <ListGroup.Item className="d-flex justify-content-between">
+                                                <span>Subtotal:</span>
+                                                <span>{formatPrice(order.subtotal)} EGP</span>
+                                            </ListGroup.Item>
+
+                                            {order.discount > 0 && (
+                                                <ListGroup.Item className="d-flex justify-content-between text-success">
+                                                    <span>Discount ({order.coupon_code}):</span>
+                                                    <span>-{formatPrice(order.discount)} EGP</span>
+                                                </ListGroup.Item>
+                                            )}
+
+                                            <ListGroup.Item className="d-flex justify-content-between">
+                                                <span>Tax (10%):</span>
+                                                <span>{formatPrice(order.tax)} EGP</span>
+                                            </ListGroup.Item>
+
+                                            <ListGroup.Item className="d-flex justify-content-between">
+                                                <span>Shipping:</span>
+                                                <span>{formatPrice(order.shipping_fee)} EGP</span>
+                                            </ListGroup.Item>
+
+                                            <ListGroup.Item className="d-flex justify-content-between fw-bold">
+                                                <span>Total Amount:</span>
+                                                <span>{formatPrice(order.total_price)} EGP</span>
+                                            </ListGroup.Item>
+                                        </ListGroup>
+                                    </Card.Body>
+                                </Card>
+                            </Col>
+
+                            <Col md={4}>
                                 <Card className="h-100">
                                     <Card.Header className="d-flex align-items-center bg-light">
                                         <FileText size={18} className="me-2" />
-                                        <span>
-                                            Order Items (
-                                            {order.order_items?.length || 0})
-                                        </span>
+                                        <span>Order Items ({order.order_items?.length || 0})</span>
                                     </Card.Header>
                                     <Card.Body className="p-0">
                                         <ListGroup variant="flush">
@@ -538,11 +567,9 @@ const OrderDetailsPage = () => {
                                                             width="60"
                                                             height="80"
                                                             className="me-3 object-fit-cover rounded"
-                                                            onError={e => {
-                                                                e.target.onerror =
-                                                                    null
-                                                                e.target.src =
-                                                                    "https://via.placeholder.com/300x450"
+                                                            onError={(e) => {
+                                                                e.target.onerror = null;
+                                                                e.target.src = 'https://via.placeholder.com/300x450';
                                                             }}
                                                         />
                                                         <div>
@@ -615,18 +642,10 @@ const OrderDetailsPage = () => {
                                             )}
                                         </Button>
                                     )}
-                                    {canPay &&
-                                        (paymentCompleted ||
-                                        payment?.status === "paid" ? (
-                                            <Button
-                                                variant="success"
-                                                className="px-4 py-2"
-                                                disabled
-                                            >
-                                                <CheckCircle
-                                                    size={18}
-                                                    className="me-2"
-                                                />
+                                    {canPay && (
+                                        paymentCompleted || payment?.status === 'paid' ? (
+                                            <Button variant="success" className="px-4 py-2" disabled>
+                                                <CheckCircle size={18} className="me-2" />
                                                 Payment Completed
                                             </Button>
                                         ) : (
@@ -652,10 +671,7 @@ const OrderDetailsPage = () => {
                                                     "Payment in progress"
                                                 ) : (
                                                     <>
-                                                        <CreditCard
-                                                            size={18}
-                                                            className="me-2"
-                                                        />
+                                                        <CreditCard size={18} className="me-2" />
                                                         Pay Now
                                                     </>
                                                 )}
@@ -669,8 +685,8 @@ const OrderDetailsPage = () => {
             </Container>
 
             <Footer />
-        </>
-    )
-}
+        </div>
+    );
+};
 
-export default OrderDetailsPage
+export default OrderDetailsPage;

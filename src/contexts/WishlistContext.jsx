@@ -1,22 +1,34 @@
-import { useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import { useNavigate } from 'react-router-dom';
 
-export const useWishlist = (userId) => {
+const WishlistContext = createContext();
+
+export const useWishlistContext = () => {
+    const context = useContext(WishlistContext);
+    if (!context) {
+        throw new Error('useWishlistContext must be used within a WishlistProvider');
+    }
+    return context;
+};
+
+export const WishlistProvider = ({ children }) => {
     const [wishlistItems, setWishlistItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
+    const user = JSON.parse(localStorage.getItem('user') || 'null');
+
     const fetchWishlist = async () => {
+        if (!user?.id) {
+            setWishlistItems([]);
+            setLoading(false);
+            return;
+        }
+
         setLoading(true);
         try {
-            if (!userId) {
-                setWishlistItems([]);
-                setError('Please login to view your wishlist');
-                return;
-            }
-
             const response = await api.getWishlist();
             const items = response.data?.data || [];
             setWishlistItems(items);
@@ -36,13 +48,9 @@ export const useWishlist = (userId) => {
         }
     };
 
-    useEffect(() => {
-        fetchWishlist();
-    }, [userId]);
-
     const addToWishlist = async (bookId) => {
         try {
-            if (!userId) {
+            if (!user?.id) {
                 navigate('/login', { state: { from: '/books' } });
                 return { success: false, error: 'Please login first' };
             }
@@ -54,7 +62,7 @@ export const useWishlist = (userId) => {
                 throw new Error('Book not found');
             }
 
-            if (book.user_id === userId) {
+            if (book.user_id === user.id) {
                 throw new Error('You cannot add your own book to your wishlist');
             }
 
@@ -96,7 +104,7 @@ export const useWishlist = (userId) => {
 
     const moveToCart = async (itemId) => {
         try {
-            if (!userId) {
+            if (!user?.id) {
                 navigate('/login', { state: { from: '/wishlist' } });
                 return { success: false, error: 'Please login first' };
             }
@@ -114,12 +122,13 @@ export const useWishlist = (userId) => {
 
     const moveAllToCart = async () => {
         try {
-            if (!userId) {
+            if (!user?.id) {
                 navigate('/login', { state: { from: '/wishlist' } });
                 return { success: false, error: 'Please login first' };
             }
 
             const response = await api.moveAllToCart();
+            setWishlistItems([]); // Clear wishlist after moving all items
             return {
                 success: true,
                 count: response.data.moved_items_count
@@ -132,9 +141,15 @@ export const useWishlist = (userId) => {
         }
     };
 
-    return {
+    useEffect(() => {
+        fetchWishlist();
+    }, [user?.id]);
+
+    const wishlistCount = wishlistItems.length;
+
+    const value = {
         wishlistItems,
-        wishlistCount: wishlistItems.length,
+        wishlistCount,
         loading,
         error,
         fetchWishlist,
@@ -143,4 +158,10 @@ export const useWishlist = (userId) => {
         moveToCart,
         moveAllToCart
     };
-};
+
+    return (
+        <WishlistContext.Provider value={value}>
+            {children}
+        </WishlistContext.Provider>
+    );
+}; 

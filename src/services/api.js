@@ -25,9 +25,9 @@ api.interceptors.response.use(
         return response
     },
     error => {
-        console.error("API Error:", error)
-        console.error("Error details:", error.response?.data)
-        return Promise.reject(error)
+        console.error("API Error:", error);
+        console.error("Error details:", error.response?.data);
+        return Promise.reject(error);
     }
 )
 
@@ -46,10 +46,10 @@ const apiService = {
 
         const payload = {
             book_id: bookId,
-            type: data.type ?? "buy",
+            type: data.type ?? 'buy',
             quantity: 1,
-            user_id: user.id,
-        }
+            user_id: user.id
+        };
 
         console.log("Sending to cart:", payload)
         return api.post("/cart", payload)
@@ -93,15 +93,13 @@ const apiService = {
     moveAllToCart: () => api.post("/wishlist/move-all-to-cart"),
 
     // Order Endpoints
-    getOrders: () => api.get("/orders"),
-    createOrder: orderData => api.post("/orders", orderData),
-    getOrderDetails: orderId =>
-        api.get(`/orders/${orderId}`).catch(err => {
-            if (
-                err.response?.status === 404 ||
-                err.response?.data?.error?.includes("No query results")
-            ) {
-                throw new Error("Order not found or already cancelled")
+    getOrders: () => api.get('/orders'),
+    createOrder: (orderData) => api.post('/orders', orderData),
+    getOrderDetails: (orderId) => api.get(`/orders/${orderId}`)
+        .catch(err => {
+            if (err.response?.status === 404 ||
+                err.response?.data?.error?.includes('No query results')) {
+                throw new Error('Order not found or already cancelled');
             }
             throw err
         }),
@@ -135,7 +133,7 @@ const apiService = {
                 throw err
             }),
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
-    getUserPayments: () => api.get("/payments"),
+    getUserPayments: () => api.get('/payments'),
     // Stripe Payment
     createStripePaymentIntent: orderId =>
         api.post("/stripe/create-payment-intent", { order_id: orderId }),
@@ -154,7 +152,7 @@ const apiService = {
         }),
 
     // Coupon Endpoints
-    applyCoupon: couponCode => api.post("/coupons/apply", { code: couponCode }),
+    applyCoupon: (couponCode) => api.post('/coupons/apply', { code: couponCode }),
 
     // Book Endpoints
     getBooks: () => api.get("/books"),

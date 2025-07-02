@@ -9,7 +9,6 @@ import {
     Star,
     Check,
 } from "lucide-react"
-import "../style/category.css"
 import Swal from "sweetalert2"
 import api from "../services/api"
 import { useCart } from "../hooks/useCart"
@@ -17,7 +16,7 @@ import { useWishlist } from "../hooks/useWishlist"
 import Navbar from "../components/HomePage/Navbar"
 import axios from "axios"
 import NotFound from "./NotFound"
-;<Navbar />
+
 const CategoryPage = () => {
     const { id } = useParams()
     const navigate = useNavigate()
@@ -37,7 +36,7 @@ const CategoryPage = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const booksPerPage = 8
 
-    const debouncedSearch = useCallback(term => {
+    const debouncedSearch = useCallback((term) => {
         let timeoutId
         clearTimeout(timeoutId)
         setSearchLoading(true)
@@ -121,24 +120,24 @@ const CategoryPage = () => {
         fetchCategoryBooks()
         fetchWishlist()
         fetchCartItems()
-    }, [id])
+    }, [id, fetchWishlist, fetchCartItems])
 
     // Helper functions
-    const isInCart = bookId => {
+    const isInCart = (bookId) => {
         return (
             Array.isArray(cartItems) &&
             cartItems.some(item => item.book_id === bookId)
         )
     }
 
-    const isInWishlist = bookId => {
+    const isInWishlist = (bookId) => {
         return (
             Array.isArray(wishlistItems) &&
             wishlistItems.some(item => item.book_id === bookId)
         )
     }
 
-    const handleAddToWishlist = async bookId => {
+    const handleAddToWishlist = async (bookId) => {
         try {
             const currentUser = JSON.parse(localStorage.getItem("user"))
             const book = books.find(b => b.id === bookId)
@@ -191,7 +190,7 @@ const CategoryPage = () => {
         }
     }
 
-    const handleAddToCart = async bookId => {
+    const handleAddToCart = async (bookId) => {
         try {
             const result = await Swal.fire({
                 title: "Add to Cart?",
@@ -225,9 +224,9 @@ const CategoryPage = () => {
         }
     }
 
-    const handleQuickView = bookId => navigate(`/books/${bookId}`)
+    const handleQuickView = (bookId) => navigate(`/books/${bookId}`)
 
-    const getStatusColor = status => {
+    const getStatusColor = (status) => {
         switch (status) {
             case "available":
                 return "#10B981"
@@ -240,7 +239,6 @@ const CategoryPage = () => {
         }
     }
 
-    // دالة لإرجاع لون متغير لكل كاتيجوري (بنفسجي، كافي، أزرق فاتح...)
     const categoryColors = [
         "#6f42c1", // بنفسجي
         "#b49a7d", // كافي
@@ -250,9 +248,9 @@ const CategoryPage = () => {
         "#fd7e14", // برتقالي
         "#adb5bd", // رمادي فاتح
     ]
+    
     const getCategoryColor = (category, idx = 0) => {
         if (!category) return categoryColors[0]
-        // حاول تعيين لون حسب اسم التصنيف أو استخدم ترتيب الكارت
         const normalized = category.toLowerCase()
         if (normalized.includes("رواية") || normalized.includes("novel"))
             return categoryColors[0]
@@ -266,7 +264,6 @@ const CategoryPage = () => {
             return categoryColors[4]
         if (normalized.includes("برتقالي") || normalized.includes("orange"))
             return categoryColors[5]
-        // افتراضي حسب ترتيب الكارت
         return categoryColors[idx % categoryColors.length]
     }
 
@@ -283,12 +280,12 @@ const CategoryPage = () => {
     const currentBooks = filteredBooks.slice(indexOfFirstBook, indexOfLastBook)
     const totalPages = Math.ceil(filteredBooks.length / booksPerPage)
 
-    const handleSearchChange = e => {
+    const handleSearchChange = (e) => {
         debouncedSearch(e.target.value)
         setCurrentPage(1)
     }
 
-    const handlePriceChange = e => {
+    const handlePriceChange = (e) => {
         setPriceFilter(e.target.value)
         setCurrentPage(1)
     }
@@ -417,7 +414,7 @@ const CategoryPage = () => {
                                 {currentBooks.map((book, index) => (
                                     <div
                                         key={book.id}
-                                        className="book-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300"
+                                        className="book-card bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition duration-300 relative"
                                         style={{
                                             animationDelay: `${index * 0.1}s`,
                                             opacity: 0,
@@ -441,7 +438,7 @@ const CategoryPage = () => {
                                                 alt={book.title}
                                                 className="w-full h-48 object-cover"
                                                 loading="lazy"
-                                                onError={e => {
+                                                onError={(e) => {
                                                     e.currentTarget.src =
                                                         "/placeholder.svg?height=300&width=200"
                                                 }}
@@ -450,10 +447,10 @@ const CategoryPage = () => {
 
                                             <div className="hover-actions absolute top-2 right-2 flex flex-col gap-2 opacity-0 hover:opacity-100 transition duration-300">
                                                 <button
-                                                    className={`action-button favorite ${
+                                                    className={`action-button p-2 rounded-full ${
                                                         isInWishlist(book.id)
-                                                            ? "active"
-                                                            : ""
+                                                            ? "bg-red-100 text-red-500"
+                                                            : "bg-white text-gray-700"
                                                     }`}
                                                     onClick={() =>
                                                         handleAddToWishlist(
@@ -473,7 +470,7 @@ const CategoryPage = () => {
                                                     />
                                                 </button>
                                                 <button
-                                                    className="action-button view"
+                                                    className="action-button p-2 rounded-full bg-white text-gray-700"
                                                     onClick={() =>
                                                         handleQuickView(book.id)
                                                     }
@@ -481,10 +478,10 @@ const CategoryPage = () => {
                                                     <Eye size={18} />
                                                 </button>
                                                 <button
-                                                    className={`action-button cart ${
+                                                    className={`action-button p-2 rounded-full ${
                                                         isInCart(book.id)
-                                                            ? "disabled"
-                                                            : ""
+                                                            ? "bg-gray-200 text-gray-600 cursor-not-allowed"
+                                                            : "bg-white text-gray-700"
                                                     }`}
                                                     onClick={
                                                         !isInCart(book.id)
@@ -511,17 +508,13 @@ const CategoryPage = () => {
                                             </div>
 
                                             <div
-                                                className="category-tag absolute bottom-2 left-2 bg-white text-xs px-2 py-1 rounded text-gray-700"
+                                                className="category-tag absolute bottom-2 left-2 text-xs px-2 py-1 rounded text-white font-bold"
                                                 style={{
-                                                    background:
+                                                    backgroundColor:
                                                         getCategoryColor(
                                                             book.category,
                                                             index
                                                         ),
-                                                    color: "#fff",
-                                                    fontWeight: "bold",
-                                                    borderRadius: "0.5em",
-                                                    padding: "2px 10px",
                                                 }}
                                             >
                                                 {book.category}

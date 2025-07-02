@@ -110,7 +110,7 @@ const AdminDashboard = () => {
                       })
                     )}
                   </div>
-                  {pendingOrders.length > 2 && (
+                  {pendingOrders.length > 0 && (
                     <div className="view-all-notifications">
                       <Link to="/admin/notifications" className="view-all-link">
                         View All Notifications ({pendingOrders.length})

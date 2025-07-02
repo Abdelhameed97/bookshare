@@ -3,7 +3,6 @@ import { Book, Heart, Palette, Clock } from "lucide-react"
 import HomePageTitle from "../shared/HomePageTitle"
 import "../../style/Homepagestyle.css"
 import { useEffect, useState } from "react"
-import { useNavigate } from "react-router-dom"
 
 const BookCategories = () => {
     const [categories, setCategories] = useState([])
@@ -101,14 +100,13 @@ const BookCategories = () => {
         },
     ]
 
-    const navigate = useNavigate()
-    // Define the new color palette
+    // الألوان الجديدة (أزرق فاتح وبنفسجي)
     const categoryColors = [
-        "#FFC0CB",
-        "#FFA500",
-        "#FF0000",
-        "#FFFF00",
-        "#D2B48C",
+        "#A7C7E7", // أزرق فاتح
+        "#C8A2C8", // بنفسجي فاتح (ليلكي)
+        "#89CFF0", // أزرق سماوي فاتح
+        "#B19CD9", // بنفسجي متوسط
+        "#ADD8E6", // أزرق فاتح جداً
     ]
 
     if (loading) {
@@ -135,7 +133,7 @@ const BookCategories = () => {
                         className="view-all-categories-btn"
                         style={{
                             background:
-                                "linear-gradient(90deg, #FFC0CB, #FFA500, #FF0000, #FFFF00, #D2B48C)",
+                                "linear-gradient(hsl(216, 98.30%, 45.70%))",
                             color: "#fff",
                             border: "none",
                             borderRadius: 8,
@@ -144,7 +142,7 @@ const BookCategories = () => {
                             marginTop: 12,
                             cursor: "pointer",
                         }}
-                        onClick={() => navigate("/categories")}
+                        onClick={() => (window.location.href = "/categories")}
                     >
                         View All Categories
                     </button>
