@@ -26,11 +26,11 @@ import PaymentDetailsPage from './pages/PaymentDetailsPage';
 import AllOrdersPage from './components/Library/AllOrdersPage';
 import NotificationsPage from './components/Library/NotificationsPage';
 import ClientNotificationsPage from './pages/ClientNotificationsPage';
+import EditClientProfile from './components/forms/EditClientProfile';
 
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
-import CategoryPage from "./pages/CategoryPage";
 import RagChat from "./pages/RagChat";
 import FloatingChatButton from "./components/FloatingChatButton";
 import ForgotPassword from './components/forms/ForgotPassword';
@@ -46,6 +46,9 @@ import AdminNotificationsPage from './components/Admin/NotificationsPage';
 import AdminRoute from './components/GuestRoute/AdminRoute';
 import OwnerRoute from './components/GuestRoute/OwnerRoute';
 import EditBookPage from './components/Library/EditBookPage';
+
+import { CartProvider } from './contexts/CartContext';
+import { WishlistProvider } from './contexts/WishlistContext';
 
 // import Users from './components/admin/Users';
 // import Categories from './components/admin/Categories';
@@ -64,64 +67,68 @@ function RedirectToDashboardOrHome() {
 function App() {
   return (
     <Router>
-      <Routes>
-        <Route path='/' element={<RedirectToDashboardOrHome />} />
-        <Route path='/about' element={<About />} />
-        <Route path='/cart' element={<CartPage />} />
-        <Route path='/orders' element={<OrdersPage />} />
-        <Route path="/orders/:id" element={<OrderDetailsPage />} />
-        <Route path='/wishlist' element={<WishlistPage />} />
-        <Route path="/payments" element={<PaymentsPage />} />
-        <Route path="/payment/:orderId" element={<PaymentDetailsPage />} />
-        <Route path="/books" element={<BooksPage />} />
-        <Route path="/books/:id" element={<BookDetails />} />
-        <Route path='/register' element={<RegisterPage />} />
-        <Route path='/login' element={<LoginPage />} />
-        <Route
-          path="/login"
-          element={
-            <GuestRoute>
-              <LoginPage />
-            </GuestRoute>
-          }
-        />
-        <Route
-          path="/get-started"
-          element={
-            <GuestRoute>
-              <GetStartedPage />
-            </GuestRoute>
-          }
-        />
-        <Route path="/social-callback" element={<SocialCallback />} />
-        <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/contact" element={<ContactPage />} />
-        <Route path="/dashboard" element={<OwnerRoute><Dashboard /></OwnerRoute>} />
-        <Route path="/edit-profile" element={<OwnerRoute><EditProfile /></OwnerRoute>} />
-        <Route path="/add-book" element={<OwnerRoute><AddBookPage /></OwnerRoute>} />
-        <Route path="/libraries" element={<OwnerRoute><LibrariesPage /></OwnerRoute>} />
-        <Route path="/library/:id" element={<OwnerRoute><LibraryDetails /></OwnerRoute>} />
-        <Route path="/all-orders" element={<OwnerRoute><AllOrdersPage /></OwnerRoute>} />
-        <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
-        <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
-        <Route path="/client-notifications" element={<ClientNotificationsPage />} />
+      <CartProvider>
+        <WishlistProvider>
+          <Routes>
+            <Route path='/' element={<RedirectToDashboardOrHome />} />
+            <Route path='/about' element={<About />} />
+            <Route path='/cart' element={<CartPage />} />
+            <Route path='/orders' element={<OrdersPage />} />
+            <Route path="/orders/:id" element={<OrderDetailsPage />} />
+            <Route path='/wishlist' element={<WishlistPage />} />
+            <Route path="/payments" element={<PaymentsPage />} />
+            <Route path="/payment/:orderId" element={<PaymentDetailsPage />} />
+            <Route path="/books" element={<BooksPage />} />
+            <Route path="/books/:id" element={<BookDetails />} />
+            <Route path='/register' element={<RegisterPage />} />
+            <Route path='/login' element={<LoginPage />} />
+            <Route
+              path="/login"
+              element={
+                <GuestRoute>
+                  <LoginPage />
+                </GuestRoute>
+              }
+            />
+            <Route
+              path="/get-started"
+              element={
+                <GuestRoute>
+                  <GetStartedPage />
+                </GuestRoute>
+              }
+            />
+            <Route path="/social-callback" element={<SocialCallback />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/dashboard" element={<OwnerRoute><Dashboard /></OwnerRoute>} />
+            <Route path="/edit-profile" element={<OwnerRoute><EditProfile /></OwnerRoute>} />
+            <Route path="/add-book" element={<OwnerRoute><AddBookPage /></OwnerRoute>} />
+            <Route path="/libraries" element={<OwnerRoute><LibrariesPage /></OwnerRoute>} />
+            <Route path="/library/:id" element={<OwnerRoute><LibraryDetails /></OwnerRoute>} />
+            <Route path="/all-orders" element={<OwnerRoute><AllOrdersPage /></OwnerRoute>} />
+            <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
+            <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
+            <Route path="/client-notifications" element={<ClientNotificationsPage />} />
+            <Route path="/edit-client-profile" element={<EditClientProfile />} />
 
 
-        {/* Admin Routes */}
-        <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-        <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="/admin/categories" element={<AdminRoute><CategoryList /></AdminRoute>} />
-        <Route path="/admin/users" element={<AdminRoute><UserList /></AdminRoute>} />
-        <Route path="/admin/books" element={<AdminRoute><BookList /></AdminRoute>} />
-        <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
-        <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
+            {/* Admin Routes */}
+            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/categories" element={<AdminRoute><CategoryList /></AdminRoute>} />
+            <Route path="/admin/users" element={<AdminRoute><UserList /></AdminRoute>} />
+            <Route path="/admin/books" element={<AdminRoute><BookList /></AdminRoute>} />
+            <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+            <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
 
-        <Route path='*' element={<NotFound />} />
+            <Route path='*' element={<NotFound />} />
 
-      </Routes>
-      <FloatingChatButton />
-
+          </Routes>
+          <FloatingChatButton />
+        </WishlistProvider>
+      </CartProvider>
     </Router>
   );
 }

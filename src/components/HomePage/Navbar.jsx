@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useContext } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
@@ -16,57 +16,83 @@ import {
   FaBook,
   FaUserEdit,
   FaBell,
+  FaHome,
+  FaInfoCircle,
+  FaEnvelope,
+  FaUser,
 } from "react-icons/fa";
-import { useCart } from "../../hooks/useCart";
-import { useWishlist } from "../../hooks/useWishlist";
-import { useOrders } from "../../hooks/useOrders";
+import { useCartContext } from "../../contexts/CartContext";
+import { useWishlistContext } from "../../contexts/WishlistContext";
+import { useOrderContext } from "../../contexts/OrderContext";
 import useTranslation from "../../hooks/useTranslation";
 import LanguageSwitcher from "../shared/LanguageSwitcher";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const navLocation = useLocation();
-  const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
 
-  const { cartCount } = useCart(user?.id);
-  const { wishlistCount } = useWishlist(user?.id);
-  const { orders, fetchOrders, countPendingOrders } = useOrders(user?.id);
-  const pendingOrdersCount = countPendingOrders();
-  
+  // Get context values correctly
+  const { cartCount } = useCartContext();
+  const { wishlistCount } = useWishlistContext();
+  const { orders, pendingOrdersCount, fetchOrders } = useOrderContext();
 
   const isLibraryOwner = user?.role === "owner";
+
   const { t, language } = useTranslation();
+
   const [showClientNotifications, setShowClientNotifications] = useState(false);
+
   const [readNotifications, setReadNotifications] = useState(() => {
     const stored = localStorage.getItem("readNotifications");
     return stored ? JSON.parse(stored) : [];
   });
 
+  // Avatar images based on user role and gender
+  const getAvatarImage = (user) => {
+    if (!user) return null;
+
+    const isMale = user.gender === "male" || !user.gender; // Default to male if gender not specified
+
+    switch (user.role) {
+      case "admin":
+        return "https://cdn.vectorstock.com/i/1000v/37/11/man-manager-administrator-consultant-avatar-vector-35753711.jpg";
+      case "owner":
+        return isMale
+          ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTslXAW6sPGW_hBPruTQwtsCeLQHqxeJEdiag&s"
+          : "https://img.freepik.com/premium-vector/business-woman-character-vector-illustration_1133257-2432.jpg?semt=ais_hybrid&w=740";
+      case "client":
+        return isMale
+          ? "https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png"
+          : "https://img.freepik.com/premium-vector/woman-spa-client-icon-flat-color-style_755164-819.jpg";
+      default:
+        return "https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png";
+    }
+  };
+
   const regularNavLinks = [
-    { to: "/", label: "home" },
-    { to: "/about", label: "about" },
-    { to: "/top-seller", label: "topSeller" },
-    { to: "/books", label: "books" },
-    { to: "/contact", label: "contact" },
+    { to: "/", label: "home", icon: FaHome },
+    { to: "/about", label: "about", icon: FaInfoCircle },
+    { to: "/books", label: "books", icon: FaBook },
+    { to: "/edit-client-profile", label: "Profile", icon: FaUserEdit },
+    { to: "/contact", label: "contact", icon: FaEnvelope },
   ];
 
   const ownerNavLinks = [
-    { to: "/dashboard", label: "dashboard" },
-    { to: "/edit-profile", label: "editProfile" },
-    { to: "/add-book", label: "addBook" },
-    { to: "/libraries", label: "allLibraries" },
-    { to: "/all-orders", label: "orders" },
+    { to: "/dashboard", label: "dashboard", icon: FaTachometerAlt },
+    { to: "/add-book", label: "Book", icon: FaBook },
+    { to: "/libraries", label: "Libraries", icon: FaBook },
+    { to: "/all-orders", label: "orders", icon: FaBoxOpen },
   ];
 
   const adminNavLinks = [
-    { to: "/admin/dashboard", label: "adminDashboard" },
-    { to: "/admin/users", label: "users" },
-    { to: "/admin/categories", label: "categories" },
-    { to: "/admin/books", label: "books" },
-    { to: "/admin/orders", label: "orders" },
+    { to: "/admin/dashboard", label: "adminDashboard", icon: FaTachometerAlt },
+    { to: "/admin/users", label: "users", icon: FaUser },
+    { to: "/admin/categories", label: "categories", icon: FaBook },
+    { to: "/admin/books", label: "books", icon: FaBook },
+    { to: "/admin/orders", label: "orders", icon: FaBoxOpen },
   ];
 
   const navLinks =
@@ -94,6 +120,7 @@ const Navbar = () => {
     }
   }, []);
 
+  // Listen for changes in readNotifications to update notification count
   useEffect(() => {
     const handleStorageChange = () => {
       const stored = localStorage.getItem("readNotifications");
@@ -115,7 +142,7 @@ const Navbar = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
-    navigate("/");
+    navigate("/login");
   };
 
   const handleProtectedAction = (path) => {
@@ -126,8 +153,10 @@ const Navbar = () => {
     navigate(path);
   };
 
+  // Notifications for client
   const clientOrderNotifications = useMemo(() => {
     if (!user || user.role !== "client" || !orders) return [];
+    // Only show notifications for orders that are not pending
     return orders
       .filter(
         (order) => order.status === "accepted" || order.status === "rejected"
@@ -144,7 +173,7 @@ const Navbar = () => {
 
   const handleShowNotifications = async () => {
     if (!showClientNotifications) {
-      await fetchOrders();
+      await fetchOrders(); // fetch latest orders before showing notifications
     }
     setShowClientNotifications((v) => !v);
   };
@@ -154,12 +183,15 @@ const Navbar = () => {
     setReadNotifications(updated);
     localStorage.setItem("readNotifications", JSON.stringify(updated));
 
+    // Dispatch custom event to notify other components
     window.dispatchEvent(
       new CustomEvent("notificationRead", {
         detail: { orderId: orderId },
       })
     );
   };
+
+  const avatarImage = getAvatarImage(user);
 
   return (
     <>
@@ -230,6 +262,7 @@ const Navbar = () => {
 
                 <LanguageSwitcher />
 
+                {/* Client Notifications Bell */}
                 {user?.role === "client" && (
                   <div className="client-notification-section">
                     <button
@@ -253,58 +286,67 @@ const Navbar = () => {
                               No notifications
                             </div>
                           ) : (
-                            unreadNotifications.slice(0, 2).map((order) => (
-                              <div
-                                key={order.id}
-                                className="client-notification-item"
-                              >
-                                <div className="client-notification-row">
-                                  <span className="client-notif-icon">
-                                    {order.status === "accepted" ? "✅" : "❌"}
-                                  </span>
-                                  <span className="client-notification-message">
-                                    Your order for{" "}
-                                    <span className="client-notif-book">
-                                      "
-                                      {order.order_items?.[0]?.book?.title ||
-                                        "a book"}
-                                      "
-                                    </span>{" "}
-                                    was
-                                    <span
-                                      className={
-                                        order.status === "accepted"
-                                          ? "notif-accepted"
-                                          : "notif-rejected"
+                            unreadNotifications
+                              .slice(0, 2)
+                              .map((order, index) => (
+                                <div
+                                  key={order.id}
+                                  className={`client-notification-item ${
+                                    index === 0 ? "first-notification" : ""
+                                  }`}
+                                >
+                                  <div className="client-notification-row">
+                                    <span className="client-notif-icon">
+                                      {order.status === "accepted"
+                                        ? "✅"
+                                        : "❌"}
+                                    </span>
+                                    <span className="client-notification-message">
+                                      Your order for{" "}
+                                      <span className="client-notif-book">
+                                        "
+                                        {order.order_items?.[0]?.book?.title ||
+                                          "a book"}
+                                        "
+                                      </span>{" "}
+                                      was
+                                      <span
+                                        className={
+                                          order.status === "accepted"
+                                            ? "notif-accepted"
+                                            : "notif-rejected"
+                                        }
+                                      >
+                                        {order.status === "accepted"
+                                          ? " accepted"
+                                          : " rejected"}
+                                      </span>
+                                    </span>
+                                    {index === 0 && (
+                                      <span className="new-badge">new</span>
+                                    )}
+                                  </div>
+                                  <div className="client-notification-meta">
+                                    <small>
+                                      {new Date(
+                                        order.updated_at
+                                      ).toLocaleString()}
+                                    </small>
+                                    <Link
+                                      to={`/orders/${order.id}`}
+                                      className="client-notification-link-btn"
+                                      onClick={() =>
+                                        handleNotificationView(order.id)
                                       }
                                     >
-                                      {order.status === "accepted"
-                                        ? " accepted"
-                                        : " rejected"}
-                                    </span>
-                                  </span>
+                                      View
+                                    </Link>
+                                  </div>
                                 </div>
-                                <div className="client-notification-meta">
-                                  <small>
-                                    {new Date(
-                                      order.updated_at
-                                    ).toLocaleString()}
-                                  </small>
-                                  <Link
-                                    to={`/orders/${order.id}`}
-                                    className="client-notification-link-btn"
-                                    onClick={() =>
-                                      handleNotificationView(order.id)
-                                    }
-                                  >
-                                    View
-                                  </Link>
-                                </div>
-                              </div>
-                            ))
+                              ))
                           )}
                         </div>
-                        {unreadNotifications.length > 2 && (
+                        {unreadNotifications.length > 0 && (
                           <div className="client-view-all-notifications">
                             <Link
                               to="/client-notifications"
@@ -398,26 +440,81 @@ const Navbar = () => {
                     </>
                   ) : (
                     <>
-                      <span
-                        style={{
-                          fontWeight: 600,
-                          color: isLibraryOwner ? "#3B82F6" : "#10B981",
-                          fontSize: "1.1rem",
-                        }}
-                      >
-                        {t("welcome")}, {user.name || t("user")}
-                        {isLibraryOwner && (
+                      <div className="user-avatar-section">
+                        <img
+                          src={avatarImage}
+                          alt="User Avatar"
+                          className="user-avatar"
+                          style={{
+                            width: "40px",
+                            height: "40px",
+                            borderRadius: "50%",
+                            objectFit: "cover",
+                            border: "2px solid #e5e7eb",
+                            cursor: "pointer",
+                            transition: "transform 0.2s ease",
+                            marginRight: 8,
+                          }}
+                          onMouseOver={(e) => {
+                            e.target.style.transform = "scale(1.1)";
+                          }}
+                          onMouseOut={(e) => {
+                            e.target.style.transform = "scale(1)";
+                          }}
+                        />
+                        <div
+                          className="user-info"
+                          style={{
+                            display: "flex",
+                            flexDirection: "column",
+                            justifyContent: "center",
+                          }}
+                        >
                           <span
                             style={{
-                              fontSize: "0.8rem",
-                              display: "block",
-                              color: "#6B7280",
+                              fontWeight: 600,
+                              color: "#222",
+                              fontSize: "1.05rem",
+                              lineHeight: 1,
                             }}
                           >
-                            {t("libraryOwner")}
+                            {user.name?.split(" ")[0] || t("user")}
                           </span>
-                        )}
-                      </span>
+                          {isLibraryOwner && (
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#3B82F6",
+                                fontWeight: 600,
+                              }}
+                            >
+                              {t("libraryOwner")}
+                            </span>
+                          )}
+                          {user.role === "admin" && (
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#EF4444",
+                                fontWeight: 600,
+                              }}
+                            >
+                              Administrator
+                            </span>
+                          )}
+                          {user.role === "client" && (
+                            <span
+                              style={{
+                                fontSize: "0.8rem",
+                                color: "#10B981",
+                                fontWeight: 600,
+                              }}
+                            >
+                              Client
+                            </span>
+                          )}
+                        </div>
+                      </div>
                       <button
                         className="btn"
                         style={{
@@ -489,27 +586,55 @@ const Navbar = () => {
               </>
             ) : (
               <>
-                <span
+                <div
+                  className="mobile-user-avatar-section"
                   style={{
-                    fontWeight: 600,
-                    color: isLibraryOwner ? "#3B82F6" : "#10B981",
-                    fontSize: "1.1rem",
-                    textAlign: "center",
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
                   }}
                 >
-                  {t("welcome")}, {user.name || t("user")}
-                  {isLibraryOwner && (
-                    <span
-                      style={{
-                        fontSize: "0.8rem",
-                        display: "block",
-                        color: "#6B7280",
-                      }}
-                    >
-                      {t("libraryOwner")}
-                    </span>
-                  )}
-                </span>
+                  <img
+                    src={avatarImage}
+                    alt="User Avatar"
+                    className="mobile-user-avatar"
+                    style={{
+                      width: "50px",
+                      height: "50px",
+                      borderRadius: "50%",
+                      objectFit: "cover",
+                      border: "2px solid #e5e7eb",
+                      marginBottom: "0.5rem",
+                    }}
+                  />
+                  <span
+                    style={{
+                      fontWeight: 600,
+                      color: "#222",
+                      fontSize: "1rem",
+                      textAlign: "center",
+                      marginBottom: 2,
+                    }}
+                  >
+                    {user.name?.split(" ")[0] || t("user")}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: "0.8rem",
+                      color: isLibraryOwner
+                        ? "#3B82F6"
+                        : user.role === "admin"
+                        ? "#EF4444"
+                        : "#10B981",
+                      fontWeight: 600,
+                      textAlign: "center",
+                    }}
+                  >
+                    {isLibraryOwner && t("libraryOwner")}
+                    {user.role === "admin" && "Administrator"}
+                    {user.role === "client" && "Client"}
+                  </span>
+                </div>
                 <button
                   className="btn"
                   style={{
