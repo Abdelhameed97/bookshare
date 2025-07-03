@@ -15,7 +15,6 @@
     "axios": "^1.10.0",
     "bootstrap": "^5.3.7",
     "date-fns": "^4.1.0",
-    "framer-motion": "^12.20.1",
     "lucide-react": "^0.517.0",
     "react": "^19.1.0",
     "react-bootstrap": "^2.10.10",

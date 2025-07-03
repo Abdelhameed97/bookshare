@@ -1,18 +1,12 @@
+// LoginForm.jsx
+
 import { useState } from "react";
 import { login } from "../../api/auth";
 import useAuth from "../../hooks/useAuth";
 import logo from "../../assets/bookshare-logo.png";
-import api from "../../api/auth";
-import {
-  FaCheck,
-  FaTimes,
-  FaEye,
-  FaEyeSlash,
-  FaGoogle,
-  FaGithub,
-  FaFacebook,
-} from "react-icons/fa";
+import { FaCheck, FaTimes } from "react-icons/fa";
 import { useNavigate, Link } from "react-router-dom";
+import { FaGoogle, FaGithub, FaFacebook, FaLinkedin } from "react-icons/fa";
 
 const LoginForm = () => {
   const [form, setForm] = useState({ email: "", password: "" });
@@ -20,11 +14,11 @@ const LoginForm = () => {
   const [touched, setTouched] = useState({});
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showPassword, setShowPassword] = useState(false); // 👈 جديد
-
   const { setUser, setToken } = useAuth();
-  const navigate = useNavigate();
+
   const baseURL = process.env.REACT_APP_API_URL;
+
+  const navigate = useNavigate();
 
   const validateField = (name, value) => {
     switch (name) {
@@ -68,6 +62,7 @@ const LoginForm = () => {
     e.preventDefault();
     setServerError("");
     setIsSubmitting(true);
+
     setTouched({ email: true, password: true });
 
     if (validateForm()) {
@@ -77,27 +72,10 @@ const LoginForm = () => {
         setToken(res.data.access_token);
         navigate("/");
       } catch (err) {
-        const message = err.response?.data?.message;
-
-        // ✅ الحالة اللي بنكتشف فيها إن الإيميل مش متفعل
-        if (message === "Email not verified") {
-          try {
-            // نبعِتله رسالة تفعيل تاني
-            await api.post("/resend-verification-email-by-email", {
-              email: form.email,
-            });
-
-            // نوديه على صفحة فيها رسالة check your inbox
-            navigate("/verify-email", {
-              state: { email: form.email },
-            });
-          } catch (sendErr) {
-            console.error("Failed to resend verification email:", sendErr);
-            setServerError("Email not verified, and failed to resend email.");
-          }
-        } else {
-          setServerError(message || "Something went wrong. Please try again.");
-        }
+        setServerError(
+          err.response?.data?.message ||
+            "Something went wrong. Please try again."
+        );
       } finally {
         setIsSubmitting(false);
       }
@@ -105,7 +83,7 @@ const LoginForm = () => {
       setIsSubmitting(false);
     }
   };
-  // Helper function to check if a field is valid
+
   const isValid = (field) => touched[field] && !errors[field] && form[field];
 
   const handleSocialLogin = (provider) => {
@@ -143,7 +121,6 @@ const LoginForm = () => {
                 </div>
               )}
 
-              {/* Email Field */}
               <div className='mb-3'>
                 <div className='form-floating'>
                   <input
@@ -172,12 +149,11 @@ const LoginForm = () => {
                 </div>
               </div>
 
-              {/* Password Field + 👁️ */}
-              <div className='mb-1 position-relative'>
+              <div className='mb-1'>
                 <div className='form-floating'>
                   <input
                     name='password'
-                    type={showPassword ? "text" : "password"}
+                    type='password'
                     id='password'
                     className={`form-control ${
                       errors.password ? "is-invalid" : ""
@@ -188,14 +164,6 @@ const LoginForm = () => {
                     placeholder='Password'
                   />
                   <label htmlFor='password'>Password</label>
-                  <button
-                    type='button'
-                    onClick={() => setShowPassword((prev) => !prev)}
-                    className='btn position-absolute top-50 end-0 translate-middle-y me-2 p-0 border-0 bg-transparent'
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <FaEyeSlash /> : <FaEye />}
-                  </button>
                   {errors.password && (
                     <div className='invalid-feedback d-flex align-items-center'>
                       <FaTimes className='me-1' /> {errors.password}
@@ -249,6 +217,7 @@ const LoginForm = () => {
               <p className='fw-semibold text-muted'>
                 🔐 Login quickly using your social accounts
               </p>
+
               <div className='d-flex flex-wrap justify-content-center gap-3'>
                 <button
                   className='btn btn-outline-danger rounded-circle d-flex justify-content-center align-items-center'
@@ -258,6 +227,7 @@ const LoginForm = () => {
                 >
                   <FaGoogle />
                 </button>
+
                 <button
                   className='btn btn-outline-dark rounded-circle d-flex justify-content-center align-items-center'
                   style={{ width: "45px", height: "45px" }}
@@ -266,6 +236,7 @@ const LoginForm = () => {
                 >
                   <FaGithub />
                 </button>
+
                 <button
                   className='btn btn-outline-primary rounded-circle d-flex justify-content-center align-items-center'
                   style={{ width: "45px", height: "45px" }}
@@ -274,9 +245,22 @@ const LoginForm = () => {
                 >
                   <FaFacebook />
                 </button>
+{/* 
+                <button
+                  className='btn rounded-circle d-flex justify-content-center align-items-center text-white'
+                  style={{
+                    width: "45px",
+                    height: "45px",
+                    backgroundColor: "#0A66C2",
+                    border: "1px solid #0A66C2",
+                  }}
+                  type='button'
+                  onClick={() => handleSocialLogin("linkedin")}
+                >
+                  <FaLinkedin />
+                </button> */}
               </div>
             </div>
-
             <p className='text-center mb-0 text-muted small'>
               Don't have an account?{" "}
               <Link to='/register' className='text-primary fw-bold'>
