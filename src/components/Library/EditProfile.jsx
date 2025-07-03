@@ -33,6 +33,8 @@ const EditProfile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
+  const [logoPreview, setLogoPreview] = useState(null);
+  const [logoFile, setLogoFile] = useState(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -67,6 +69,10 @@ const EditProfile = () => {
       new_password: '',
       confirm_password: ''
     });
+    // Set logo preview if exists
+    if (currentUser.owner && currentUser.owner.library_logo) {
+      setLogoPreview(`${process.env.REACT_APP_API_URL || ''}/storage/${currentUser.owner.library_logo}`);
+    }
   }, [currentUser, navigate]);
 
   const handleInputChange = (e) => {
@@ -82,6 +88,14 @@ const EditProfile = () => {
         ...prev,
         [name]: ''
       }));
+    }
+  };
+
+  const handleLogoChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setLogoFile(file);
+      setLogoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -153,73 +167,50 @@ const EditProfile = () => {
       console.log('Form data:', formData);
       console.log('Token:', localStorage.getItem('token'));
 
-      // Prepare data for update - match backend field names
-      const updateData = {
-        name: formData.name,
-        email: formData.email,
-        phone_number: formData.phone_number,
-        location: formData.location,
-      };
-
-      // Add national_id if not set
+      // Prepare FormData for file upload
+      const form = new FormData();
+      form.append('name', formData.name);
+      form.append('email', formData.email);
+      form.append('phone_number', formData.phone_number);
+      form.append('location', formData.location);
       if (!currentUser.national_id && formData.national_id) {
-        updateData.national_id = formData.national_id;
+        form.append('national_id', formData.national_id);
       }
-
-      // Add password fields if user wants to change password
       if (formData.new_password) {
-        updateData.password = formData.new_password;
-        updateData.password_confirmation = formData.confirm_password;
-        updateData.current_password = formData.current_password;
+        form.append('password', formData.new_password);
+        form.append('password_confirmation', formData.confirm_password);
+        form.append('current_password', formData.current_password);
       }
-
-      console.log('Sending update data:', updateData);
-      console.log('API endpoint:', `/users/${currentUser.id}`);
-
-      // Use the API service method
-      const response = await apiService.updateUser(currentUser.id, updateData);
-      
-      console.log('Response received:', response);
-      console.log('Response data:', response.data);
-
-      const passwordWasChanged = !!formData.new_password;
-
-      if (passwordWasChanged) {
-        // Log user out by clearing local storage
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-
-        await Swal.fire({
-          icon: 'success',
-          title: 'Password Updated!',
-          text: 'Your password has been changed successfully. Please log in again.',
-        });
-
-        // Redirect to login page
-        navigate('/login');
-
-      } else {
-        // Update local storage with new user data if only profile info was changed
-        const updatedUser = { ...currentUser, ...response.data.data };
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        console.log('Updated user in localStorage:', updatedUser);
-
-        await Swal.fire({
-          icon: 'success',
-          title: 'Profile Updated!',
-          text: 'Your profile has been updated successfully.',
-          timer: 2000
-        });
-
-        // Clear password fields
-        setFormData(prev => ({
-          ...prev,
-          current_password: '',
-          new_password: '',
-          confirm_password: ''
-        }));
+      if (logoFile) {
+        form.append('library_logo', logoFile);
       }
-
+      // Laravel: use POST with _method=PUT for file upload
+      form.append('_method', 'PUT');
+      // Use fetch directly for multipart/form-data
+      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/users/${currentUser.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: form
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update profile');
+      // Update localStorage with new user data and owner.logo
+      const updatedUser = { ...currentUser, ...data.data };
+      if (data.data.owner) {
+        updatedUser.owner = data.data.owner;
+      }
+      localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Notify Navbar to update
+      window.dispatchEvent(new Event('storage'));
+      await Swal.fire({
+        icon: 'success',
+        title: 'Profile Updated!',
+        text: 'Your profile has been updated successfully.',
+        timer: 2000
+      });
+      setFormData(prev => ({ ...prev, current_password: '', new_password: '', confirm_password: '' }));
     } catch (error) {
       console.error('=== PROFILE UPDATE ERROR ===');
       console.error('Error object:', error);
@@ -395,6 +386,25 @@ const EditProfile = () => {
                     />
                   )}
                   {errors.national_id && <span className="error-message">{errors.national_id}</span>}
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="library_logo">
+                    <Camera size={18} />
+                    Library Logo
+                  </label>
+                  <input
+                    type="file"
+                    id="library_logo"
+                    name="library_logo"
+                    accept="image/*"
+                    onChange={handleLogoChange}
+                  />
+                  {logoPreview && (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <img src={logoPreview} alt="Library Logo Preview" style={{ maxWidth: 120, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
