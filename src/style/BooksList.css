@@ -836,3 +836,10 @@
    transform: translateY(-2px) scale(1.03);
    box-shadow: 0 12px 30px rgba(139, 92, 246, 0.18);
  }
+ .quantity-badge-custom {
+  transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+  font-family: inherit;
+}
+.out-of-stock-badge {
+  background: linear-gradient(90deg, #e53935 60%, #ff5252 100%);
+}

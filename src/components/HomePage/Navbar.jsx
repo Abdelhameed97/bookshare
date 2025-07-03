@@ -6,23 +6,23 @@ import SearchModal from "./SearchModal";
 import "../../style/Homepagestyle.css";
 import "../../style/Notifications.css";
 import {
-  FaSearch,
-  FaShoppingCart,
-  FaBars,
-  FaTimes,
-  FaHeart,
-  FaBoxOpen,
-  FaTachometerAlt,
-  FaBook,
-  FaUserEdit,
-  FaBell,
+    FaSearch,
+    FaShoppingCart,
+    FaBars,
+    FaTimes,
+    FaHeart,
+    FaBoxOpen,
+    FaTachometerAlt,
+    FaBook,
+    FaUserEdit,
+    FaBell,
 } from "react-icons/fa";
 import { useCartContext } from "../../contexts/CartContext";
 import { useWishlistContext } from "../../contexts/WishlistContext";
 import { useOrders } from "../../hooks/useOrders";
 import useTranslation from '../../hooks/useTranslation';
 import LanguageSwitcher from '../shared/LanguageSwitcher';
-
+import { FaHome, FaInfoCircle, FaEnvelope, FaUser } from "react-icons/fa";
 const Navbar = () => {
   const [user, setUser] = useState(null);
 
@@ -49,56 +49,59 @@ const Navbar = () => {
   });
 
   // Avatar images based on user role and gender
-  const getAvatarImage = (user) => {
-    if (!user) return null;
-    
-    const isMale = user.gender === 'male' || !user.gender; // Default to male if gender not specified
-    
-    switch (user.role) {
-      case 'admin':
-        return 'https://cdn.vectorstock.com/i/1000v/37/11/man-manager-administrator-consultant-avatar-vector-35753711.jpg';
-      case 'owner':
-        return isMale 
-          ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTslXAW6sPGW_hBPruTQwtsCeLQHqxeJEdiag&s'
-          : 'https://img.freepik.com/premium-vector/business-woman-character-vector-illustration_1133257-2432.jpg?semt=ais_hybrid&w=740';
-      case 'client':
-        return isMale 
-          ? 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png'
-          : 'https://img.freepik.com/premium-vector/woman-spa-client-icon-flat-color-style_755164-819.jpg';
-      default:
-        return 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png';
-    }
-  };
+        const getAvatarImage = (user) => {
+            if (!user) return null;
+            
+            const isMale = user.gender === 'male' || !user.gender; // Default to male if gender not specified
+            
+            switch (user.role) {
+              case 'admin':
+                return 'https://cdn.vectorstock.com/i/1000v/37/11/man-manager-administrator-consultant-avatar-vector-35753711.jpg';
+              case 'owner':
+                return isMale 
+                  ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTslXAW6sPGW_hBPruTQwtsCeLQHqxeJEdiag&s'
+                  : 'https://img.freepik.com/premium-vector/business-woman-character-vector-illustration_1133257-2432.jpg?semt=ais_hybrid&w=740';
+              case 'client':
+                return isMale 
+                  ? 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png'
+                  : 'https://img.freepik.com/premium-vector/woman-spa-client-icon-flat-color-style_755164-819.jpg';
+              default:
+                return 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png';
+            }
+          };
 
-  const regularNavLinks = [
-    { to: "/", label: "home" },
-    { to: "/about", label: "about" },
+    const regularNavLinks = [
+    { to: "/", label: "home" , icon: FaHome},
+
+    { to: "/about", label: "about" , icon: FaInfoCircle},
+
     // { to: "/coming-soon", label: "comingSoon" },
-    { to: "/books", label: "books" },
-    { to: "/contact", label: "contact" },
+    { to: "/books", label: "books" , icon: FaBook},
+    { to: "/edit-client-profile", label: "Profile", icon: FaUserEdit },
+    { to: "/contact", label: "contact" , icon: FaEnvelope},
+    
   ];
 
-  const ownerNavLinks = [
-    { to: "/dashboard", label: "dashboard" },
-    { to: "/edit-profile", label: "editProfile" },
-    { to: "/add-book", label: "addBook" },
-    { to: "/libraries", label: "allLibraries" },
-    { to: "/all-orders", label: "orders" },
+    const ownerNavLinks = [
+    { to: "/dashboard", label: "dashboard" , icon: FaTachometerAlt},
+    // { to: "/edit-profile", label: "editProfile" , icon: FaUserEdit},
+    { to: "/add-book", label: "Book" , icon: FaBook},
+    { to: "/libraries", label: "Libraries" , icon: FaBook},
+    { to: "/all-orders", label: "orders" , icon: FaBoxOpen},
   ];
 
-  const adminNavLinks = [
-    { to: "/admin/dashboard", label: "adminDashboard" },
-
-    { to: "/admin/users", label: "users" },
-    { to: "/admin/categories", label: "categories" },
-    { to: "/admin/books", label: "books" },
-    { to: "/admin/orders", label: "orders" },
+    const adminNavLinks = [
+    { to: "/admin/dashboard", label: "adminDashboard" , icon: FaTachometerAlt},
+    { to: "/admin/users", label: "users" , icon: FaUser},
+    { to: "/admin/categories", label: "categories" , icon: FaBook},
+    { to: "/admin/books", label: "books" , icon: FaBook},
+    { to: "/admin/orders", label: "orders" , icon: FaBoxOpen},
   ];
 
   const navLinks = user?.role === "admin"
-    ? adminNavLinks
-    : isLibraryOwner
-      ? ownerNavLinks
+            ? adminNavLinks
+            : isLibraryOwner
+                ? ownerNavLinks
       : regularNavLinks;
       
 
@@ -106,41 +109,41 @@ const Navbar = () => {
   const closeMobileMenu = () => setIsOpen(false);
   const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
 
-  useEffect(() => {
+    useEffect(() => {
     const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      try {
+        if (storedUser) {
+            try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
-      } catch {
+            } catch {
         setUser(null);
-      }
-    } else {
+            }
+        } else {
       setUser(null);
-    }
+        }
   }, []);
 
   // Listen for changes in readNotifications to update notification count
-  useEffect(() => {
-    const handleStorageChange = () => {
+    useEffect(() => {
+        const handleStorageChange = () => {
       const stored = localStorage.getItem('readNotifications');
-      if (stored) {
+            if (stored) {
         setReadNotifications(JSON.parse(stored));
-      }
+            }
     };
 
     window.addEventListener('storage', handleStorageChange);
-    
+
     // Also listen for custom events
     window.addEventListener('notificationRead', handleStorageChange);
-    
-    return () => {
+
+        return () => {
       window.removeEventListener('storage', handleStorageChange);
       window.removeEventListener('notificationRead', handleStorageChange);
     };
   }, []);
 
-  const handleLogout = () => {
+    const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
     setUser(null);
@@ -148,7 +151,7 @@ const Navbar = () => {
   };
 
   const handleProtectedAction = (path) => {
-    if (!user) {
+        if (!user) {
       navigate("/login", { state: { from: path } });
       return;
     }
@@ -156,21 +159,21 @@ const Navbar = () => {
   };
 
   // Notifications for client
-  const clientOrderNotifications = useMemo(() => {
+    const clientOrderNotifications = useMemo(() => {
     if (!user || user.role !== 'client' || !orders) return [];
     // Only show notifications for orders that are not pending
-    return orders
+        return orders
       .filter(order => order.status === 'accepted' || order.status === 'rejected')
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }, [user, orders]);
 
-  const unreadNotifications = useMemo(() => {
+    const unreadNotifications = useMemo(() => {
     if (!user || user.role !== 'client' || !orders) return [];
     return clientOrderNotifications.filter(n => !readNotifications.includes(n.id));
   }, [user, orders, clientOrderNotifications, readNotifications]);
 
-  const handleShowNotifications = async () => {
-    if (!showClientNotifications) {
+    const handleShowNotifications = async () => {
+        if (!showClientNotifications) {
       await fetchOrders(); // fetch latest orders before showing notifications
     }
     setShowClientNotifications(v => !v);
@@ -189,47 +192,47 @@ const Navbar = () => {
 
   const avatarImage = getAvatarImage(user);
 
-  return (
-    <>
-      <header className="bookshare-navbar">
-        <div className="navbar-header">
-          <div className="navbar-content-wrapper">
-            <div className="navbar-header-container">
-              <Link to="/" className="company-title-link">
-                <h1 className="company-title">
+    return (
+        <>
+            <header className="bookshare-navbar">
+                <div className="navbar-header">
+                    <div className="navbar-content-wrapper">
+                        <div className="navbar-header-container">
+                            <Link to="/" className="company-title-link">
+                                <h1 className="company-title">
                   {t('book')}<span className="company-title-accent">{t('share')}</span>
-                </h1>
-                <p className="company-subtitle">
+                                </h1>
+                                <p className="company-subtitle">
                   {t('publishingExcellence')}
-                </p>
-              </Link>
-            </div>
-          </div>
-        </div>
+                                </p>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
 
-        <nav className="navbar-nav">
-          <div className="navbar-content-wrapper">
-            <div className="navbar-content">
-              <div className="nav-links-desktop">
+                <nav className="navbar-nav">
+                    <div className="navbar-content-wrapper">
+                        <div className="navbar-content">
+                            <div className="nav-links-desktop">
                 {navLinks.map((link) => {
                   const isActive = navLocation.pathname === link.to;
                   const IconComponent = link.icon;
-                  return (
-                    <Link
+                                    return (
+                                        <Link
                       key={link.label}
-                      to={link.to}
+                                            to={link.to}
                       className={`nav-link${isActive ? " active" : ""}`}
-                      style={{
+                                            style={{
                         background: isActive ? "#90a4b8" : "transparent",
                         color: isActive ? "white" : "#222",
-                        borderRadius: "2rem",
-                        padding: "0.5rem 1.2rem",
+                                                borderRadius: "2rem",
+                                                padding: "0.5rem 1.2rem",
                         fontWeight: isActive ? 700 : 500,
                         transition: "background 0.2s, color 0.2s",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                      }}
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "0.5rem",
+                                            }}
                       onMouseOver={(e) => {
                         if (!isActive) {
                           e.currentTarget.style.background = "#e3e9f1";
@@ -242,167 +245,167 @@ const Navbar = () => {
                       }}
                     >
                       {IconComponent && <IconComponent size={16} />}
-                      {t(link.label)}
-                    </Link>
+                                            {t(link.label)}
+                                        </Link>
                   );
-                })}
-              </div>
+                                })}
+                            </div>
 
-              <div className="navbar-actions">
-                <button
-                  className="icon-button"
+                            <div className="navbar-actions">
+                                <button
+                                    className="icon-button"
                   title={t('search')}
-                  onClick={toggleSearch}
-                >
-                  <FaSearch size={18} />
-                </button>
+                                    onClick={toggleSearch}
+                                >
+                                    <FaSearch size={18} />
+                                </button>
 
-                <LanguageSwitcher />
+                                <LanguageSwitcher />
 
                 {/* Client Notifications Bell */}
                 {user?.role === 'client' && (
-                  <div className="client-notification-section">
-                    <button
-                      className="icon-button client-notification-btn"
+                                    <div className="client-notification-section">
+                                        <button
+                                            className="icon-button client-notification-btn"
                       title={t('notifications')}
-                      onClick={handleShowNotifications}
-                    >
-                      <FaBell size={20} />
-                      {unreadNotifications.length > 0 && (
+                                            onClick={handleShowNotifications}
+                                        >
+                                            <FaBell size={20} />
+                                            {unreadNotifications.length > 0 && (
                         <span className="client-notification-badge">{unreadNotifications.length}</span>
-                      )}
-                    </button>
-                    {showClientNotifications && (
-                      <div className="client-notification-dropdown">
-                        <h4>Order Updates</h4>
-                        <div className="client-notifications-scroll-container">
+                                            )}
+                                        </button>
+                                        {showClientNotifications && (
+                                            <div className="client-notification-dropdown">
+                                                <h4>Order Updates</h4>
+                                                <div className="client-notifications-scroll-container">
                           {unreadNotifications.length === 0 ? (
                             <div className="no-notifications">No notifications</div>
                           ) : (
                             unreadNotifications.slice(0, 2).map((order, index) => (
                               <div key={order.id} className={`client-notification-item ${index === 0 ? 'first-notification' : ''}`}>
-                                <div className="client-notification-row">
-                                  <span className="client-notif-icon">
+                                                                    <div className="client-notification-row">
+                                                                        <span className="client-notif-icon">
                                     {order.status === 'accepted' ? '✅' : '❌'}
-                                  </span>
-                                  <span className="client-notification-message">
+                                                                        </span>
+                                                                        <span className="client-notification-message">
                                     Your order for <span className="client-notif-book">"{order.order_items?.[0]?.book?.title || 'a book'}"</span> was
                                     <span className={order.status === 'accepted' ? 'notif-accepted' : 'notif-rejected'}>
                                       {order.status === 'accepted' ? ' accepted' : ' rejected'}
-                                    </span>
-                                  </span>
+                                                                            </span>
+                                                                        </span>
                                   {index === 0 && (
                                     <span className="new-badge">new</span>
                                   )}
-                                </div>
-                                <div className="client-notification-meta">
+                                                                    </div>
+                                                                    <div className="client-notification-meta">
                                   <small>{new Date(order.updated_at).toLocaleString()}</small>
-                                  <Link
-                                    to={`/orders/${order.id}`}
-                                    className="client-notification-link-btn"
+                                                                        <Link
+                                                                            to={`/orders/${order.id}`}
+                                                                            className="client-notification-link-btn"
                                     onClick={() => handleNotificationView(order.id)}
-                                  >
-                                    View
-                                  </Link>
-                                </div>
-                              </div>
-                            ))
-                          )}
-                        </div>
+                                                                        >
+                                                                            View
+                                                                        </Link>
+                                                                    </div>
+                                                                </div>
+                                                            ))
+                                                    )}
+                                                </div>
                         {unreadNotifications.length > 0 && (
-                          <div className="client-view-all-notifications">
+                                                        <div className="client-view-all-notifications">
                             <Link to="/client-notifications" className="client-view-all-link">
                               View All Notifications ({unreadNotifications.length})
-                            </Link>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
-                )}
+                                                            </Link>
+                                                        </div>
+                                                    )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
 
-                {user?.role !== "admin" && !isLibraryOwner && (
-                  <>
-                    <button
-                      className="icon-button wishlist-badge"
+                                {user?.role !== "admin" && !isLibraryOwner && (
+                                    <>
+                                        <button
+                                            className="icon-button wishlist-badge"
                       title={t('wishlist')}
                       onClick={() => handleProtectedAction("/wishlist")}
-                    >
-                      <FaHeart size={18} />
-                      {wishlistCount > 0 && (
+                                        >
+                                            <FaHeart size={18} />
+                                            {wishlistCount > 0 && (
                         <span className="wishlist-count">{wishlistCount}</span>
-                      )}
-                    </button>
+                                            )}
+                                        </button>
 
-                    <button
-                      className="icon-button order-badge"
+                                        <button
+                                            className="icon-button order-badge"
                       title={t('orders')}
                       onClick={() => handleProtectedAction("/orders")}
-                    >
-                      <FaBoxOpen size={18} />
-                      {ordersCount > 0 && (
+                                        >
+                                            <FaBoxOpen size={18} />
+                                            {ordersCount > 0 && (
                         <span className="order-count">{ordersCount}</span>
-                      )}
-                    </button>
+                                            )}
+                                        </button>
 
-                    <button
-                      className="icon-button cart-badge"
+                                        <button
+                                            className="icon-button cart-badge"
                       title={t('cart')}
                       onClick={() => handleProtectedAction("/cart")}
-                    >
-                      <FaShoppingCart size={18} />
-                      {cartCount > 0 && (
+                                        >
+                                            <FaShoppingCart size={18} />
+                                            {cartCount > 0 && (
                         <span className="cart-count">{cartCount}</span>
-                      )}
-                    </button>
-                  </>
-                )}
+                                            )}
+                                        </button>
+                                    </>
+                                )}
 
-                {isLibraryOwner && (
-                  <>
-                    <button
-                      className="icon-button"
+                                {isLibraryOwner && (
+                                    <>
+                                        <button
+                                            className="icon-button"
                       title={t('dashboard')}
                       onClick={() => navigate("/dashboard")}
-                      style={{
-                        background: "#3B82F6",
-                        color: "white",
-                      }}
-                    >
-                      <FaBook size={18} />
-                    </button>
-                    <button
-                      className="icon-button"
+                                            style={{
+                                                background: "#3B82F6",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <FaBook size={18} />
+                                        </button>
+                                        <button
+                                            className="icon-button"
                       title={t('editProfile')}
                       onClick={() => navigate("/edit-profile")}
-                      style={{
-                        background: "#10B981",
-                        color: "white",
-                      }}
-                    >
-                      <FaUserEdit size={18} />
-                    </button>
-                  </>
-                )}
+                                            style={{
+                                                background: "#10B981",
+                                                color: "white",
+                                            }}
+                                        >
+                                            <FaUserEdit size={18} />
+                                        </button>
+                                    </>
+                                )}
 
-                <div className="auth-buttons-desktop">
-                  {!user ? (
-                    <>
+                                <div className="auth-buttons-desktop">
+                                    {!user ? (
+                                        <>
                       <Link to="/login" className="btn btn-outline">
                         {t('signIn')}
-                      </Link>
+                                            </Link>
                       <Link to="/register" className="btn btn-primary">
                         {t('register')}
-                      </Link>
-                    </>
-                  ) : (
-                    <>
+                                            </Link>
+                                        </>
+                                    ) : (
+                                        <>
                       <div className="user-avatar-section">
                         <img 
                           src={avatarImage} 
                           alt="User Avatar" 
                           className="user-avatar"
-                          style={{
+                                                style={{
                             width: "40px",
                             height: "40px",
                             borderRadius: "50%",
@@ -410,6 +413,7 @@ const Navbar = () => {
                             border: "2px solid #e5e7eb",
                             cursor: "pointer",
                             transition: "transform 0.2s ease",
+                            marginRight: 8
                           }}
                           onMouseOver={(e) => {
                             e.target.style.transform = "scale(1.1)";
@@ -418,225 +422,214 @@ const Navbar = () => {
                             e.target.style.transform = "scale(1)";
                           }}
                         />
-                        <div className="user-info">
-                          {isLibraryOwner && (
-                            <span style={{ fontSize: "0.8rem", color: "#3B82F6", fontWeight: 600 }}>
-                              {t('libraryOwner')}
-                            </span>
+                        <div className="user-info" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
+                          <span style={{ fontWeight: 600, color: '#222', fontSize: '1.05rem', lineHeight: 1 }}>{user.name?.split(' ')[0] || t('user')}</span>
+                                                {isLibraryOwner && (
+                            <span style={{ fontSize: "0.8rem", color: "#3B82F6", fontWeight: 600 }}>{t('libraryOwner')}</span>
                           )}
                           {user.role === "admin" && (
-                            <span style={{ fontSize: "0.8rem", color: "#EF4444", fontWeight: 600 }}>
-                              Administrator
-                            </span>
+                            <span style={{ fontSize: "0.8rem", color: "#EF4444", fontWeight: 600 }}>Administrator</span>
                           )}
                           {user.role === "client" && (
-                            <span style={{ fontSize: "0.8rem", color: "#10B981", fontWeight: 600 }}>
-                              Client
-                            </span>
+                            <span style={{ fontSize: "0.8rem", color: "#10B981", fontWeight: 600 }}>Client</span>
                           )}
                         </div>
                       </div>
-                      <button
-                        className="btn"
-                        style={{
-                          background: "#EF4444",
-                          color: "white",
-                          fontWeight: 600,
-                          borderRadius: "2rem",
-                          padding: "0.4rem 1.2rem",
-                          border: "none",
-                        }}
-                        onClick={handleLogout}
-                      >
+                                            <button
+                                                className="btn"
+                                                style={{
+                                                    background: "#EF4444",
+                                                    color: "white",
+                                                    fontWeight: 600,
+                                                    borderRadius: "2rem",
+                                                    padding: "0.4rem 1.2rem",
+                                                    border: "none",
+                                                }}
+                                                onClick={handleLogout}
+                                            >
                         {t('logout')}
-                      </button>
-                    </>
-                  )}
-                </div>
+                                            </button>
+                                        </>
+                                    )}
+                                </div>
 
-                <button
-                  className="mobile-menu-toggle icon-button"
-                  onClick={toggleMobileMenu}
+                                <button
+                                    className="mobile-menu-toggle icon-button"
+                                    onClick={toggleMobileMenu}
                   title={t('menu')}
-                >
-                  <FaBars size={20} />
-                </button>
-              </div>
-            </div>
-          </div>
-        </nav>
-      </header>
+                                >
+                                    <FaBars size={20} />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </nav>
+            </header>
 
-      <SearchModal
-        isOpen={isSearchOpen}
-        onClose={() => setIsSearchOpen(false)}
-      />
+            <SearchModal
+                isOpen={isSearchOpen}
+                onClose={() => setIsSearchOpen(false)}
+            />
 
-      <div
-        className={`overlay ${isOpen ? "open" : ""}`}
-        onClick={closeMobileMenu}
-      ></div>
+            <div
+                className={`overlay ${isOpen ? "open" : ""}`}
+                onClick={closeMobileMenu}
+            ></div>
 
-      <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
-        <div className="mobile-menu-content">
-          <button
-            className="icon-button mobile-close-button"
-            onClick={closeMobileMenu}
+            <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
+                <div className="mobile-menu-content">
+                    <button
+                        className="icon-button mobile-close-button"
+                        onClick={closeMobileMenu}
             title={t('closeMenu')}
-          >
-            <FaTimes size={20} />
-          </button>
+                    >
+                        <FaTimes size={20} />
+                    </button>
 
-          <div className="mobile-auth-section">
-            {!user ? (
-              <>
-                <Link
-                  to="/register"
-                  className="btn btn-primary"
-                  onClick={closeMobileMenu}
-                >
+                    <div className="mobile-auth-section">
+                        {!user ? (
+                            <>
+                                <Link
+                                    to="/register"
+                                    className="btn btn-primary"
+                                    onClick={closeMobileMenu}
+                                >
                   {t('register')}
-                </Link>
-                <Link
-                  to="/login"
-                  className="btn btn-outline"
-                  onClick={closeMobileMenu}
-                >
+                                </Link>
+                                <Link
+                                    to="/login"
+                                    className="btn btn-outline"
+                                    onClick={closeMobileMenu}
+                                >
                   {t('signIn')}
-                </Link>
-              </>
-            ) : (
-              <>
-                <div className="mobile-user-avatar-section">
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                <div className="mobile-user-avatar-section" style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                   <img 
                     src={avatarImage} 
                     alt="User Avatar" 
                     className="mobile-user-avatar"
-                    style={{
+                                    style={{
                       width: "50px",
                       height: "50px",
                       borderRadius: "50%",
                       objectFit: "cover",
                       border: "2px solid #e5e7eb",
-                      marginBottom: "0.5rem",
+                      marginBottom: "0.5rem"
                     }}
                   />
-                  <span
-                    style={{
-                      fontWeight: 600,
-                      color: isLibraryOwner ? "#3B82F6" : user.role === "admin" ? "#EF4444" : "#10B981",
-                      fontSize: "1rem",
-                      textAlign: "center",
-                    }}
-                  >
+                  <span style={{ fontWeight: 600, color: '#222', fontSize: '1rem', textAlign: 'center', marginBottom: 2 }}>{user.name?.split(' ')[0] || t('user')}</span>
+                  <span style={{ fontSize: "0.8rem", color: isLibraryOwner ? "#3B82F6" : user.role === "admin" ? "#EF4444" : "#10B981", fontWeight: 600, textAlign: 'center' }}>
                     {isLibraryOwner && t('libraryOwner')}
                     {user.role === "admin" && "Administrator"}
                     {user.role === "client" && "Client"}
-                  </span>
+                                        </span>
                 </div>
-                <button
-                  className="btn"
-                  style={{
-                    background: "#EF4444",
-                    color: "white",
-                    fontWeight: 600,
-                    borderRadius: "2rem",
-                    padding: "0.4rem 1.2rem",
-                    border: "none",
-                  }}
-                  onClick={() => {
+                                <button
+                                    className="btn"
+                                    style={{
+                                        background: "#EF4444",
+                                        color: "white",
+                                        fontWeight: 600,
+                                        borderRadius: "2rem",
+                                        padding: "0.4rem 1.2rem",
+                                        border: "none",
+                                    }}
+                                    onClick={() => {
                     handleLogout();
                     closeMobileMenu();
-                  }}
-                >
+                                    }}
+                                >
                   {t('logout')}
-                </button>
-              </>
-            )}
-          </div>
+                                </button>
+                            </>
+                        )}
+                    </div>
 
-          <div className="mobile-nav-links">
+                    <div className="mobile-nav-links">
             {navLinks.map((link) => {
               const isActive = navLocation.pathname === link.to;
               const IconComponent = link.icon;
-              return (
-                <Link
+                            return (
+                                <Link
                   key={link.label}
-                  to={link.to}
+                                    to={link.to}
                   className={`mobile-nav-link${isActive ? " active" : ""}`}
-                  onClick={closeMobileMenu}
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
+                                    onClick={closeMobileMenu}
+                                    style={{
+                                        display: "flex",
+                                        alignItems: "center",
+                                        gap: "0.5rem",
+                                    }}
+                                >
                   {IconComponent && <IconComponent size={16} />}
-                  {t(link.label)}
-                </Link>
+                                    {t(link.label)}
+                                </Link>
               );
-            })}
-          </div>
+                        })}
+                    </div>
 
-          <div className="mobile-account-section">
-            {!isLibraryOwner ? (
-              <>
-                <Link
-                  to="/wishlist"
-                  className="mobile-account-link"
-                  onClick={closeMobileMenu}
-                >
+                    <div className="mobile-account-section">
+                        {!isLibraryOwner ? (
+                            <>
+                                <Link
+                                    to="/wishlist"
+                                    className="mobile-account-link"
+                                    onClick={closeMobileMenu}
+                                >
                   {t('wishlist')} ({wishlistCount})
-                </Link>
-                <Link
-                  to="/cart"
-                  className="mobile-account-link"
-                  onClick={closeMobileMenu}
-                >
+                                </Link>
+                                <Link
+                                    to="/cart"
+                                    className="mobile-account-link"
+                                    onClick={closeMobileMenu}
+                                >
                   {t('cart')} ({cartCount})
-                </Link>
-                <Link
-                  to="/orders"
-                  className="mobile-account-link"
-                  onClick={closeMobileMenu}
-                >
+                                </Link>
+                                <Link
+                                    to="/orders"
+                                    className="mobile-account-link"
+                                    onClick={closeMobileMenu}
+                                >
                   {t('orders')} ({ordersCount})
-                </Link>
-                <Link
-                  to="/client-notifications"
-                  className="mobile-account-link"
-                  onClick={closeMobileMenu}
-                >
+                                </Link>
+                                <Link
+                                    to="/client-notifications"
+                                    className="mobile-account-link"
+                                    onClick={closeMobileMenu}
+                                >
                   <FaBell size={16} style={{ marginRight: "0.5rem" }} />
-                  Notifications ({unreadNotifications.length})
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/dashboard"
-                  className="mobile-account-link"
-                  onClick={closeMobileMenu}
+                                    Notifications ({unreadNotifications.length})
+                                </Link>
+                            </>
+                        ) : (
+                            <>
+                                <Link
+                                    to="/dashboard"
+                                    className="mobile-account-link"
+                                    onClick={closeMobileMenu}
                   style={{ color: "#3B82F6", fontWeight: 600 }}
                 >
                   <FaTachometerAlt size={16} style={{ marginRight: "0.5rem" }} />
                   {t('dashboard')}
-                </Link>
-                <Link
-                  to="/edit-profile"
-                  className="mobile-account-link"
-                  onClick={closeMobileMenu}
+                                </Link>
+                                <Link
+                                    to="/edit-profile"
+                                    className="mobile-account-link"
+                                    onClick={closeMobileMenu}
                   style={{ color: "#10B981", fontWeight: 600 }}
                 >
                   <FaUserEdit size={16} style={{ marginRight: "0.5rem" }} />
                   {t('editProfile')}
-                </Link>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    </>
+                                </Link>
+                            </>
+                        )}
+                    </div>
+                </div>
+            </div>
+        </>
   );
 };
 

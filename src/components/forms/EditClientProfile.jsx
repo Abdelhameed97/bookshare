@@ -5,18 +5,17 @@ import {
   Phone, 
   MapPin, 
   Save, 
-  Camera,
   Eye,
   EyeOff
 } from 'lucide-react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import apiService from '../../services/api';
 import Swal from 'sweetalert2';
 import Navbar from '../HomePage/Navbar';
 import Footer from '../HomePage/Footer';
-import './EditProfile.css';
+import '../Library/EditProfile.css';
 
-const EditProfile = () => {
+const EditClientProfile = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [formData, setFormData] = useState({
     name: '',
@@ -35,7 +34,6 @@ const EditProfile = () => {
   const [errors, setErrors] = useState({});
   
   const navigate = useNavigate();
-  const location = useLocation();
   
   // Memoize currentUser to prevent unnecessary re-renders
   const currentUser = useMemo(() => {
@@ -51,11 +49,10 @@ const EditProfile = () => {
   }, []);
 
   useEffect(() => {
-    if (!currentUser || currentUser.role !== 'owner') {
+    if (!currentUser || currentUser.role !== 'client') {
       navigate('/login');
       return;
     }
-    
     // Load current user data
     setFormData({
       name: currentUser.name || '',
@@ -75,8 +72,6 @@ const EditProfile = () => {
       ...prev,
       [name]: value
     }));
-    
-    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -87,22 +82,17 @@ const EditProfile = () => {
 
   const validateForm = (e) => {
     const newErrors = {};
-
-    // Basic validation
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
-
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
-
     if (formData.phone_number && !/^01[0-9]\d{8}$/.test(formData.phone_number)) {
       newErrors.phone_number = 'Phone number must be a valid 11-digit Egyptian mobile number.';
     }
-
     // National ID validation (only if not set)
     if (!currentUser.national_id) {
       if (!formData.national_id.trim()) {
@@ -111,107 +101,68 @@ const EditProfile = () => {
         newErrors.national_id = 'National ID must be 14 digits.';
       }
     }
-
     // Password validation logic
     const isChangingPassword = formData.new_password || formData.confirm_password || formData.current_password;
-
-    // If on the password tab, and fields are empty, but user clicks save, show errors.
-    // Or if user has started filling any password field, enforce all fields.
     if ((activeTab === 'password' && !isChangingPassword && e?.type === 'submit') || isChangingPassword) {
       if (!formData.current_password) {
         newErrors.current_password = 'Current password is required.';
       }
-
       if (!formData.new_password) {
         newErrors.new_password = 'New password is required.';
       } else if (formData.new_password.length < 6) {
         newErrors.new_password = 'New password must be at least 6 characters.';
       }
-      
       if (!formData.confirm_password) {
         newErrors.confirm_password = 'Please confirm your new password.';
       } else if (formData.new_password !== formData.confirm_password) {
         newErrors.confirm_password = 'Passwords do not match.';
       }
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm(e)) {
       return;
     }
-
     try {
       setLoading(true);
-      console.log('=== PROFILE UPDATE DEBUG ===');
-      console.log('Current user:', currentUser);
-      console.log('Form data:', formData);
-      console.log('Token:', localStorage.getItem('token'));
-
-      // Prepare data for update - match backend field names
       const updateData = {
         name: formData.name,
         email: formData.email,
         phone_number: formData.phone_number,
         location: formData.location,
       };
-
-      // Add national_id if not set
       if (!currentUser.national_id && formData.national_id) {
         updateData.national_id = formData.national_id;
       }
-
-      // Add password fields if user wants to change password
       if (formData.new_password) {
         updateData.password = formData.new_password;
         updateData.password_confirmation = formData.confirm_password;
         updateData.current_password = formData.current_password;
       }
-
-      console.log('Sending update data:', updateData);
-      console.log('API endpoint:', `/users/${currentUser.id}`);
-
-      // Use the API service method
       const response = await apiService.updateUser(currentUser.id, updateData);
-      
-      console.log('Response received:', response);
-      console.log('Response data:', response.data);
-
       const passwordWasChanged = !!formData.new_password;
-
       if (passwordWasChanged) {
-        // Log user out by clearing local storage
         localStorage.removeItem('user');
         localStorage.removeItem('token');
-
         await Swal.fire({
           icon: 'success',
           title: 'Password Updated!',
           text: 'Your password has been changed successfully. Please log in again.',
         });
-
-        // Redirect to login page
         navigate('/login');
-
       } else {
-        // Update local storage with new user data if only profile info was changed
         const updatedUser = { ...currentUser, ...response.data.data };
         localStorage.setItem('user', JSON.stringify(updatedUser));
-        console.log('Updated user in localStorage:', updatedUser);
-
         await Swal.fire({
           icon: 'success',
           title: 'Profile Updated!',
           text: 'Your profile has been updated successfully.',
           timer: 2000
         });
-
-        // Clear password fields
         setFormData(prev => ({
           ...prev,
           current_password: '',
@@ -219,32 +170,17 @@ const EditProfile = () => {
           confirm_password: ''
         }));
       }
-
     } catch (error) {
-      console.error('=== PROFILE UPDATE ERROR ===');
-      console.error('Error object:', error);
-      console.error('Error response:', error.response);
-      console.error('Error status:', error.response?.status);
-      console.error('Error data:', error.response?.data);
-      console.error('Error message:', error.message);
-      
       let errorMessage = 'Failed to update profile';
-      
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.errors) {
-        // Handle validation errors
         const validationErrors = error.response.data.errors;
-        console.error('Validation errors:', validationErrors);
         const errorMessages = Object.values(validationErrors).flat();
         errorMessage = errorMessages.join(', ');
       } else if (error.message) {
         errorMessage = error.message;
       }
-      
-      console.error('Final error message:', errorMessage);
-      
-      // Specifically check for incorrect current password error
       if (error.response?.data?.errors?.current_password) {
         Swal.fire({
           icon: 'error',
@@ -264,7 +200,7 @@ const EditProfile = () => {
   };
 
   const handleCancel = () => {
-    navigate('/dashboard');
+    navigate('/');
   };
 
   if (!currentUser) {
@@ -278,9 +214,8 @@ const EditProfile = () => {
         <div className="edit-profile-card">
           <div className="profile-header">
             <h1>Edit Profile</h1>
-            <p>Update your library owner profile information</p>
+            <p>Update your client profile information</p>
           </div>
-
           <div className="profile-tabs">
             <button
               className={`tab-button ${activeTab === 'personal' ? 'active' : ''}`}
@@ -295,12 +230,10 @@ const EditProfile = () => {
               Change Password
             </button>
           </div>
-
           <form onSubmit={handleSubmit} className="profile-form">
             {activeTab === 'personal' && (
               <div className="form-section">
                 <h2>Personal Information</h2>
-                
                 <div className="form-group">
                   <label htmlFor="name">
                     <User size={18} />
@@ -318,7 +251,6 @@ const EditProfile = () => {
                   />
                   {errors.name && <span className="error-message">{errors.name}</span>}
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="email">
                     <Mail size={18} />
@@ -336,7 +268,6 @@ const EditProfile = () => {
                   />
                   {errors.email && <span className="error-message">{errors.email}</span>}
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="phone_number">
                     <Phone size={18} />
@@ -353,7 +284,6 @@ const EditProfile = () => {
                   />
                   {errors.phone_number && <span className="error-message">{errors.phone_number}</span>}
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="location">
                     <MapPin size={18} />
@@ -368,7 +298,7 @@ const EditProfile = () => {
                     rows="3"
                   />
                 </div>
-
+                {/* National ID Field */}
                 <div className="form-group">
                   <label htmlFor="national_id">
                     الرقم القومي (National ID)
@@ -398,7 +328,6 @@ const EditProfile = () => {
                 </div>
               </div>
             )}
-
             {activeTab === 'password' && (
               <div className="form-section">
                 <h2>Change Password</h2>
@@ -406,7 +335,6 @@ const EditProfile = () => {
                   Leave blank if you don't want to change your password. 
                   New password must be at least 6 characters long.
                 </p>
-                
                 <div className="form-group">
                   <label htmlFor="current_password">
                     <Eye size={18} />
@@ -433,7 +361,6 @@ const EditProfile = () => {
                   </div>
                   {errors.current_password && <span className="error-message">{errors.current_password}</span>}
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="new_password">
                     <Eye size={18} />
@@ -465,7 +392,6 @@ const EditProfile = () => {
                     </small>
                   )}
                 </div>
-
                 <div className="form-group">
                   <label htmlFor="confirm_password">
                     <Eye size={18} />
@@ -504,7 +430,6 @@ const EditProfile = () => {
                 </div>
               </div>
             )}
-
             {/* Form Actions */}
             <div className="form-actions">
               <button
@@ -535,4 +460,4 @@ const EditProfile = () => {
   );
 };
 
-export default EditProfile; 
+export default EditClientProfile; 

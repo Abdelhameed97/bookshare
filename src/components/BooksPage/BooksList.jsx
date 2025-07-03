@@ -11,6 +11,7 @@ import {
   List,
   Loader2,
   Check,
+    Box,
 } from "lucide-react";
 import HomePageTitle from "../shared/HomePageTitle";
 import HomePageButton from "../shared/HomePageButton";
@@ -80,8 +81,8 @@ const BooksList = () => {
               ? book.images[0]
               : `http://localhost:8000/storage/${book.images[0]}`
             : "/placeholder.svg?height=300&width=200",
-          price: `${book.price} $`,
-          originalPrice: book.rental_price ? `${book.rental_price} $` : null,
+          price: `${book.price}$`,
+          originalPrice: book.rental_price ? `${book.rental_price}$` : null,
           title: book.title,
           author: book.user?.name || "Unknown Author",
           rating: book.ratings?.length
@@ -102,6 +103,7 @@ const BooksList = () => {
               : "New",
           category: book.category?.name || "Uncategorized",
           description: book.description || "No description available",
+          quantity: book.quantity,
         }));
 
         setBooks(processedBooks);
@@ -446,7 +448,7 @@ const BooksList = () => {
               </div>
 
               {/* Book Image */}
-              <div className="book-image-container">
+              <div className="book-image-container" style={{ position: 'relative' }}>
                 <img
                   src={book.image}
                   alt={book.title}
@@ -455,11 +457,55 @@ const BooksList = () => {
                   height="320"
                   loading="lazy"
                   onError={(e) => {
-                    e.currentTarget.src =
-                      "/placeholder.svg?height=300&width=200";
+                    e.currentTarget.src = "/placeholder.svg?height=300&width=200";
                   }}
                 />
                 <div className="image-overlay"></div>
+
+                {/* Modern Quantity/Out of Stock Badge - bottom right over image */}
+                {typeof book.quantity !== 'undefined' && (
+                  <span
+                    className={
+                      book.quantity === 0
+                        ? "quantity-badge-modern out-of-stock-badge-modern position-absolute"
+                        : "quantity-badge-modern in-stock-badge-modern position-absolute"
+                    }
+                    style={{
+                      bottom: 14,
+                      right: 14,
+                      borderRadius: '999px',
+                      padding: '0.38em 1.3em 0.38em 1em',
+                      fontSize: '1.05rem',
+                      fontWeight: 700,
+                      zIndex: 3,
+                      boxShadow: '0 4px 16px rgba(0,0,0,0.13)',
+                      background: book.quantity === 0
+                        ? 'linear-gradient(90deg, #e53935 60%, #ff5252 100%)'
+                        : 'linear-gradient(90deg, #1976d2 60%, #64b5f6 100%)',
+                      color: '#fff',
+                      letterSpacing: '0.01em',
+                      minWidth: 90,
+                      textAlign: 'center',
+                      border: '2.5px solid #fff',
+                      lineHeight: 1.2,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 7,
+                    }}
+                  >
+                    {book.quantity === 0 ? (
+                      <>
+                        <span style={{ display: 'flex', alignItems: 'center', fontSize: '1.1em', marginRight: 4 }}>❌</span>
+                        Out of Stock
+                      </>
+                    ) : (
+                      <>
+                        <Box size={17} style={{ marginRight: 4, marginBottom: 1 }} />
+                        {`Qty: ${book.quantity}`}
+                      </>
+                    )}
+                  </span>
+                )}
 
                 {/* Hover Actions */}
                 <div className="hover-actions">
@@ -474,7 +520,7 @@ const BooksList = () => {
                   ) : (
                     <>
                       <button
-                        className={`action-button favorite ${isInWishlist(book.id) ? "active" : ""}`}
+                        className={`action-button favorite EGP{isInWishlist(book.id) ? "active" : ""}`}
                         onClick={() => handleAddToWishlist(book.id)}
                         aria-label={
                           isInWishlist(book.id)
@@ -495,7 +541,7 @@ const BooksList = () => {
                         <Eye size={18} />
                       </button>
                       <button
-                        className={`action-button cart ${isInCart(book.id) ? "disabled" : ""}`}
+                        className={`action-button cart EGP{isInCart(book.id) ? "disabled" : ""}`}
                         onClick={
                           !isInCart(book.id)
                             ? () => handleAddToCart(book.id)
@@ -552,10 +598,21 @@ const BooksList = () => {
                   <span className="current-price">{book.price}</span>
                 </div>
 
-                {/* Add to Cart Button */}
+                {/* View Details Button (for owners only) */}
+                {currentUser && currentUser.role === 'owner' && (
+                  <button
+                    className="view-details-btn btn btn-primary w-100 mt-2"
+                    onClick={() => navigate(`/books/${book.id}`)}
+                    style={{ fontWeight: 600 }}
+                  >
+                    View Details
+                  </button>
+                )}
+
+                {/* Add to Cart Button (for clients only) */}
                 {currentUser && currentUser.role === 'client' && (
                   <button
-                    className={`add-to-cart-btn ${isInCart(book.id) ? "disabled" : ""}`}
+                    className={`add-to-cart-btn EGP{isInCart(book.id) ? "disabled" : ""}`}
                     onClick={
                       !isInCart(book.id)
                         ? () => handleAddToCart(book.id)

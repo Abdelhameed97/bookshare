@@ -679,9 +679,9 @@ const Dashboard = () => {
                           <span className="rating-count">({book.ratings?.length || 0})</span>
                         </div>
                         <div className="book-pricing">
-                          <p className="book-price">${book.price}</p>
+                          <p className="book-price">{book.price}$</p>
                           {book.rental_price && (
-                            <p className="book-rental-price">Rent: ${book.rental_price}</p>
+                            <p className="book-rental-price">Rent: {book.rental_price}$</p>
                           )}
                         </div>
                         <div className="book-meta">

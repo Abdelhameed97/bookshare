@@ -26,6 +26,7 @@ import PaymentDetailsPage from './pages/PaymentDetailsPage';
 import AllOrdersPage from './components/Library/AllOrdersPage';
 import NotificationsPage from './components/Library/NotificationsPage';
 import ClientNotificationsPage from './pages/ClientNotificationsPage';
+import EditClientProfile from './components/forms/EditClientProfile';
 
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
@@ -110,6 +111,7 @@ function App() {
             <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
             <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
             <Route path="/client-notifications" element={<ClientNotificationsPage />} />
+            <Route path="/edit-client-profile" element={<EditClientProfile />} />
             
 
             {/* Admin Routes */}
