@@ -25,7 +25,6 @@ import LanguageSwitcher from "../shared/LanguageSwitcher";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
-
   const navLocation = useLocation();
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
@@ -34,15 +33,13 @@ const Navbar = () => {
 
   const { cartCount } = useCart(user?.id);
   const { wishlistCount } = useWishlist(user?.id);
-  const { orders, fetchOrders, ...restOrders } = useOrders(user?.id);
-  const ordersCount = orders.length;
+  const { orders, fetchOrders, countPendingOrders } = useOrders(user?.id);
+  const pendingOrdersCount = countPendingOrders();
+  
 
   const isLibraryOwner = user?.role === "owner";
-
   const { t, language } = useTranslation();
-
   const [showClientNotifications, setShowClientNotifications] = useState(false);
-
   const [readNotifications, setReadNotifications] = useState(() => {
     const stored = localStorage.getItem("readNotifications");
     return stored ? JSON.parse(stored) : [];
@@ -51,7 +48,6 @@ const Navbar = () => {
   const regularNavLinks = [
     { to: "/", label: "home" },
     { to: "/about", label: "about" },
-    // { to: "/coming-soon", label: "comingSoon" },
     { to: "/top-seller", label: "topSeller" },
     { to: "/books", label: "books" },
     { to: "/contact", label: "contact" },
@@ -67,7 +63,6 @@ const Navbar = () => {
 
   const adminNavLinks = [
     { to: "/admin/dashboard", label: "adminDashboard" },
-
     { to: "/admin/users", label: "users" },
     { to: "/admin/categories", label: "categories" },
     { to: "/admin/books", label: "books" },
@@ -99,7 +94,6 @@ const Navbar = () => {
     }
   }, []);
 
-  // Listen for changes in readNotifications to update notification count
   useEffect(() => {
     const handleStorageChange = () => {
       const stored = localStorage.getItem("readNotifications");
@@ -109,8 +103,6 @@ const Navbar = () => {
     };
 
     window.addEventListener("storage", handleStorageChange);
-
-    // Also listen for custom events
     window.addEventListener("notificationRead", handleStorageChange);
 
     return () => {
@@ -134,10 +126,8 @@ const Navbar = () => {
     navigate(path);
   };
 
-  // Notifications for client
   const clientOrderNotifications = useMemo(() => {
     if (!user || user.role !== "client" || !orders) return [];
-    // Only show notifications for orders that are not pending
     return orders
       .filter(
         (order) => order.status === "accepted" || order.status === "rejected"
@@ -154,7 +144,7 @@ const Navbar = () => {
 
   const handleShowNotifications = async () => {
     if (!showClientNotifications) {
-      await fetchOrders(); // fetch latest orders before showing notifications
+      await fetchOrders();
     }
     setShowClientNotifications((v) => !v);
   };
@@ -164,7 +154,6 @@ const Navbar = () => {
     setReadNotifications(updated);
     localStorage.setItem("readNotifications", JSON.stringify(updated));
 
-    // Dispatch custom event to notify other components
     window.dispatchEvent(
       new CustomEvent("notificationRead", {
         detail: { orderId: orderId },
@@ -241,7 +230,6 @@ const Navbar = () => {
 
                 <LanguageSwitcher />
 
-                {/* Client Notifications Bell */}
                 {user?.role === "client" && (
                   <div className="client-notification-section">
                     <button
@@ -351,8 +339,10 @@ const Navbar = () => {
                       onClick={() => handleProtectedAction("/orders")}
                     >
                       <FaBoxOpen size={18} />
-                      {ordersCount > 0 && (
-                        <span className="order-count">{ordersCount}</span>
+                      {pendingOrdersCount > 0 && (
+                        <span className="order-count">
+                          {pendingOrdersCount}
+                        </span>
                       )}
                     </button>
 
@@ -586,7 +576,7 @@ const Navbar = () => {
                   className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
-                  {t("orders")} ({ordersCount})
+                  {t("orders")} ({pendingOrdersCount})
                 </Link>
                 <Link
                   to="/client-notifications"

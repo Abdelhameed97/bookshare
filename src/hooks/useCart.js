@@ -105,7 +105,7 @@ export const useCart = (userId) => {
         fetchCartItems();
     }, [userId]);
 
-    const cartCount = cartItems.reduce((total, item) => total + (item.quantity || 0), 0);
+    const cartCount = cartItems.length;
     const cartTotal = cartItems.reduce((total, item) => total + (item.price || 0) * (item.quantity || 0), 0);
 
     return {

@@ -1,0 +1,252 @@
+[33mcommit af2b5ac573b0b88e327f17ea41d59fab926e7273[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mpayment[m[33m, [m[1;32mupdate-work[m[33m)[m
+Merge: 4d58882 a1db469
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sun Jun 29 18:56:01 2025 +0300
+
+    Merge pull request #55 from Abdelhameed97/payment
+    
+    Payment
+
+[33mcommit a1db469549f3ecba5de6c44d5820db53db18a805[m[33m ([m[1;31morigin/payment[m[33m)[m
+Merge: bdefda2 4d58882
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sun Jun 29 18:46:58 2025 +0300
+
+    Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+
+[33mcommit bdefda28316e5917ac2437956eb7dd3c1ba6788e[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sun Jun 29 18:46:48 2025 +0300
+
+    Add Tax, Shipping, And Coupon
+
+[33mcommit 4d588825399f6e1a8a20849c455d1897e564b683[m
+Merge: 7de4e6d fa6dbbc
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 22:47:14 2025 +0300
+
+    Merge pull request #54 from Abdelhameed97/forget-password
+    
+    Forget password
+
+[33mcommit 7de4e6d2da34ea85de0dd608a4f42787d33fd5e7[m
+Merge: cfac505 af74b76
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 22:45:28 2025 +0300
+
+    Merge pull request #53 from Abdelhameed97/payment
+    
+    Payment
+
+[33mcommit fa6dbbc90b54f78cf2096d957cea97908b1a3e67[m[33m ([m[1;31morigin/forget-password[m[33m)[m
+Merge: 75156b6 cfac505
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 22:43:15 2025 +0300
+
+    Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into forget-password
+
+[33mcommit af74b76840239b1af5aa11618bb1fa42026988de[m
+Merge: 05b1acb cfac505
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 22:42:34 2025 +0300
+
+    Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+
+[33mcommit cfac5050781bff118a583c9122202dbadee8eb8d[m
+Author: harbi <harbia305@gmail.com>
+Date:   Sat Jun 28 22:37:10 2025 +0300
+
+    Revert "Merge pull request #52 from Abdelhameed97/RAG_Chat"
+    
+    This reverts commit b7c854c64d2c92d0b4a625b244748c5dbf303a48, reversing
+    changes made to 915a7d3f89f7f1645cf073ba8359d3d165e3e1cd.
+
+[33mcommit 05b1acbfc974b088430c0d9ea39af5bf6c5dec82[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 22:24:42 2025 +0300
+
+    Edit Book Details
+
+[33mcommit 75156b6dd3f0d6d3f377c6c4e014c381774e87b6[m
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 22:19:19 2025 +0300
+
+    edit design for forget password.
+
+[33mcommit b7c854c64d2c92d0b4a625b244748c5dbf303a48[m
+Merge: 915a7d3 acb6b46
+Author: harbiabdellah <101594247+harbiabdellah@users.noreply.github.com>
+Date:   Sat Jun 28 20:25:00 2025 +0300
+
+    Merge pull request #52 from Abdelhameed97/RAG_Chat
+    
+    Rag chat
+
+[33mcommit acb6b4683bb6c3aa2fcbbd4fda80719d0f30e8a3[m[33m ([m[1;31morigin/RAG_Chat[m[33m)[m
+Merge: 77f2556 915a7d3
+Author: harbi <harbia305@gmail.com>
+Date:   Sat Jun 28 20:09:34 2025 +0300
+
+    add chat and all category
+
+[33mcommit 77f255640ac7f9601f92713ddb13f9f98bdcf6d3[m
+Author: harbi <harbia305@gmail.com>
+Date:   Sat Jun 28 19:17:44 2025 +0300
+
+    chat real time and add allcategorypage
+
+[33mcommit 915a7d3f89f7f1645cf073ba8359d3d165e3e1cd[m[33m ([m[1;31morigin/solving[m[33m)[m
+Merge: 8aacdb6 80ac607
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 18:41:31 2025 +0300
+
+    Merge pull request #51 from Abdelhameed97/forget-password
+    
+    add forget-password.
+
+[33mcommit 80ac607ae1c9cb92887760b3b6f8c9d22894df22[m
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 18:34:39 2025 +0300
+
+    add forget-password.
+
+[33mcommit 8aacdb653b4eeaafe41ac83f4d0fab44707aaea5[m
+Merge: 8ef28be 062f5c4
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 17:26:14 2025 +0300
+
+    Merge pull request #50 from Abdelhameed97/payment
+    
+    Handel Rating In Library
+
+[33mcommit 062f5c408d72449c4e409fa1167d08ba4000b1df[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 17:20:18 2025 +0300
+
+    Handel Rating In Library
+
+[33mcommit 8ef28be8589c08e6599aa51e758cabf455ab00a0[m
+Merge: c61834e e5ee172
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 17:00:36 2025 +0300
+
+    Merge pull request #49 from Abdelhameed97/payment
+    
+    Payment
+
+[33mcommit c61834ea53ed292decd626f6a64fdba6729c169a[m
+Merge: 60ae70d 209c516
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 16:57:35 2025 +0300
+
+    Merge pull request #48 from Abdelhameed97/forget-password
+    
+    Forget password
+
+[33mcommit 209c516f32e8b51e71e0de5b64bb21fc043aaf55[m
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 16:50:53 2025 +0300
+
+    eddit path for forgetpassword.
+
+[33mcommit 314338a9f02f13cf84f62904900ed2675d38b176[m
+Merge: e011b17 60ae70d
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 16:30:04 2025 +0300
+
+    accept incomming code.
+
+[33mcommit e011b17b3e29ba9c0b030224f8bb644f9d07d584[m
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 16:26:42 2025 +0300
+
+    work on forget password.
+
+[33mcommit e5ee1729a5a4f89aecdb6e77076334c41bb5b269[m
+Merge: f36424c 60ae70d
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 16:24:14 2025 +0300
+
+    Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into payment
+
+[33mcommit f36424ca9f8b557c267600f62339db3f1e2299ef[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 16:24:05 2025 +0300
+
+    Handel Error In  Payment Details
+
+[33mcommit 60ae70dd9c626ec9b64aef99f36aac1cc682773c[m
+Merge: 700abaf a5e64ad
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 16:21:16 2025 +0300
+
+    Merge pull request #47 from Abdelhameed97/solving
+    
+    Solving
+
+[33mcommit a5e64ad6884f96a58a4fa3aa84f659ce5862cbed[m
+Merge: 89d4ad5 700abaf
+Author: Rehab Kamal <wwwrehabkamal601@gmail.com>
+Date:   Sat Jun 28 16:18:25 2025 +0300
+
+    merging with main
+
+[33mcommit 89d4ad51897633d4143062376d4045a0db4b1b1a[m
+Author: Rehab Kamal <wwwrehabkamal601@gmail.com>
+Date:   Sat Jun 28 14:56:16 2025 +0300
+
+    update notification
+
+[33mcommit 6519eb04111d4a15570f7fe8367f6cd1efb697d4[m
+Merge: cc93154 700abaf
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 13:53:53 2025 +0300
+
+    Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+
+[33mcommit 700abaf1034da455d273e178da4c1551a165c264[m
+Merge: af6aec1 c0bb84d
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Sat Jun 28 13:49:09 2025 +0300
+
+    Merge pull request #46 from Abdelhameed97/payment
+    
+    Payment
+
+[33mcommit c0bb84d748f382f16c7c6be44e4a57999fa7dc5e[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 12:51:52 2025 +0300
+
+    Fix Payment Method
+
+[33mcommit de0ca0bf26cfb632a80dc7944ec93710255275f3[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 11:42:49 2025 +0300
+
+    Add Payment Methods To Cart Page And Fix Count Of Cart In NavBar
+
+[33mcommit 34f02bb06b5366806d9f637a740978278ef09713[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 00:54:50 2025 +0300
+
+    Fixed Cancelled Oreder
+
+[33mcommit 3edc0c011a0ae2e7582b4d7ca2ad7d351b5a595c[m
+Author: Marwa Nasser <marwa.nasser8133@gmail.com>
+Date:   Sat Jun 28 00:13:09 2025 +0300
+
+    Order Details And Payment Details Are Updated
+
+[33mcommit cc9315459a829f13f63b75f25b6f7232d24c71c4[m
+Merge: f0f7a87 af6aec1
+Author: Abdelhameed Mohammed <abdelhameed7mohammed21@gmail.com>
+Date:   Fri Jun 27 23:32:15 2025 +0300
+
+    Merge branch 'main' of https://github.com/Abdelhameed97/bookshare into social-branch
+
+[33mcommit af6aec13fcc72e41ae8044428fdbd7e0dce11c00[m
+Merge: efcb2bd 16dea11
+Author: Abdelhameed Mohamed <abdelhameed7mohammed21@gmail.com>
+Date:   Fri Jun 27 23:31:18 2025 +0300
+
+    Merge pull request 
