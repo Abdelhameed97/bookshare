@@ -48,29 +48,34 @@ const Navbar = () => {
     return stored ? JSON.parse(stored) : [];
   });
 
-  // Avatar images based on user role and gender
-        const getAvatarImage = (user) => {
-            if (!user) return null;
-            
-            const isMale = user.gender === 'male' || !user.gender; // Default to male if gender not specified
-            
-            switch (user.role) {
-              case 'admin':
-                return 'https://cdn.vectorstock.com/i/1000v/37/11/man-manager-administrator-consultant-avatar-vector-35753711.jpg';
-              case 'owner':
-                return isMale 
-                  ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTslXAW6sPGW_hBPruTQwtsCeLQHqxeJEdiag&s'
-                  : 'https://img.freepik.com/premium-vector/business-woman-character-vector-illustration_1133257-2432.jpg?semt=ais_hybrid&w=740';
-              case 'client':
-                return isMale 
-                  ? 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png'
-                  : 'https://img.freepik.com/premium-vector/woman-spa-client-icon-flat-color-style_755164-819.jpg';
-              default:
-                return 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png';
-            }
-          };
+  const [showProfileSidebar, setShowProfileSidebar] = useState(false);
 
-    const regularNavLinks = [
+  // Avatar images based on user role and gender
+  const getAvatarImage = (user) => {
+    if (!user) return null;
+    // If owner and has a library_logo, show it
+    if (user.role === 'owner' && user.owner && user.owner.library_logo) {
+      return `${process.env.REACT_APP_API_URL || ''}/storage/${user.owner.library_logo}`;
+    }
+    // Otherwise fallback to default avatar by role/gender
+    const isMale = user.gender === 'male' || !user.gender;
+    switch (user.role) {
+      case 'admin':
+        return 'https://cdn.vectorstock.com/i/1000v/37/11/man-manager-administrator-consultant-avatar-vector-35753711.jpg';
+      case 'owner':
+        return isMale
+          ? 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTslXAW6sPGW_hBPruTQwtsCeLQHqxeJEdiag&s'
+          : 'https://img.freepik.com/premium-vector/business-woman-character-vector-illustration_1133257-2432.jpg?semt=ais_hybrid&w=740';
+      case 'client':
+        return isMale
+          ? 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png'
+          : 'https://img.freepik.com/premium-vector/woman-spa-client-icon-flat-color-style_755164-819.jpg';
+      default:
+        return 'https://cdn3.iconfinder.com/data/icons/3d-printing-icon-set/512/User.png';
+    }
+  };
+
+  const regularNavLinks = [
     { to: "/", label: "home" , icon: FaHome},
 
     { to: "/about", label: "about" , icon: FaInfoCircle},
@@ -82,7 +87,7 @@ const Navbar = () => {
     
   ];
 
-    const ownerNavLinks = [
+  const ownerNavLinks = [
     { to: "/dashboard", label: "dashboard" , icon: FaTachometerAlt},
     // { to: "/edit-profile", label: "editProfile" , icon: FaUserEdit},
     { to: "/add-book", label: "Book" , icon: FaBook},
@@ -90,8 +95,8 @@ const Navbar = () => {
     { to: "/all-orders", label: "orders" , icon: FaBoxOpen},
   ];
 
-    const adminNavLinks = [
-    { to: "/admin/dashboard", label: "adminDashboard" , icon: FaTachometerAlt},
+  const adminNavLinks = [
+    { to: "/admin/dashboard", label: "Dashboard" , icon: FaTachometerAlt},
     { to: "/admin/users", label: "users" , icon: FaUser},
     { to: "/admin/categories", label: "categories" , icon: FaBook},
     { to: "/admin/books", label: "books" , icon: FaBook},
@@ -109,18 +114,36 @@ const Navbar = () => {
   const closeMobileMenu = () => setIsOpen(false);
   const toggleSearch = () => setIsSearchOpen(!isSearchOpen);
 
-    useEffect(() => {
+  // Add a state to force re-render on storage event
+  const [avatarKey, setAvatarKey] = useState(0);
+
+  useEffect(() => {
     const storedUser = localStorage.getItem("user");
-        if (storedUser) {
-            try {
-        const parsedUser = JSON.parse(storedUser);
-        setUser(parsedUser);
-            } catch {
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch {
         setUser(null);
-            }
-        } else {
+      }
+    } else {
       setUser(null);
+    }
+    // Listen for storage changes to update avatar instantly
+    const handleStorage = () => {
+      const storedUser = localStorage.getItem("user");
+      if (storedUser) {
+        try {
+          setUser(JSON.parse(storedUser));
+        } catch {
+          setUser(null);
         }
+      } else {
+        setUser(null);
+      }
+      setAvatarKey(prev => prev + 1); // force re-render
+    };
+    window.addEventListener('storage', handleStorage);
+    return () => window.removeEventListener('storage', handleStorage);
   }, []);
 
   // Listen for changes in readNotifications to update notification count
@@ -402,6 +425,7 @@ const Navbar = () => {
                                         <>
                       <div className="user-avatar-section">
                         <img 
+                          key={avatarKey}
                           src={avatarImage} 
                           alt="User Avatar" 
                           className="user-avatar"
@@ -421,6 +445,7 @@ const Navbar = () => {
                           onMouseOut={(e) => {
                             e.target.style.transform = "scale(1)";
                           }}
+                          onClick={() => setIsOpen(true)}
                         />
                         <div className="user-info" style={{display: 'flex', flexDirection: 'column', justifyContent: 'center'}}>
                           <span style={{ fontWeight: 600, color: '#222', fontSize: '1.05rem', lineHeight: 1 }}>{user.name?.split(' ')[0] || t('user')}</span>
@@ -435,20 +460,6 @@ const Navbar = () => {
                           )}
                         </div>
                       </div>
-                                            <button
-                                                className="btn"
-                                                style={{
-                                                    background: "#EF4444",
-                                                    color: "white",
-                                                    fontWeight: 600,
-                                                    borderRadius: "2rem",
-                                                    padding: "0.4rem 1.2rem",
-                                                    border: "none",
-                                                }}
-                                                onClick={handleLogout}
-                                            >
-                        {t('logout')}
-                                            </button>
                                         </>
                                     )}
                                 </div>
@@ -508,6 +519,7 @@ const Navbar = () => {
                             <>
                 <div className="mobile-user-avatar-section" style={{display: 'flex', flexDirection: 'column', alignItems: 'center'}}>
                   <img 
+                    key={avatarKey}
                     src={avatarImage} 
                     alt="User Avatar" 
                     className="mobile-user-avatar"
@@ -629,6 +641,62 @@ const Navbar = () => {
                     </div>
                 </div>
             </div>
+
+            {showProfileSidebar && (
+              <div className="profile-sidebar-overlay" onClick={() => setShowProfileSidebar(false)} style={{
+                position: 'fixed',
+                top: 0,
+                left: 0,
+                width: '100vw',
+                height: '100vh',
+                background: 'rgba(0,0,0,0.18)',
+                zIndex: 1000
+              }}>
+                <div className="profile-sidebar" onClick={e => e.stopPropagation()} style={{
+                  position: 'fixed',
+                  top: 0,
+                  right: 0,
+                  width: 270,
+                  height: '100vh',
+                  background: '#fff',
+                  boxShadow: '-2px 0 16px rgba(0,0,0,0.08)',
+                  zIndex: 1001,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  padding: '1.5rem 1.2rem 1.2rem 1.2rem',
+                  gap: 18
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+                    <FaBars size={22} />
+                    <button onClick={() => setShowProfileSidebar(false)} style={{ background: 'none', border: 'none', fontSize: 22, cursor: 'pointer' }}><FaTimes /></button>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                    <img src={avatarImage} alt="User Avatar" style={{ width: 70, height: 70, borderRadius: '50%', objectFit: 'cover', border: '2px solid #e5e7eb', marginBottom: 6 }} />
+                    <span style={{ fontWeight: 700, fontSize: 18 }}>{user.name}</span>
+                    {isLibraryOwner && <span style={{ fontSize: 13, color: '#3B82F6', fontWeight: 600 }}>{t('libraryOwner')}</span>}
+                    {user.role === "admin" && <span style={{ fontSize: 13, color: '#EF4444', fontWeight: 600 }}>Administrator</span>}
+                    {user.role === "client" && <span style={{ fontSize: 13, color: '#10B981', fontWeight: 600 }}>Client</span>}
+                  </div>
+                  <hr style={{ margin: '1rem 0', border: 0, borderTop: '1px solid #e5e7eb' }} />
+                  <button
+                    className="btn"
+                    style={{
+                      background: "#EF4444",
+                      color: "white",
+                      fontWeight: 600,
+                      borderRadius: "2rem",
+                      padding: "0.4rem 1.2rem",
+                      border: "none",
+                      width: '100%',
+                      marginTop: 10
+                    }}
+                    onClick={() => { handleLogout(); setShowProfileSidebar(false); }}
+                  >
+                    {t('logout')}
+                  </button>
+                </div>
+              </div>
+            )}
         </>
   );
 };
