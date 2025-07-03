@@ -39,8 +39,24 @@ export const useCart = (userId) => {
                 type: data.type ?? 'buy',
             };
 
-            await api.addToCart(bookId, payload);
-            await fetchCartItems();
+            const response = await api.addToCart(bookId, payload);
+            
+            // Update local state immediately
+            if (response.data) {
+                setCartItems(prev => {
+                    const existingItem = prev.find(item => item.book_id === bookId);
+                    if (existingItem) {
+                        return prev.map(item => 
+                            item.book_id === bookId 
+                                ? { ...item, quantity: (item.quantity || 0) + 1 }
+                                : item
+                        );
+                    } else {
+                        return [...prev, response.data];
+                    }
+                });
+            }
+            
             return true;
         } catch (error) {
             console.error("Error adding to cart:", error);
@@ -53,7 +69,9 @@ export const useCart = (userId) => {
             const cartItem = cartItems.find(item => item.book_id === bookId);
             if (cartItem) {
                 await api.removeCartItem(cartItem.id);
-                await fetchCartItems();
+                
+                // Update local state immediately
+                setCartItems(prev => prev.filter(item => item.book_id !== bookId));
             }
             return true;
         } catch (error) {

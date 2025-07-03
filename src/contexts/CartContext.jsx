@@ -136,6 +136,39 @@ export const CartProvider = ({ children }) => {
     setCartItems([]);
   };
 
+  const checkCartStatus = async (bookId) => {
+    try {
+      const response = await api.getCart();
+      return {
+        isInCart: response.data.some((item) => item.book_id === bookId),
+        cartItem: response.data.find((item) => item.book_id === bookId),
+      };
+    } catch (error) {
+      console.error("Error checking cart status:", error);
+      return { isInCart: false, cartItem: null };
+    }
+  };
+
+  const applyCoupon = async (couponCode, subtotal) => {
+    try {
+      const response = await api.applyCoupon(couponCode, subtotal);
+      return {
+        success: true,
+        coupon: response.coupon,
+        discount: response.discount,
+        newSubtotal: response.newSubtotal,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error:
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to apply coupon",
+      };
+    }
+  };
+
   useEffect(() => {
     fetchCartItems();
 
@@ -163,6 +196,8 @@ export const CartProvider = ({ children }) => {
     updateCartItemQuantity,
     clearCart,
     setCartItems,
+    checkCartStatus,
+    applyCoupon,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

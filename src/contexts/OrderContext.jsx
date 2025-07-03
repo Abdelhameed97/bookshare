@@ -36,7 +36,13 @@ export const OrderProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await api.getOrders();
-      setOrders(response.data || []);
+      const ordersData = response.data?.data || response.data;
+      const ordersWithCount = ordersData.map((order) => ({
+        ...order,
+        items_count: order.order_items?.length || 0,
+        total: parseFloat(order.total_price) || 0,
+      }));
+      setOrders(ordersWithCount);
       setError(null);
     } catch (err) {
       if (err.response?.status === 401) {
@@ -65,6 +71,33 @@ export const OrderProvider = ({ children }) => {
     return bookIds.size;
   }, [orders]);
 
+  const cancelOrder = async (orderId) => {
+    try {
+      await api.cancelOrder(orderId);
+      setOrders((prev) =>
+        prev.map((order) =>
+          order.id === orderId ? { ...order, status: "cancelled" } : order
+        )
+      );
+      return { success: true };
+    } catch (err) {
+      return {
+        success: false,
+        error: err.response?.data?.message || "Failed to cancel order",
+      };
+    }
+  };
+
+  const countPendingOrders = () => {
+    return orders.filter((order) => order.status === "pending").length;
+  };
+
+  const countBooksInPendingOrders = () => {
+    return orders
+      .filter((order) => order.status === "pending")
+      .reduce((total, order) => total + (order.order_items?.length || 0), 0);
+  };
+
   useEffect(() => {
     fetchOrders();
 
@@ -86,6 +119,9 @@ export const OrderProvider = ({ children }) => {
     loading,
     error,
     fetchOrders,
+    cancelOrder,
+    countPendingOrders,
+    countBooksInPendingOrders,
     setOrders,
   };
 

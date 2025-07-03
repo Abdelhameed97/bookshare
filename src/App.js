@@ -1,4 +1,3 @@
-// App.js
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home";
@@ -49,9 +48,8 @@ import EditBookPage from './components/Library/EditBookPage';
 
 import { CartProvider } from './contexts/CartContext';
 import { WishlistProvider } from './contexts/WishlistContext';
-
-// import Users from './components/admin/Users';
-// import Categories from './components/admin/Categories';
+import { OrderProvider } from './contexts/OrderContext';
+import { PaymentProvider } from './contexts/PaymentContext';
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -69,64 +67,66 @@ function App() {
     <Router>
       <CartProvider>
         <WishlistProvider>
-          <Routes>
-            <Route path='/' element={<RedirectToDashboardOrHome />} />
-            <Route path='/about' element={<About />} />
-            <Route path='/cart' element={<CartPage />} />
-            <Route path='/orders' element={<OrdersPage />} />
-            <Route path="/orders/:id" element={<OrderDetailsPage />} />
-            <Route path='/wishlist' element={<WishlistPage />} />
-            <Route path="/payments" element={<PaymentsPage />} />
-            <Route path="/payment/:orderId" element={<PaymentDetailsPage />} />
-            <Route path="/books" element={<BooksPage />} />
-            <Route path="/books/:id" element={<BookDetails />} />
-            <Route path='/register' element={<RegisterPage />} />
-            <Route path='/login' element={<LoginPage />} />
-            <Route
-              path="/login"
-              element={
-                <GuestRoute>
-                  <LoginPage />
-                </GuestRoute>
-              }
-            />
-            <Route
-              path="/get-started"
-              element={
-                <GuestRoute>
-                  <GetStartedPage />
-                </GuestRoute>
-              }
-            />
-            <Route path="/social-callback" element={<SocialCallback />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/dashboard" element={<OwnerRoute><Dashboard /></OwnerRoute>} />
-            <Route path="/edit-profile" element={<OwnerRoute><EditProfile /></OwnerRoute>} />
-            <Route path="/add-book" element={<OwnerRoute><AddBookPage /></OwnerRoute>} />
-            <Route path="/libraries" element={<OwnerRoute><LibrariesPage /></OwnerRoute>} />
-            <Route path="/library/:id" element={<OwnerRoute><LibraryDetails /></OwnerRoute>} />
-            <Route path="/all-orders" element={<OwnerRoute><AllOrdersPage /></OwnerRoute>} />
-            <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
-            <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
-            <Route path="/client-notifications" element={<ClientNotificationsPage />} />
-            <Route path="/edit-client-profile" element={<EditClientProfile />} />
+          <OrderProvider>
+            <PaymentProvider>
+              <Routes>
+                <Route path='/' element={<RedirectToDashboardOrHome />} />
+                <Route path='/about' element={<About />} />
+                <Route path='/cart' element={<CartPage />} />
+                <Route path='/orders' element={<OrdersPage />} />
+                <Route path="/orders/:id" element={<OrderDetailsPage />} />
+                <Route path='/wishlist' element={<WishlistPage />} />
+                <Route path="/payments" element={<PaymentsPage />} />
+                <Route path="/payment/:orderId" element={<PaymentDetailsPage />} />
+                <Route path="/books" element={<BooksPage />} />
+                <Route path="/books/:id" element={<BookDetails />} />
+                <Route path='/register' element={<RegisterPage />} />
+                <Route path='/login' element={<LoginPage />} />
+                <Route
+                  path="/login"
+                  element={
+                    <GuestRoute>
+                      <LoginPage />
+                    </GuestRoute>
+                  }
+                />
+                <Route
+                  path="/get-started"
+                  element={
+                    <GuestRoute>
+                      <GetStartedPage />
+                    </GuestRoute>
+                  }
+                />
+                <Route path="/social-callback" element={<SocialCallback />} />
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/dashboard" element={<OwnerRoute><Dashboard /></OwnerRoute>} />
+                <Route path="/edit-profile" element={<OwnerRoute><EditProfile /></OwnerRoute>} />
+                <Route path="/add-book" element={<OwnerRoute><AddBookPage /></OwnerRoute>} />
+                <Route path="/libraries" element={<OwnerRoute><LibrariesPage /></OwnerRoute>} />
+                <Route path="/library/:id" element={<OwnerRoute><LibraryDetails /></OwnerRoute>} />
+                <Route path="/all-orders" element={<OwnerRoute><AllOrdersPage /></OwnerRoute>} />
+                <Route path="/edit-book/:id" element={<OwnerRoute><EditBookPage /></OwnerRoute>} />
+                <Route path="/notifications" element={<OwnerRoute><NotificationsPage /></OwnerRoute>} />
+                <Route path="/client-notifications" element={<ClientNotificationsPage />} />
+                <Route path="/edit-client-profile" element={<EditClientProfile />} />
 
+                {/* Admin Routes */}
+                <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+                <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+                <Route path="/admin/categories" element={<AdminRoute><CategoryList /></AdminRoute>} />
+                <Route path="/admin/users" element={<AdminRoute><UserList /></AdminRoute>} />
+                <Route path="/admin/books" element={<AdminRoute><BookList /></AdminRoute>} />
+                <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
+                <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
 
-            {/* Admin Routes */}
-            <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/categories" element={<AdminRoute><CategoryList /></AdminRoute>} />
-            <Route path="/admin/users" element={<AdminRoute><UserList /></AdminRoute>} />
-            <Route path="/admin/books" element={<AdminRoute><BookList /></AdminRoute>} />
-            <Route path="/admin/orders" element={<AdminRoute><AdminOrders /></AdminRoute>} />
-            <Route path="/admin/notifications" element={<AdminRoute><AdminNotificationsPage /></AdminRoute>} />
-
-            <Route path='*' element={<NotFound />} />
-
-          </Routes>
-          <FloatingChatButton />
+                <Route path='*' element={<NotFound />} />
+              </Routes>
+              <FloatingChatButton />
+            </PaymentProvider>
+          </OrderProvider>
         </WishlistProvider>
       </CartProvider>
     </Router>

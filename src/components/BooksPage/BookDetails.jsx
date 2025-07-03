@@ -24,7 +24,8 @@ import "react-toastify/dist/ReactToastify.css";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "animate.css";
 import Swal from "sweetalert2";
-import { useCart } from "../../hooks/useCart";
+import { useCartContext } from "../../contexts/CartContext";
+import { useWishlistContext } from "../../contexts/WishlistContext";
 import StarRating from "./StarRating";
 
 const BookDetails = () => {
@@ -48,9 +49,11 @@ const BookDetails = () => {
   const [avgRating, setAvgRating] = useState(0);
   const [ratingCount, setRatingCount] = useState(0);
   const [ratingLoading, setRatingLoading] = useState(false);
+  const [newCommentId, setNewCommentId] = useState(null);
 
   const user = JSON.parse(localStorage.getItem("user"));
-  const { addToCart, removeFromCart, checkCartStatus } = useCart(user?.id);
+  const { addToCart, removeFromCart, checkCartStatus } = useCartContext();
+  const { addToWishlist, removeItem } = useWishlistContext();
 
   useEffect(() => {
     return () => {
@@ -107,27 +110,11 @@ const BookDetails = () => {
     setLoading(true);
     try {
       const response = await axios.get(`http://localhost:8000/api/books/${id}`);
-      const bookData = response.data.data;
-
-      if (!mounted) return;
-      setBook(bookData);
-
-      if (user) {
-        await Promise.all([
-          checkWishlistStatus(bookData.id),
-          checkCartStatus(bookData.id),
-        ]);
-        await fetchRatings(bookData.id);
-      }
-
-      const userId = bookData.user?.id;
-      if (userId) {
-        const res = await axios.get(
-          `http://localhost:8000/api/books?user_id=${userId}`
-        );
-
-        if (!mounted) return;
-        setAuthorBooks(res.data.data.filter((b) => b.id !== bookData.id));
+      if (response.data.status === "success") {
+        setBook(response.data.data);
+        setError(null);
+      } else {
+        setError(response.data.message || "Failed to load book details.");
       }
     } catch (err) {
       if (!mounted) return;
@@ -155,6 +142,20 @@ const BookDetails = () => {
     fetchBookDetails();
   }, [fetchBookDetails]);
 
+  // Fetch other books by the same author (not just same owner)
+  useEffect(() => {
+    if (book && book.author) {
+      axios.get(`http://localhost:8000/api/books?author=${encodeURIComponent(book.author)}`)
+        .then(res => {
+          // Filter out the current book
+          setAuthorBooks((res.data.data || []).filter(b => b.id !== book.id));
+        })
+        .catch(() => setAuthorBooks([]));
+    } else {
+      setAuthorBooks([]);
+    }
+  }, [book]);
+
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!commentInput.trim()) {
@@ -163,7 +164,7 @@ const BookDetails = () => {
     }
 
     try {
-      await axios.post(
+      const response = await axios.post(
         "http://localhost:8000/api/comment",
         {
           user_id: user.id,
@@ -178,14 +179,70 @@ const BookDetails = () => {
         }
       );
 
+      // Create new comment object
+      const newComment = {
+        id: response.data.id,
+        comment: commentInput,
+        user_id: user.id,
+        user: response.data.user || {
+          id: user.id,
+          name: user.name
+        },
+        book_id: id,
+        parent_id: parentId,
+        created_at: response.data.created_at || new Date().toISOString(),
+        updated_at: response.data.updated_at || new Date().toISOString(),
+        replies: []
+      };
+
+      // Update local state immediately
+      setBook(prevBook => {
+        const updatedBook = { ...prevBook };
+        
+        if (!updatedBook.comments) {
+          updatedBook.comments = [];
+        }
+
+        if (parentId) {
+          // Add reply to parent comment
+          const addReplyToComment = (comments) => {
+            return comments.map(comment => {
+              if (comment.id === parentId) {
+                return {
+                  ...comment,
+                  replies: [...(comment.replies || []), newComment]
+                };
+              }
+              if (comment.replies && comment.replies.length > 0) {
+                return {
+                  ...comment,
+                  replies: addReplyToComment(comment.replies)
+                };
+              }
+              return comment;
+            });
+          };
+          updatedBook.comments = addReplyToComment(updatedBook.comments);
+        } else {
+          // Add new top-level comment
+          updatedBook.comments = [newComment, ...updatedBook.comments];
+        }
+        
+        return updatedBook;
+      });
+
       setCommentInput("");
       setParentId(null);
       setReplyingTo(null);
-      await fetchBookWithComments();
+      
+      // Scroll to new comment with highlight
+      scrollToComment(newComment.id);
+      
       toast.success("Comment added successfully!");
     } catch (error) {
       console.error("Error submitting comment:", error);
-      toast.error(error.response?.data?.message || "Failed to add comment");
+      console.error("Error response:", error.response?.data);
+      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to add comment");
     }
   };
 
@@ -225,9 +282,35 @@ const BookDetails = () => {
         }
       );
 
+      // Update local state immediately
+      setBook(prevBook => {
+        const updatedBook = { ...prevBook };
+        
+        const updateCommentInArray = (comments) => {
+          return comments.map(comment => {
+            if (comment.id === editingComment) {
+              return {
+                ...comment,
+                comment: editCommentText,
+                updated_at: new Date().toISOString()
+              };
+            }
+            if (comment.replies && comment.replies.length > 0) {
+              return {
+                ...comment,
+                replies: updateCommentInArray(comment.replies)
+              };
+            }
+            return comment;
+          });
+        };
+        
+        updatedBook.comments = updateCommentInArray(updatedBook.comments);
+        return updatedBook;
+      });
+
       setEditingComment(null);
       setEditCommentText("");
-      await fetchBookWithComments();
       toast.success("Comment updated successfully!");
     } catch (error) {
       console.error("Error updating comment:", error);
@@ -253,7 +336,27 @@ const BookDetails = () => {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         });
-        await fetchBookWithComments();
+
+        // Update local state immediately, recursively remove from all levels
+        setBook((prevBook) => {
+          const updatedBook = { ...prevBook };
+          
+          const removeCommentFromArray = (comments) => {
+            if (!comments) return [];
+            return comments
+              .filter((comment) => comment.id !== commentId)
+              .map((comment) => ({
+                  ...comment,
+                replies: comment.replies
+                  ? removeCommentFromArray(comment.replies)
+                  : [],
+              }));
+          };
+          
+          updatedBook.comments = removeCommentFromArray(updatedBook.comments);
+          return updatedBook;
+        });
+
         toast.success("Comment deleted successfully!");
       }
     } catch (error) {
@@ -271,23 +374,11 @@ const BookDetails = () => {
     setLoadingStatus(true);
     try {
       if (isWishlisted) {
-        await axios.delete(`http://localhost:8000/api/wishlist/${book.id}`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        });
+        await removeItem(book.id);
         setIsWishlisted(false);
         toast.success("Removed from wishlist");
       } else {
-        await axios.post(
-          `http://localhost:8000/api/wishlist`,
-          { book_id: book.id },
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("token")}`,
-            },
-          }
-        );
+        await addToWishlist(book.id);
         setIsWishlisted(true);
         toast.success("Added to wishlist");
       }
@@ -394,12 +485,33 @@ const BookDetails = () => {
     }
   };
 
+  const scrollToComment = (commentId) => {
+    setTimeout(() => {
+      const commentElement = document.getElementById(`comment-${commentId}`);
+      if (commentElement) {
+        commentElement.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center' 
+        });
+        
+        // Add highlight effect
+        commentElement.classList.add('comment-highlight');
+        
+        // Remove highlight class after animation
+        setTimeout(() => {
+          commentElement.classList.remove('comment-highlight');
+        }, 3000);
+      }
+    }, 100);
+  };
+
   const renderComments = (comments, depth = 0) => {
     if (!comments || !Array.isArray(comments)) return null;
 
     return comments.map((comment) => (
       <div
         key={comment.id}
+        id={`comment-${comment.id}`}
         className={`mb-3 ${
           depth > 0 ? "ms-4 ps-3 border-start border-2 border-primary" : ""
         } animate__animated animate__fadeIn`}
@@ -660,8 +772,7 @@ const BookDetails = () => {
                       <div className="d-flex align-items-center mb-2">
                         <StarRating rating={avgRating} size={24} />
                         <span className="ms-2 text-muted">
-                          ({ratingCount}{" "}
-                          {ratingCount === 1 ? "rating" : "ratings"})
+                          ({ratingCount} {ratingCount === 1 ? "rating" : "ratings"})
                         </span>
                       </div>
 
@@ -715,7 +826,7 @@ const BookDetails = () => {
                     </div>
                   </div>
 
-                  <h1 className="h2 mb-3">{book.title}</h1>
+                  <h1 className="h2 mb-3">{book.title || "Untitled"}</h1>
 
                   <div className="d-flex align-items-center mb-4">
                     <div
@@ -728,15 +839,34 @@ const BookDetails = () => {
                         justifyContent: "center",
                       }}
                     >
-                      {book.user?.name?.charAt(0) || "A"}
+                      {book.author?.charAt(0) || "A"}
                     </div>
                     <div>
                       <h6 className="mb-0 fw-bold">Author</h6>
+                      <p className="mb-0">{book.author || "Unknown"}</p>
+                    </div>
+                  </div>
+
+                  <div className="d-flex align-items-center mb-4">
+                    <div
+                      className="bg-success text-white rounded-circle me-3"
+                      style={{
+                        width: "40px",
+                        height: "40px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {book.user?.name?.charAt(0) || "L"}
+                    </div>
+                    <div>
+                      <h6 className="mb-0 fw-bold">Library Owner</h6>
                       <p className="mb-0">{book.user?.name || "Unknown"}</p>
                     </div>
                   </div>
 
-                  <p className="text-muted mb-4">{book.description}</p>
+                  <p className="text-muted mb-4">{book.description || "No description available."}</p>
 
                   <div className="row mb-4">
                     <div className="col-md-6">
@@ -752,6 +882,17 @@ const BookDetails = () => {
                         <div>
                           <h6 className="mb-0 fw-bold">Rental Price</h6>
                           <p className="mb-0">${book.rental_price}</p>
+                        </div>
+                      </div>
+                      <div className="d-flex align-items-center mb-3">
+                        <FaTag className="text-info me-2" />
+                        <div>
+                          <h6 className="mb-0 fw-bold">Quantity</h6>
+                          {book.quantity === 0 ? (
+                            <span className="badge bg-danger">Out of Stock</span>
+                          ) : (
+                            <p className="mb-0">{book.quantity ?? 'N/A'}</p>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -906,14 +1047,14 @@ const BookDetails = () => {
             </div>
           </div>
 
-          {book.user && authorBooks.length > 0 && (
+          {book.author && authorBooks.length > 0 && (
             <div className="card shadow-sm mb-5 animate__animated animate__fadeIn">
               <div className="card-header bg-white">
                 <h3 className="h5 mb-0">
                   <span className="badge bg-purple me-2">
                     {authorBooks.length}
                   </span>
-                  More books by {book.user?.name || "this author"}
+                  More books by {book.author}
                 </h3>
               </div>
               <div className="card-body">
@@ -930,20 +1071,26 @@ const BookDetails = () => {
                         ? authorBookImagePath
                         : `http://localhost:8000/storage/${authorBookImagePath}`
                       : "/placeholder.svg?height=300&width=200";
+
                     return (
                       <div key={authorBook.id} className="col">
-                        <Link
-                          to={`/books/${authorBook.id}`}
-                          className="text-decoration-none"
-                        >
-                          <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-                            <div
-                              className="card-img-top"
-                              style={{
-                                height: "200px",
-                                overflow: "hidden",
+                        <div className="card h-100 border-0 shadow-sm hover-shadow transition position-relative">
+                          {/* Only show details icon */}
+                          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, display: 'flex', gap: 8 }}>
+                            <button
+                              className="btn btn-sm rounded-circle btn-outline-secondary"
+                              title="View details"
+                              style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                e.preventDefault();
+                                window.location.href = `/books/${authorBook.id}`;
                               }}
                             >
+                              <FaBook />
+                            </button>
+                          </div>
+                          <div className="card-img-top" style={{ height: "200px", overflow: "hidden" }}>
                               {authorBookImageUrl ? (
                                 <img
                                   src={authorBookImageUrl}
@@ -965,20 +1112,20 @@ const BookDetails = () => {
                                 {authorBook.category?.name || "Uncategorized"}
                               </p>
                               <div className="d-flex justify-content-between align-items-center">
-                                <span
-                                  className={`badge ${getStatusBadgeStyle(
-                                    authorBook.status
-                                  )}`}
-                                >
+                              <span className={`badge ${getStatusBadgeStyle(authorBook.status)}`}>
                                   {authorBook.status}
                                 </span>
                                 <span className="text-success fw-bold">
                                   {authorBook.price} $
                                 </span>
+                                {authorBook.quantity === 0 ? (
+                                  <span className="badge bg-danger ms-2">Out of Stock</span>
+                                ) : (
+                                  <span className="badge bg-secondary ms-2">Qty: {authorBook.quantity ?? 'N/A'}</span>
+                                )}
                               </div>
                             </div>
                           </div>
-                        </Link>
                       </div>
                     );
                   })}
@@ -988,6 +1135,69 @@ const BookDetails = () => {
           )}
         </div>
       </div>
+
+      <style>{`
+        @keyframes spin {
+          to {
+            transform: rotate(360deg);
+          }
+        }
+        
+        @keyframes commentHighlight {
+          0% {
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+          }
+          50% {
+            transform: scale(1.02);
+            box-shadow: 0 0 20px rgba(59, 130, 246, 0.5);
+          }
+          100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 rgba(59, 130, 246, 0);
+          }
+        }
+        
+        .comment-highlight {
+          animation: commentHighlight 3s ease-in-out;
+          border: 2px solid #3b82f6 !important;
+        }
+        
+        @media (max-width: 768px) {
+          .form-grid {
+            grid-template-columns: 1fr !important;
+          }
+          
+          .form-container {
+            padding: 20px !important;
+          }
+          
+          .header-container {
+            padding: 20px !important;
+          }
+          
+          .back-link {
+            position: static !important;
+            transform: none !important;
+            margin-bottom: 15px !important;
+            justify-content: center !important;
+          }
+        }
+        
+        @media (max-width: 480px) {
+          .form-container {
+            padding: 15px !important;
+          }
+          
+          .header-container {
+            padding: 15px !important;
+          }
+          
+          h1 {
+            font-size: 1.5rem !important;
+          }
+        }
+      `}</style>
     </>
   );
 };

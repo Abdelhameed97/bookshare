@@ -22,7 +22,7 @@ import Swal from 'sweetalert2';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
 import api from '../services/api';
-import { useCart } from '../hooks/useCart';
+import { useCartContext } from '../contexts/CartContext';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from "../components/HomePage/Footer.jsx";
 import '../style/CartPage.css';
@@ -47,8 +47,11 @@ const CartPage = () => {
         loading,
         error,
         fetchCartItems,
-        setCartItems
-    } = useCart(user?.id);
+        removeFromCart,
+        updateCartItemQuantity,
+        clearCart,
+        cartCount
+    } = useCartContext();
 
     const [showAlert, setShowAlert] = useState(false);
     const [alertMessage, setAlertMessage] = useState('');
@@ -142,11 +145,7 @@ const CartPage = () => {
         }
 
         try {
-            await api.updateCartItem(itemId, { quantity: parsedQuantity });
-            const updatedItems = cartItems.map(item =>
-                item.id === itemId ? { ...item, quantity: parsedQuantity } : item
-            );
-            setCartItems(updatedItems);
+            await updateCartItemQuantity(itemId, parsedQuantity);
         } catch (err) {
             await Swal.fire({
                 icon: 'error',
@@ -162,7 +161,7 @@ const CartPage = () => {
             const updatedItems = cartItems.map(item =>
                 item.id === itemId ? { ...item, type: newType } : item
             );
-            setCartItems(updatedItems);
+            await fetchCartItems(); // Refresh cart items after type change
 
             await Swal.fire({
                 icon: 'success',
@@ -196,9 +195,7 @@ const CartPage = () => {
         }
 
         try {
-            await api.removeCartItem(itemId);
-            const updatedItems = cartItems.filter(item => item.id !== itemId);
-            setCartItems(updatedItems);
+            await removeFromCart(itemId);
             await Swal.fire({
                 icon: 'success',
                 title: 'Item Removed',
@@ -231,8 +228,7 @@ const CartPage = () => {
         }
 
         try {
-            await Promise.all(cartItems.map(item => api.removeCartItem(item.id)));
-            setCartItems([]);
+            await clearCart();
             await Swal.fire({
                 icon: 'success',
                 title: 'Cart Cleared!',
@@ -374,7 +370,7 @@ const CartPage = () => {
                         <FaChevronLeft size={20} className="me-1" />
                         Back
                     </CustomButton>
-                    <Title className="page-title">Shopping Cart <Badge bg="primary" className="ms-2">{cartItems.length}</Badge></Title>
+                    <Title className="page-title">Shopping Cart <Badge bg="primary" className="ms-2">{cartCount}</Badge></Title>
                 </div>
 
                 <Row>
@@ -661,7 +657,6 @@ const CartPage = () => {
                                             <option value="paypal">PayPal</option>
                                         </Form.Select>
 
-                                        {/* عرض الأيقونات خارج الـ select */}
                                         <div className="payment-icons mt-2">
                                             <FaCreditCard className="me-2" />
                                             <FaMoneyBillWave className="me-2" />

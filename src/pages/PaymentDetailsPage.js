@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
 import {
     Container,
     Row,
@@ -20,8 +19,9 @@ import {
     Clock,
     XCircle
 } from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { usePayment } from '../hooks/usePayment';
+import { usePaymentContext } from '../contexts/PaymentContext';
 import Title from '../components/shared/Title';
 import CustomButton from '../components/shared/CustomButton';
 import Navbar from '../components/HomePage/Navbar';
@@ -47,9 +47,9 @@ const PaymentDetailsPage = () => {
         createStripePayment,
         confirmStripePayment,
         createPayPalPayment,
-        setProcessing,
-        updatePaymentMethod
-    } = usePayment();
+        updatePaymentMethod,
+        setProcessing
+    } = usePaymentContext();
 
     const getBookImage = (images) => {
         if (!images || images.length === 0) {
@@ -80,12 +80,12 @@ const PaymentDetailsPage = () => {
             setIsInitialLoad(false);
         }
     }, [orderId, fetchData, isInitialLoad, payment?.method]);
-    
+
     useEffect(() => {
         if (order && order.status) {
             setIsOrderAccepted(order.status === 'accepted');
         }
-    }, [order]);    
+    }, [order]); 
 
     const handlePaymentError = (error) => {
         let errorMessage = error.response?.data?.message || error.message;

@@ -12,6 +12,8 @@ const EditBookPage = () => {
     title: '',
     description: '',
     author: '',
+    isbn: '',
+    pages: '',
     genre: '',
     educational_level: '',
     condition: 'new',
@@ -115,6 +117,7 @@ const EditBookPage = () => {
     if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required';
     if (!formData.category_id) newErrors.category_id = 'Category is required';
     if (!formData.quantity || parseInt(formData.quantity) <= 0) newErrors.quantity = 'Valid quantity is required';
+    if (formData.pages && parseInt(formData.pages) <= 0) newErrors.pages = 'Pages must be a positive number';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -128,6 +131,8 @@ const EditBookPage = () => {
       formDataToSend.append('title', formData.title);
       formDataToSend.append('description', formData.description);
       formDataToSend.append('author', formData.author);
+      formDataToSend.append('isbn', formData.isbn);
+      formDataToSend.append('pages', formData.pages);
       formDataToSend.append('genre', formData.genre);
       formDataToSend.append('educational_level', formData.educational_level);
       formDataToSend.append('condition', formData.condition);
@@ -190,6 +195,33 @@ const EditBookPage = () => {
                 <label>Description</label>
                 <textarea name="description" value={formData.description} onChange={handleInputChange} className={errors.description ? 'error' : ''} rows={2} />
                 {errors.description && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.description}</div>}
+              </div>
+            </div>
+            <div className="edit-book-row">
+              <div className="edit-book-col">
+                <label>ISBN</label>
+                <input 
+                  type="text" 
+                  name="isbn" 
+                  value={formData.isbn} 
+                  onChange={handleInputChange}
+                  placeholder="e.g., 978-0-7475-3269-9"
+                />
+                <small className="edit-book-field-hint">International Standard Book Number (optional)</small>
+              </div>
+              <div className="edit-book-col">
+                <label>Pages</label>
+                <input 
+                  type="number" 
+                  name="pages" 
+                  value={formData.pages} 
+                  onChange={handleInputChange}
+                  placeholder="e.g., 320"
+                  min="1"
+                  className={errors.pages ? 'error' : ''}
+                />
+                {errors.pages && <div className="edit-book-error-message"><AlertCircle size={16} /> {errors.pages}</div>}
+                <small className="edit-book-field-hint">Number of pages (optional)</small>
               </div>
             </div>
             <div className="edit-book-row">

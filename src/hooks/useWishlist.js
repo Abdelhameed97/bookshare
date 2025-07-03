@@ -63,7 +63,15 @@ export const useWishlist = (userId) => {
                 throw new Error('Failed to add to wishlist');
             }
 
-            await fetchWishlist();
+            // Update local state immediately
+            setWishlistItems(prev => {
+                const existingItem = prev.find(item => item.book_id === bookId);
+                if (!existingItem) {
+                    return [...prev, { id: Date.now(), book_id: bookId, book: book }];
+                }
+                return prev;
+            });
+            
             return { success: true };
         } catch (err) {
             return {
