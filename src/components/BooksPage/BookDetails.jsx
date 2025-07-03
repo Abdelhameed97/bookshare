@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, useNavigate, Link } from "react-router-dom"
 import axios from "axios"
 import { formatDistanceToNow } from "date-fns"
 import {
@@ -29,6 +29,7 @@ import StarRating from "./StarRating"
 
 const BookDetails = () => {
     const { id } = useParams()
+    const navigate = useNavigate()
     const [book, setBook] = useState(null)
     const [authorBooks, setAuthorBooks] = useState([])
     const [loading, setLoading] = useState(true)
@@ -162,7 +163,7 @@ const BookDetails = () => {
     useEffect(() => {
         fetchBookDetails()
         fetchBookWithComments()
-    }, [fetchBookDetails, fetchBookWithComments])
+    }, [id, fetchBookDetails, fetchBookWithComments])
 
     const handleCommentSubmit = async e => {
         e.preventDefault()
@@ -302,7 +303,7 @@ const BookDetails = () => {
 
             setEditingComment(null)
             setEditCommentText("")
-            await fetchBookWithComments()
+            await fetchBookWithComments() // تحديث الكومنتات مباشرة
             toast.success("Comment updated successfully!")
         } catch (error) {
             console.error("Error updating comment:", error)
@@ -335,7 +336,7 @@ const BookDetails = () => {
                         },
                     }
                 )
-                await fetchBookWithComments()
+                await fetchBookWithComments() // تحديث الكومنتات مباشرة
                 toast.success("Comment deleted successfully!")
             }
         } catch (error) {
@@ -785,6 +786,11 @@ const BookDetails = () => {
             : `http://localhost:8000/storage/${bookImagePath}`
         : "/placeholder.svg?height=300&width=200"
 
+    // عند الضغط على كتاب من كتب المؤلف، انتقل ديناميكياً بدون ريفرش
+    const handleAuthorBookClick = bookId => {
+        navigate(`/books/${bookId}`)
+    }
+
     return (
         <>
             <ToastContainer position="top-right" autoClose={3000} />
@@ -868,7 +874,8 @@ const BookDetails = () => {
                                                 className="badge text-white"
                                                 style={{
                                                     background:
-                                                        book.category?.color || "#6B7280", // Use existing category color or a default
+                                                        book.category?.color ||
+                                                        "#6B7280", // Use existing category color or a default
                                                 }}
                                             >
                                                 {book.category?.name ||
@@ -1192,69 +1199,67 @@ const BookDetails = () => {
                                             <div
                                                 key={authorBook.id}
                                                 className="col"
+                                                onClick={() =>
+                                                    handleAuthorBookClick(
+                                                        authorBook.id
+                                                    )
+                                                }
+                                                style={{ cursor: "pointer" }}
                                             >
-                                                <Link
-                                                    to={`/books/${authorBook.id}`}
-                                                    className="text-decoration-none"
-                                                >
-                                                    <div className="card h-100 border-0 shadow-sm hover-shadow transition">
-                                                        <div
-                                                            className="card-img-top"
-                                                            style={{
-                                                                height: "200px",
-                                                                overflow:
-                                                                    "hidden",
-                                                            }}
-                                                        >
-                                                            {authorBookImageUrl ? (
-                                                                <img
-                                                                    src={
-                                                                        authorBookImageUrl
-                                                                    }
-                                                                    alt={
-                                                                        authorBook.title
-                                                                    }
-                                                                    className="img-fluid h-100 w-100 object-fit-cover"
-                                                                    loading="lazy"
-                                                                />
-                                                            ) : (
-                                                                <div className="h-100 d-flex align-items-center justify-content-center bg-light text-muted">
-                                                                    <FaBook className="display-4" />
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                        <div className="card-body">
-                                                            <h5 className="card-title text-truncate">
-                                                                {
+                                                {/* أزل Link واستخدم div فقط */}
+                                                <div className="card h-100 border-0 shadow-sm hover-shadow transition">
+                                                    <div
+                                                        className="card-img-top"
+                                                        style={{
+                                                            height: "200px",
+                                                            overflow: "hidden",
+                                                        }}
+                                                    >
+                                                        {authorBookImageUrl ? (
+                                                            <img
+                                                                src={
+                                                                    authorBookImageUrl
+                                                                }
+                                                                alt={
                                                                     authorBook.title
                                                                 }
-                                                            </h5>
-                                                            <p className="card-text text-muted small text-truncate">
-                                                                {authorBook
-                                                                    .category
-                                                                    ?.name ||
-                                                                    "Uncategorized"}
-                                                            </p>
-                                                            <div className="d-flex justify-content-between align-items-center">
-                                                                <span
-                                                                    className={`badge ${getStatusBadgeStyle(
-                                                                        authorBook.status
-                                                                    )}`}
-                                                                >
-                                                                    {
-                                                                        authorBook.status
-                                                                    }
-                                                                </span>
-                                                                <span className="text-success fw-bold">
-                                                                    {
-                                                                        authorBook.price
-                                                                    }{" "}
-                                                                    $
-                                                                </span>
+                                                                className="img-fluid h-100 w-100 object-fit-cover"
+                                                                loading="lazy"
+                                                            />
+                                                        ) : (
+                                                            <div className="h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                                                                <FaBook className="display-4" />
                                                             </div>
+                                                        )}
+                                                    </div>
+                                                    <div className="card-body">
+                                                        <h5 className="card-title text-truncate">
+                                                            {authorBook.title}
+                                                        </h5>
+                                                        <p className="card-text text-muted small text-truncate">
+                                                            {authorBook.category
+                                                                ?.name ||
+                                                                "Uncategorized"}
+                                                        </p>
+                                                        <div className="d-flex justify-content-between align-items-center">
+                                                            <span
+                                                                className={`badge ${getStatusBadgeStyle(
+                                                                    authorBook.status
+                                                                )}`}
+                                                            >
+                                                                {
+                                                                    authorBook.status
+                                                                }
+                                                            </span>
+                                                            <span className="text-success fw-bold">
+                                                                {
+                                                                    authorBook.price
+                                                                }{" "}
+                                                                $
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                </Link>
+                                                </div>
                                             </div>
                                         )
                                     })}
