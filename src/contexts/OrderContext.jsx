@@ -98,6 +98,15 @@ export const OrderProvider = ({ children }) => {
       .reduce((total, order) => total + (order.order_items?.length || 0), 0);
   };
 
+  const getOrderDetails = async (orderId) => {
+    try {
+      const response = await api.getOrderDetails(orderId);
+      return response.data?.data || response.data;
+    } catch (error) {
+      throw error.response?.data?.message || "Failed to fetch order details";
+    }
+  };
+
   useEffect(() => {
     fetchOrders();
 
@@ -122,6 +131,7 @@ export const OrderProvider = ({ children }) => {
     cancelOrder,
     countPendingOrders,
     countBooksInPendingOrders,
+    getOrderDetails,
     setOrders,
   };
 

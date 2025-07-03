@@ -100,13 +100,10 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const removeFromCart = async (bookId) => {
+  const removeFromCart = async (cartItemId) => {
     try {
-      const cartItem = cartItems.find((item) => item.book_id === bookId);
-      if (cartItem) {
-        await api.removeCartItem(cartItem.id);
-        setCartItems((prev) => prev.filter((item) => item.book_id !== bookId));
-      }
+      await api.removeCartItem(cartItemId);
+      setCartItems((prev) => prev.filter((item) => item.id !== cartItemId));
       return true;
     } catch (error) {
       console.error("Error removing from cart:", error);
@@ -114,17 +111,18 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const updateCartItemQuantity = async (bookId, quantity) => {
+  const updateCartItemQuantity = async (cartItemId, quantity) => {
     try {
-      const cartItem = cartItems.find((item) => item.book_id === bookId);
-      if (cartItem) {
-        await api.updateCartItemQuantity(cartItem.id, { quantity });
-        setCartItems((prev) =>
-          prev.map((item) =>
-            item.book_id === bookId ? { ...item, quantity } : item
-          )
-        );
+      if (isNaN(quantity) || quantity < 1) {
+        throw new Error("Quantity must be at least 1");
       }
+
+      await api.updateCartItem(cartItemId, { quantity });
+      setCartItems((prev) =>
+        prev.map((item) =>
+          item.id === cartItemId ? { ...item, quantity } : item
+        )
+      );
       return true;
     } catch (error) {
       console.error("Error updating cart item quantity:", error);
@@ -132,8 +130,24 @@ export const CartProvider = ({ children }) => {
     }
   };
 
-  const clearCart = () => {
-    setCartItems([]);
+  const updateCartItem = async (cartItemId, quantity) => {
+    try {
+      await api.updateCartItem(cartItemId, { quantity });
+      await fetchCartItems();
+      return true;
+    } catch (error) {
+      throw error.response?.data?.message || "Failed to update cart item";
+    }
+  };
+
+  const clearCart = async () => {
+    try {
+      await Promise.all(cartItems.map((item) => api.removeCartItem(item.id)));
+      setCartItems([]);
+      return true;
+    } catch (error) {
+      throw error.response?.data?.message || "Failed to clear cart";
+    }
   };
 
   const checkCartStatus = async (bookId) => {
@@ -194,6 +208,7 @@ export const CartProvider = ({ children }) => {
     addToCart,
     removeFromCart,
     updateCartItemQuantity,
+    updateCartItem,
     clearCart,
     setCartItems,
     checkCartStatus,

@@ -37,8 +37,12 @@ const Navbar = () => {
   // Get context values correctly
   const { cartCount } = useCartContext();
   const { wishlistCount } = useWishlistContext();
-  const { orders, pendingOrdersCount, fetchOrders } = useOrderContext();
-
+  const {
+    orders = [],
+    pendingOrdersCount = 0,
+    fetchOrders = () => {},
+  } = useOrderContext();
+  
   const isLibraryOwner = user?.role === "owner";
 
   const { t, language } = useTranslation();
