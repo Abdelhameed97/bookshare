@@ -36,12 +36,18 @@ export const OrderProvider = ({ children }) => {
     setLoading(true);
     try {
       const response = await api.getOrders();
-      const ordersData = response.data?.data || response.data;
+      const ordersData = Array.isArray(response.data?.data)
+        ? response.data.data
+        : Array.isArray(response.data)
+        ? response.data
+        : [];
+
       const ordersWithCount = ordersData.map((order) => ({
         ...order,
         items_count: order.order_items?.length || 0,
         total: parseFloat(order.total_price) || 0,
       }));
+
       setOrders(ordersWithCount);
       setError(null);
     } catch (err) {
@@ -123,7 +129,7 @@ export const OrderProvider = ({ children }) => {
 
   const value = {
     orders,
-    pendingOrdersCount,
+    pendingOrdersCount, 
     uniqueBooksCount,
     loading,
     error,
