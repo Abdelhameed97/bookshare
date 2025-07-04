@@ -1,13 +1,13 @@
 "use client"
-import { Book, Heart, Palette, Clock } from "lucide-react"
+import { Book, Heart, Palette, Clock, ShoppingCart } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import Navbar from "../components/HomePage/Navbar"
 import "../style/Categories.css"
 import axios from "axios"
-import BookCard from "../components/shared/BookCard"
 import { useCart } from "../hooks/useCart"
 import { useWishlist } from "../hooks/useWishlist"
+import Swal from "sweetalert2"
 
 const CategoriesPage = () => {
     const [categories, setCategories] = useState([])
@@ -17,6 +17,7 @@ const CategoriesPage = () => {
     const [currentPage, setCurrentPage] = useState(1)
     const [categoriesPerPage] = useState(6)
     const [categoriesBooks, setCategoriesBooks] = useState({})
+    const navigate = useNavigate()
 
     // Fetch all categories
     useEffect(() => {
@@ -156,29 +157,97 @@ const CategoriesPage = () => {
 
     const handleAddToWishlist = async book => {
         try {
+            if (!userId) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Login Required",
+                    text: "Please login to use the wishlist feature",
+                })
+                return navigate("/login")
+            }
+
             if (isInWishlist(book.id)) {
                 const itemToRemove = wishlistItems.find(
                     item => item.book_id === book.id
                 )
                 await removeItem(itemToRemove.id)
+                Swal.fire({
+                    icon: "success",
+                    title: "Removed!",
+                    text: "Book removed from wishlist",
+                    timer: 1500,
+                })
             } else {
                 await addToWishlist(book.id)
+                Swal.fire({
+                    icon: "success",
+                    title: "Added!",
+                    text: "Book added to wishlist",
+                    timer: 1500,
+                })
             }
             await fetchWishlist()
-        } catch {}
+        } catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "Error",
+                text: error.message || "Failed to update wishlist",
+            })
+        }
     }
 
     const handleAddToCart = async book => {
         try {
-            if (!isInCart(book.id)) {
-                await addToCart(book.id)
-                await fetchCartItems()
+            if (!userId) {
+                Swal.fire({
+                    icon: "error",
+                    title: "Login Required",
+                    text: "Please login to add items to cart",
+                })
+                return navigate("/login")
             }
-        } catch {}
+
+            if (isInCart(book.id)) {
+                Swal.fire({
+                    icon: "info",
+                    title: "Already in Cart",
+                    text: "This book is already in your cart",
+                    timer: 1500,
+                })
+                return
+            }
+
+            const result = await Swal.fire({
+                title: "Add to Cart?",
+                text: "This book will be added to your shopping cart",
+                icon: "question",
+                showCancelButton: true,
+                confirmButtonColor: "#28a745",
+                cancelButtonColor: "#6c757d",
+            })
+
+            if (!result.isConfirmed) return
+
+            await addToCart(book.id)
+            await fetchCartItems()
+
+            Swal.fire({
+                icon: "success",
+                title: "Added to Cart!",
+                text: "The book has been added to your shopping cart",
+                timer: 1500,
+            })
+        } catch (error) {
+            Swal.fire({
+                icon: "error",
+                title: "Failed to Add",
+                text: error.message || "Failed to add to cart",
+            })
+        }
     }
 
     const handleQuickView = book => {
-        window.location.href = `/books/${book.id}`
+        navigate(`/books/${book.id}`, { replace: true })
     }
 
     if (loading) {
@@ -207,17 +276,58 @@ const CategoriesPage = () => {
         <div className="categories-page">
             <Navbar />
             <div className="container">
-                <h1 className="text-center my-5">Browse Categories</h1>
+                <h1 className="text-center my-5 browse-categories-title">
+                    Browse Categories
+                </h1>
 
                 {/* Search Bar */}
-                <div className="search-bar mb-5">
-                    <input
-                        type="text"
-                        placeholder="Search categories..."
-                        value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
-                        className="form-control form-control-lg"
-                    />
+                <div className="search-bar mb-5 d-flex justify-content-center">
+                    <div
+                        style={{
+                            position: "relative",
+                            width: "100%",
+                            maxWidth: 400,
+                        }}
+                    >
+                        <input
+                            type="text"
+                            placeholder="Search categories..."
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            className="form-control form-control-lg shadow-sm"
+                            style={{
+                                borderRadius: 30,
+                                paddingLeft: 44,
+                                boxShadow: "0 2px 8px rgba(0,0,0,0.07)",
+                                border: "1px solid #e5e7eb",
+                                background: "#fff",
+                            }}
+                        />
+                        <span
+                            style={{
+                                position: "absolute",
+                                left: 16,
+                                top: "50%",
+                                transform: "translateY(-50%)",
+                                color: "#aaa",
+                                pointerEvents: "none",
+                            }}
+                        >
+                            <svg
+                                width="20"
+                                height="20"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                viewBox="0 0 24 24"
+                            >
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                            </svg>
+                        </span>
+                    </div>
                 </div>
 
                 {/* Categories Grid */}
@@ -326,6 +436,7 @@ const CategoriesPage = () => {
                                                             >
                                                                 {book.title}
                                                             </div>
+                                                            {/* تم حذف الأزرار الخاصة بالكتاب (wishlist/cart/view) */}
                                                         </div>
                                                     ))}
                                                 </div>
@@ -449,6 +560,24 @@ const CategoriesPage = () => {
                     </div>
                 )}
             </div>
+            <style>{`
+                .browse-categories-title {
+                    font-size: 3rem;
+                    font-weight: 800;
+                    padding: 1.5rem 0;
+                    background: linear-gradient(90deg, #5b21b6 0%, #7c3aed 100%);
+                    color: #fff;
+                    border-radius: 1.5rem;
+                    box-shadow: 0 4px 24px rgba(91,33,182,0.13);
+                    margin-bottom: 2.5rem;
+                    transition: background 0.3s, box-shadow 0.3s, transform 0.2s;
+                }
+                .browse-categories-title:hover {
+                    background: linear-gradient(90deg, #7c3aed 0%, #5b21b6 100%);
+                    box-shadow: 0 8px 32px rgba(91,33,182,0.18);
+                    transform: scale(1.03);
+                }
+            `}</style>
         </div>
     )
 }
