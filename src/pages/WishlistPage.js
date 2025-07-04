@@ -345,14 +345,6 @@ const WishlistPage = () => {
                                                     {parseFloat(item.book.price).toFixed(2)} EGP
                                                 </h5>
                                                 <ButtonGroup>
-                                                    <CustomButton
-                                                        variant="outline-secondary"
-                                                        size="sm"
-                                                        title="Share"
-                                                        className="me-1"
-                                                    >
-                                                        <Share size={16} />
-                                                    </CustomButton>
                                                     {item.book.status === 'available' && (
                                                         <CustomButton
                                                             variant="primary"

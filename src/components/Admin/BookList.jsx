@@ -21,8 +21,14 @@ const BookList = () => {
 
     const [form, setForm] = useState({
         title: '',
+        author: '',
+        isbn: '',
+        pages: '',
         description: '',
         price: '',
+        rental_price: '',
+        educational_level: '',
+        genre: '',
         quantity: '1',
         category_id: '',
         condition: 'new',
@@ -92,8 +98,14 @@ const BookList = () => {
         if (book) {
             setForm({
                 title: book.title || '',
+                author: book.author || '',
+                isbn: book.isbn || '',
+                pages: book.pages || '',
                 description: book.description || '',
                 price: book.price || '',
+                rental_price: book.rental_price || '',
+                educational_level: book.educational_level || '',
+                genre: book.genre || '',
                 quantity: book.quantity || '1',
                 category_id: book.category_id || '',
                 condition: book.condition || 'new',
@@ -104,7 +116,7 @@ const BookList = () => {
                 setPreviewImage(`http://localhost:8000/storage/${book.images[0]}`);
             }
         } else {
-            setForm({ title: '', description: '', price: '', quantity: '1', category_id: '', condition: 'new', status: 'available' });
+            setForm({ title: '', author: '', isbn: '', pages: '', description: '', price: '', rental_price: '', educational_level: '', genre: '', quantity: '1', category_id: '', condition: 'new', status: 'available' });
             setEditId(null);
         }
         setImageFile(null);
@@ -254,7 +266,7 @@ const BookList = () => {
             </div>
             {showModal && (
                 <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.25)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <div style={{ background: 'white', borderRadius: 12, padding: '2rem', minWidth: 550, maxWidth: '90vw', boxShadow: '0 4px 24px rgba(0,0,0,0.13)', position: 'relative' }}>
+                    <div style={{ background: 'white', borderRadius: 12, padding: '2rem', minWidth: 450, maxWidth: '90vw', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 4px 24px rgba(0,0,0,0.13)', position: 'relative' }}>
                         <button onClick={closeModal} style={{ position: 'absolute', top: 12, right: 12, background: 'none', border: 'none', color: '#888', fontSize: 20, cursor: 'pointer' }}><FaTimes /></button>
                         <h2 style={{ marginBottom: 20, color: '#1e293b', fontWeight: 700 }}>{editId ? 'Edit Book' : 'Create Book'}</h2>
                         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
@@ -270,6 +282,18 @@ const BookList = () => {
                                     <div>
                                         <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Title</label>
                                         <input type="text" name="title" value={form.title} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Author</label>
+                                        <input type="text" name="author" value={form.author} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>ISBN</label>
+                                        <input type="text" name="isbn" value={form.isbn} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Pages</label>
+                                        <input type="number" name="pages" value={form.pages} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
                                     </div>
                                     <div>
                                         <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Description</label>
@@ -289,6 +313,10 @@ const BookList = () => {
                                     <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Price ($)</label>
                                     <input type="number" step="0.01" name="price" value={form.price} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
                                 </div>
+                                <div style={{flex: 1}}>
+                                    <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Rental Price ($)</label>
+                                    <input type="number" step="0.01" name="rental_price" value={form.rental_price} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                                </div>
                              </div>
                              <div style={{display: 'flex', gap: '1rem'}}>
                                 <div style={{flex: 1}}>
@@ -300,6 +328,40 @@ const BookList = () => {
                                     <select name="condition" value={form.condition} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }}>
                                         <option value="new">New</option>
                                         <option value="used">Used</option>
+                                    </select>
+                                </div>
+                                <div style={{flex: 1}}>
+                                    <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Status</label>
+                                    <select name="status" value={form.status} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }}>
+                                        <option value="available">Available</option>
+                                        <option value="unavailable">Unavailable</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div style={{display: 'flex', gap: '1rem'}}>
+                                <div style={{flex: 1}}>
+                                    <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Educational Level</label>
+                                    <select name="educational_level" value={form.educational_level} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }}>
+                                        <option value="">Select level</option>
+                                        <option value="Children">Children</option>
+                                        <option value="Teen">Teen</option>
+                                        <option value="Young Adult">Young Adult</option>
+                                        <option value="Adult">Adult</option>
+                                        <option value="Academic">Academic</option>
+                                    </select>
+                                </div>
+                                <div style={{flex: 1}}>
+                                    <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Genre</label>
+                                    <select name="genre" value={form.genre} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }}>
+                                        <option value="">Select genre</option>
+                                        <option value="Fiction">Fiction</option>
+                                        <option value="Non-Fiction">Non-Fiction</option>
+                                        <option value="Science">Science</option>
+                                        <option value="History">History</option>
+                                        <option value="Biography">Biography</option>
+                                        <option value="Children">Children</option>
+                                        <option value="Academic">Academic</option>
+                                        <option value="Other">Other</option>
                                     </select>
                                 </div>
                             </div>

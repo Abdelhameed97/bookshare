@@ -149,6 +149,8 @@ const apiService = {
         }),
     updatePayment: (paymentId, data) => api.put(`/payments/${paymentId}`, data),
     getUserPayments: () => api.get('/payments'),
+    updateOrderPaymentMethod: (orderId, paymentMethod) =>
+        api.put(`/orders/${orderId}/payment-method`, { payment_method: paymentMethod }),
 
     // Stripe Payment
     createStripePaymentIntent: (orderId) => api.post('/stripe/create-payment-intent', { order_id: orderId }),

@@ -173,7 +173,7 @@ const OrdersPage = () => {
                         <ChevronLeft size={20} className="me-1" />
                         Back
                     </CustomButton>
-                    <Title>My Orders</Title>
+                    <Title>My Orders <Badge bg="primary" className="ms-2">{orders.length}</Badge></Title>
                 </div>
 
                 {/* Payments Section */}

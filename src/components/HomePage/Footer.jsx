@@ -61,11 +61,11 @@ const Footer = () => {
             <ul className="footer-contact">
               <li>
                 <FaMapMarkerAlt className="contact-icon" />
-                <span>203 Fake St. Mountain View, San Francisco, California, USA</span>
+                <span>Minya, Egypt</span>
               </li>
               <li>
                 <FaPhone className="contact-icon" />
-                <span>+2 392 3929 210</span>
+                <span>01010560217</span>
               </li>
               <li>
                 <FaPaperPlane className="contact-icon" />
