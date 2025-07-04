@@ -8,6 +8,7 @@ import Footer from "../components/HomePage/Footer.jsx";
 import Welcome from "../components/HomePage/Welcome.jsx";
 import NewReleases from "../components/HomePage/NewRelease.jsx";
 import Estimonialssection from "../components/HomePage/Estimonialssection.jsx";
+import Categories from "../components/HomePage/Categories.jsx";
 
 const Home = () => {
   const { user } = useAuth();
@@ -23,6 +24,7 @@ const Home = () => {
     <>
       <Navbar />
       <Hero />
+      <Categories/>
       <Welcome />
       <NewReleases />
       <Blog />
