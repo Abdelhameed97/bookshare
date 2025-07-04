@@ -46,7 +46,7 @@ const Navbar = () => {
   const [showClientNotifications, setShowClientNotifications] = useState(false);
 
   const [readNotifications, setReadNotifications] = useState(() => {
-    const stored = localStorage.getItem("readNotifications");
+    const stored = localStorage.getItem('readNotifications');
     return stored ? JSON.parse(stored) : [];
   });
 
@@ -102,12 +102,12 @@ const Navbar = () => {
     { to: "/admin/orders", label: "orders", icon: FaBoxOpen },
   ];
 
-  const navLinks =
-    user?.role === "admin"
-      ? adminNavLinks
-      : isLibraryOwner
+  const navLinks = user?.role === "admin"
+    ? adminNavLinks
+    : isLibraryOwner
       ? ownerNavLinks
       : regularNavLinks;
+      
 
   const toggleMobileMenu = () => setIsOpen(!isOpen);
   const closeMobileMenu = () => setIsOpen(false);
@@ -148,7 +148,7 @@ const Navbar = () => {
   // Listen for changes in readNotifications to update notification count
   useEffect(() => {
     const handleStorageChange = () => {
-      const stored = localStorage.getItem("readNotifications");
+      const stored = localStorage.getItem('readNotifications');
       if (stored) {
         setReadNotifications(JSON.parse(stored));
       }
@@ -158,8 +158,8 @@ const Navbar = () => {
     window.addEventListener("notificationRead", handleStorageChange);
 
     return () => {
-      window.removeEventListener("storage", handleStorageChange);
-      window.removeEventListener("notificationRead", handleStorageChange);
+      window.removeEventListener('storage', handleStorageChange);
+      window.removeEventListener('notificationRead', handleStorageChange);
     };
   }, []);
 
@@ -180,40 +180,34 @@ const Navbar = () => {
 
   // Notifications for client
   const clientOrderNotifications = useMemo(() => {
-    if (!user || user.role !== "client" || !orders) return [];
+    if (!user || user.role !== 'client' || !orders) return [];
     // Only show notifications for orders that are not pending
     return orders
-      .filter(
-        (order) => order.status === "accepted" || order.status === "rejected"
-      )
+      .filter(order => order.status === 'accepted' || order.status === 'rejected')
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }, [user, orders]);
 
   const unreadNotifications = useMemo(() => {
-    if (!user || user.role !== "client" || !orders) return [];
-    return clientOrderNotifications.filter(
-      (n) => !readNotifications.includes(n.id)
-    );
+    if (!user || user.role !== 'client' || !orders) return [];
+    return clientOrderNotifications.filter(n => !readNotifications.includes(n.id));
   }, [user, orders, clientOrderNotifications, readNotifications]);
 
   const handleShowNotifications = async () => {
     if (!showClientNotifications) {
       await fetchOrders(); // fetch latest orders before showing notifications
     }
-    setShowClientNotifications((v) => !v);
+    setShowClientNotifications(v => !v);
   };
 
   const handleNotificationView = (orderId) => {
     const updated = [...readNotifications, orderId];
     setReadNotifications(updated);
-    localStorage.setItem("readNotifications", JSON.stringify(updated));
-
+    localStorage.setItem('readNotifications', JSON.stringify(updated));
+    
     // Dispatch custom event to notify other components
-    window.dispatchEvent(
-      new CustomEvent("notificationRead", {
-        detail: { orderId: orderId },
-      })
-    );
+    window.dispatchEvent(new CustomEvent('notificationRead', {
+      detail: { orderId: orderId }
+    }));
   };
 
   const avatarImage = getAvatarImage(user);
@@ -226,10 +220,11 @@ const Navbar = () => {
             <div className="navbar-header-container">
               <Link to="/" className="company-title-link">
                 <h1 className="company-title">
-                  {t("book")}
-                  <span className="company-title-accent">{t("share")}</span>
+                  {t('book')}<span className="company-title-accent">{t('share')}</span>
                 </h1>
-                <p className="company-subtitle">{t("publishingExcellence")}</p>
+                <p className="company-subtitle">
+                  {t('publishingExcellence')}
+                </p>
               </Link>
             </div>
           </div>
@@ -279,7 +274,7 @@ const Navbar = () => {
               <div className="navbar-actions">
                 <button
                   className="icon-button"
-                  title={t("search")}
+                  title={t('search')}
                   onClick={toggleSearch}
                 >
                   <FaSearch size={18} />
@@ -288,18 +283,16 @@ const Navbar = () => {
                 <LanguageSwitcher />
 
                 {/* Client Notifications Bell */}
-                {user?.role === "client" && (
+                {user?.role === 'client' && (
                   <div className="client-notification-section">
                     <button
                       className="icon-button client-notification-btn"
-                      title={t("notifications")}
+                      title={t('notifications')}
                       onClick={handleShowNotifications}
                     >
                       <FaBell size={20} />
                       {unreadNotifications.length > 0 && (
-                        <span className="client-notification-badge">
-                          {unreadNotifications.length}
-                        </span>
+                        <span className="client-notification-badge">{unreadNotifications.length}</span>
                       )}
                     </button>
                     {showClientNotifications && (
@@ -307,9 +300,7 @@ const Navbar = () => {
                         <h4>Order Updates</h4>
                         <div className="client-notifications-scroll-container">
                           {unreadNotifications.length === 0 ? (
-                            <div className="no-notifications">
-                              No notifications
-                            </div>
+                            <div className="no-notifications">No notifications</div>
                           ) : (
                             unreadNotifications
                               .slice(0, 2)
@@ -373,12 +364,8 @@ const Navbar = () => {
                         </div>
                         {unreadNotifications.length > 0 && (
                           <div className="client-view-all-notifications">
-                            <Link
-                              to="/client-notifications"
-                              className="client-view-all-link"
-                            >
-                              View All Notifications (
-                              {unreadNotifications.length})
+                            <Link to="/client-notifications" className="client-view-all-link">
+                              View All Notifications ({unreadNotifications.length})
                             </Link>
                           </div>
                         )}
@@ -391,7 +378,7 @@ const Navbar = () => {
                   <>
                     <button
                       className="icon-button wishlist-badge"
-                      title={t("wishlist")}
+                      title={t('wishlist')}
                       onClick={() => handleProtectedAction("/wishlist")}
                     >
                       <FaHeart size={18} />
@@ -402,7 +389,7 @@ const Navbar = () => {
 
                     <button
                       className="icon-button order-badge"
-                      title={t("orders")}
+                      title={t('orders')}
                       onClick={() => handleProtectedAction("/orders")}
                     >
                       <FaBoxOpen size={18} />
@@ -415,7 +402,7 @@ const Navbar = () => {
 
                     <button
                       className="icon-button cart-badge"
-                      title={t("cart")}
+                      title={t('cart')}
                       onClick={() => handleProtectedAction("/cart")}
                     >
                       <FaShoppingCart size={18} />
@@ -430,7 +417,7 @@ const Navbar = () => {
                   <>
                     <button
                       className="icon-button"
-                      title={t("dashboard")}
+                      title={t('dashboard')}
                       onClick={() => navigate("/dashboard")}
                       style={{
                         background: "#3B82F6",
@@ -441,7 +428,7 @@ const Navbar = () => {
                     </button>
                     <button
                       className="icon-button"
-                      title={t("editProfile")}
+                      title={t('editProfile')}
                       onClick={() => navigate("/edit-profile")}
                       style={{
                         background: "#10B981",
@@ -457,10 +444,10 @@ const Navbar = () => {
                   {!user ? (
                     <>
                       <Link to="/login" className="btn btn-outline">
-                        {t("signIn")}
+                        {t('signIn')}
                       </Link>
                       <Link to="/register" className="btn btn-primary">
-                        {t("register")}
+                        {t('register')}
                       </Link>
                     </>
                   ) : (
@@ -549,7 +536,7 @@ const Navbar = () => {
                 <button
                   className="mobile-menu-toggle icon-button"
                   onClick={toggleMobileMenu}
-                  title={t("menu")}
+                  title={t('menu')}
                 >
                   <FaBars size={20} />
                 </button>
@@ -574,7 +561,7 @@ const Navbar = () => {
           <button
             className="icon-button mobile-close-button"
             onClick={closeMobileMenu}
-            title={t("closeMenu")}
+            title={t('closeMenu')}
           >
             <FaTimes size={20} />
           </button>
@@ -587,14 +574,14 @@ const Navbar = () => {
                   className="btn btn-primary"
                   onClick={closeMobileMenu}
                 >
-                  {t("register")}
+                  {t('register')}
                 </Link>
                 <Link
                   to="/login"
                   className="btn btn-outline"
                   onClick={closeMobileMenu}
                 >
-                  {t("signIn")}
+                  {t('signIn')}
                 </Link>
               </>
             ) : (
@@ -664,7 +651,7 @@ const Navbar = () => {
                     closeMobileMenu();
                   }}
                 >
-                  {t("logout")}
+                  {t('logout')}
                 </button>
               </>
             )}
@@ -701,14 +688,14 @@ const Navbar = () => {
                   className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
-                  {t("wishlist")} ({wishlistCount})
+                  {t('wishlist')} ({wishlistCount})
                 </Link>
                 <Link
                   to="/cart"
                   className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
-                  {t("cart")} ({cartCount})
+                  {t('cart')} ({cartCount})
                 </Link>
                 <Link
                   to="/orders"
@@ -734,11 +721,8 @@ const Navbar = () => {
                   onClick={closeMobileMenu}
                   style={{ color: "#3B82F6", fontWeight: 600 }}
                 >
-                  <FaTachometerAlt
-                    size={16}
-                    style={{ marginRight: "0.5rem" }}
-                  />
-                  {t("dashboard")}
+                  <FaTachometerAlt size={16} style={{ marginRight: "0.5rem" }} />
+                  {t('dashboard')}
                 </Link>
                 <Link
                   to="/edit-profile"
@@ -747,7 +731,7 @@ const Navbar = () => {
                   style={{ color: "#10B981", fontWeight: 600 }}
                 >
                   <FaUserEdit size={16} style={{ marginRight: "0.5rem" }} />
-                  {t("editProfile")}
+                  {t('editProfile')}
                 </Link>
               </>
             )}

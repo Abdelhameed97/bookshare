@@ -6,7 +6,8 @@ import {
   FaGoogle,
   FaGithub,
   FaFacebook,
-  FaLinkedin,
+  FaEye,
+  FaEyeSlash,
 } from "react-icons/fa";
 import logo from "../../assets/bookshare-logo.png";
 import { register } from "../../api/auth";
@@ -34,6 +35,8 @@ const RegisterForm = () => {
   const [touched, setTouched] = useState({});
   const [serverError, setServerError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   useEffect(() => {
     if (!form.role) {
@@ -102,9 +105,8 @@ const RegisterForm = () => {
     if (validateForm()) {
       try {
         const res = await register(form);
-        setUser(res.data.data);
-        setToken(res.data.access_token);
-        navigate("/", { replace: true });
+        navigate("/verify-email", { state: { email: form.email } });
+        console.log("Registration successful:", res.data);
       } catch (err) {
         setServerError(
           err.response?.data?.message ||
@@ -122,6 +124,7 @@ const RegisterForm = () => {
   };
 
   const handleSocialLogin = (provider) => {
+    if (!form.role) return;
     window.location.href = `${process.env.REACT_APP_API_URL}/auth/${provider}/redirect?role=${form.role}`;
   };
 
@@ -241,31 +244,49 @@ const RegisterForm = () => {
 
               {/* PASSWORD + CONFIRMATION */}
               <div className='row g-2 mb-1'>
-                {["password", "password_confirmation"].map((field, idx) => (
+                {[
+                  {
+                    name: "password",
+                    show: showPassword,
+                    toggle: setShowPassword,
+                  },
+                  {
+                    name: "password_confirmation",
+                    show: showConfirmPassword,
+                    toggle: setShowConfirmPassword,
+                  },
+                ].map(({ name, show, toggle }, idx) => (
                   <div className='col-md-6' key={idx}>
-                    <div className='form-floating'>
+                    <div className='form-floating position-relative'>
                       <input
-                        type='password'
-                        name={field}
-                        id={field}
+                        type={show ? "text" : "password"}
+                        name={name}
+                        id={name}
                         className={`form-control ${
-                          errors[field] ? "is-invalid" : ""
-                        } ${isValid(field) ? "is-valid" : ""}`}
-                        value={form[field]}
+                          errors[name] ? "is-invalid" : ""
+                        } ${isValid(name) ? "is-valid" : ""}`}
+                        value={form[name]}
                         onChange={handleChange}
                         onBlur={handleBlur}
-                        placeholder={field}
+                        placeholder={name}
                         autoComplete='new-password'
                       />
-                      <label htmlFor={field}>
-                        {field === "password" ? "Password" : "Confirm Password"}
+                      <label htmlFor={name}>
+                        {name === "password" ? "Password" : "Confirm Password"}
                       </label>
-                      {errors[field] && (
+                      <span
+                        className='position-absolute top-50 end-0 translate-middle-y me-3'
+                        style={{ cursor: "pointer", zIndex: 2 }}
+                        onClick={() => toggle((prev) => !prev)}
+                      >
+                        {show ? <FaEyeSlash /> : <FaEye />}
+                      </span>
+                      {errors[name] && (
                         <div className='invalid-feedback d-flex align-items-center'>
-                          <FaTimes className='me-1' /> {errors[field]}
+                          <FaTimes className='me-1' /> {errors[name]}
                         </div>
                       )}
-                      {isValid(field) && (
+                      {isValid(name) && (
                         <div className='valid-feedback d-flex align-items-center'>
                           <FaCheck className='me-1' /> Password OK
                         </div>
@@ -338,20 +359,6 @@ const RegisterForm = () => {
                   >
                     <FaFacebook />
                   </button>
-
-                  {/* <button
-                    className='btn rounded-circle d-flex justify-content-center align-items-center text-white'
-                    style={{
-                      width: "45px",
-                      height: "45px",
-                      backgroundColor: "#0A66C2",
-                      border: "1px solid #0A66C2",
-                    }}
-                    type='button'
-                    onClick={() => handleSocialLogin("linkedin")}
-                  >
-                    <FaLinkedin />
-                  </button> */}
                 </div>
               </div>
 
