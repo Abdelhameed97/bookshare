@@ -126,6 +126,13 @@ const BookDetails = () => {
     }
   }, [id, user, mounted, checkWishlistStatus, checkCartStatus]);
 
+  useEffect(() => {
+    if (book?.id) {
+      fetchRatings(book.id);
+    }
+  }, [book]);
+  
+
   const fetchBookWithComments = useCallback(async () => {
     try {
       const response = await axios.get(`http://localhost:8000/api/books/${id}`);
