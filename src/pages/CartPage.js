@@ -249,10 +249,10 @@ const CartPage = () => {
     }
 
     const handleOrderNow = async () => {
-        if (cartItems.length === 0) return
+        if (cartItems.length === 0) return;
         if (!user) {
-            navigate("/login", { state: { from: "/cart" } })
-            return
+            navigate("/login", { state: { from: "/cart" } });
+            return;
         }
 
         if (!selectedPaymentMethod) {
@@ -260,8 +260,8 @@ const CartPage = () => {
                 icon: "error",
                 title: "Payment Method Required",
                 text: "Please select a payment method before proceeding",
-            })
-            return
+            });
+            return;
         }
 
         const result = await Swal.fire({
@@ -272,9 +272,9 @@ const CartPage = () => {
             confirmButtonColor: "#28a745",
             cancelButtonColor: "#6c757d",
             confirmButtonText: "Continue to Order",
-        })
+        });
 
-        if (!result.isConfirmed) return
+        if (!result.isConfirmed) return;
 
         setProcessing(true);
         try {
@@ -288,20 +288,22 @@ const CartPage = () => {
                 coupon_code: appliedCoupon?.code || null
             };
 
-            const response = await api.createOrder(orderData)
-            const orderList = response.data?.data
+            const response = await api.createOrder(orderData);
+            const orderList = response.data?.data;
             const orderId =
                 Array.isArray(orderList) && orderList.length > 0
                     ? orderList[0].id
-                    : null
+                    : null;
 
             if (!orderId) {
-                throw new Error("Order ID not found in response")
+                throw new Error("Order ID not found in response");
             }
+
+            await clearCart();
 
             navigate(`/orders/${orderId}`);
         } catch (err) {
-            console.error("Checkout error:", err)
+            console.error("Checkout error:", err);
             await Swal.fire({
                 icon: 'error',
                 title: 'Checkout Failed',
@@ -310,7 +312,8 @@ const CartPage = () => {
         } finally {
             setProcessing(false);
         }
-    }
+    };
+    
 
     if (loading) {
         return (

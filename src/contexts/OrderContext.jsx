@@ -80,11 +80,7 @@ export const OrderProvider = ({ children }) => {
   const cancelOrder = async (orderId) => {
     try {
       await api.cancelOrder(orderId);
-      setOrders((prev) =>
-        prev.map((order) =>
-          order.id === orderId ? { ...order, status: "cancelled" } : order
-        )
-      );
+      await fetchOrders();
       return { success: true };
     } catch (err) {
       return {
@@ -92,16 +88,6 @@ export const OrderProvider = ({ children }) => {
         error: err.response?.data?.message || "Failed to cancel order",
       };
     }
-  };
-
-  const countPendingOrders = () => {
-    return orders.filter((order) => order.status === "pending").length;
-  };
-
-  const countBooksInPendingOrders = () => {
-    return orders
-      .filter((order) => order.status === "pending")
-      .reduce((total, order) => total + (order.order_items?.length || 0), 0);
   };
 
   const getOrderDetails = async (orderId) => {
@@ -124,19 +110,25 @@ export const OrderProvider = ({ children }) => {
     };
 
     window.addEventListener("storage", handleStorageChange);
-    return () => window.removeEventListener("storage", handleStorageChange);
+
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 1000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
   }, [user?.id]);
 
   const value = {
     orders,
-    pendingOrdersCount, 
+    pendingOrdersCount,
     uniqueBooksCount,
     loading,
     error,
     fetchOrders,
     cancelOrder,
-    countPendingOrders,
-    countBooksInPendingOrders,
     getOrderDetails,
     setOrders,
   };
