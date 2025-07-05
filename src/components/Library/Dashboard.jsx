@@ -393,12 +393,12 @@ const Dashboard = () => {
               </button>
               {showNotifications && (
                 <div className="notifications-dropdown">
-                  <h4>New Book Requests</h4>
-                  <div className="notifications-scroll-container">
-                    {pendingOrders.length === 0 ? (
-                      <div className="no-notifications">No new requests</div>
+                  <h4>All Book Requests</h4>
+                  <div className="notifications-scroll-container" style={{ maxHeight: 320, overflowY: 'auto' }}>
+                    {filteredOrders.length === 0 ? (
+                      <div className="no-notifications">No notifications</div>
                     ) : (
-                      pendingOrders.slice(0, 2).map(order => {
+                      filteredOrders.slice(0, 10).map(order => {
                         const userName = order.user?.name || order.client?.name || 'Someone';
                         const firstBook = order.order_items?.[0]?.book?.title || 'a book';
                         const moreCount = order.order_items?.length > 1 ? order.order_items.length - 1 : 0;
@@ -413,6 +413,8 @@ const Dashboard = () => {
                                 {moreCount > 0 && (
                                   <span> and <span className="notif-more">{moreCount} more</span></span>
                                 )}
+                                <span> - </span>
+                                <span className={`notif-status notif-status-${order.status}`}>{order.status}</span>
                               </span>
                             </div>
                             <div className="notification-meta">
@@ -424,13 +426,11 @@ const Dashboard = () => {
                       })
                     )}
                   </div>
-                  {pendingOrders.length > 0 && (
-                    <div className="view-all-notifications">
-                      <Link to="/notifications" className="view-all-link">
-                        View All Notifications ({pendingOrders.length})
-                      </Link>
-                    </div>
-                  )}
+                  <div className="view-all-notifications">
+                    <Link to="/notifications" className="view-all-link">
+                      View All Notifications ({filteredOrders.length})
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>

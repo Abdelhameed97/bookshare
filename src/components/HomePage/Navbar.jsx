@@ -398,7 +398,9 @@ const Navbar = () => {
                     >
                       <FaBoxOpen size={18} />
                       {pendingOrdersCount > 0 && (
-                        <span className="order-count">{pendingOrdersCount}</span>
+                        <span className="order-count">
+                          {pendingOrdersCount}
+                        </span>
                       )}
                     </button>
 
