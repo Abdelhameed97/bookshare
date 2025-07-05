@@ -121,7 +121,7 @@ const ClientNotificationsPage = () => {
       // Get user notifications
       const userNotifications = notificationsResponse.status === 'fulfilled' && notificationsResponse.value.data.data 
         ? notificationsResponse.value.data.data.filter(
-            notification => notification.user_id === currentUser.id
+            notification => notification.notifiable_id === currentUser.id
           )
         : [];
 

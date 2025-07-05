@@ -33,6 +33,7 @@ const BookList = () => {
         category_id: '',
         condition: 'new',
         status: 'available',
+        tax: '',
     });
     const [imageFile, setImageFile] = useState(null);
     const [previewImage, setPreviewImage] = useState(null);
@@ -110,13 +111,14 @@ const BookList = () => {
                 category_id: book.category_id || '',
                 condition: book.condition || 'new',
                 status: book.status || 'available',
+                tax: '',
             });
             setEditId(book.id);
             if (book.images && book.images[0]) {
                 setPreviewImage(`http://localhost:8000/storage/${book.images[0]}`);
             }
         } else {
-            setForm({ title: '', author: '', isbn: '', pages: '', description: '', price: '', rental_price: '', educational_level: '', genre: '', quantity: '1', category_id: '', condition: 'new', status: 'available' });
+            setForm({ title: '', author: '', isbn: '', pages: '', description: '', price: '', rental_price: '', educational_level: '', genre: '', quantity: '1', category_id: '', condition: 'new', status: 'available', tax: '' });
             setEditId(null);
         }
         setImageFile(null);
@@ -126,7 +128,17 @@ const BookList = () => {
     };
     
     const closeModal = () => setShowModal(false);
-    const handleFormChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setForm(prev => {
+            let updated = { ...prev, [name]: value };
+            if (name === 'price') {
+                const priceVal = parseFloat(value) || 0;
+                updated.tax = (priceVal * 0.1).toFixed(2);
+            }
+            return updated;
+        });
+    };
     const handleFileChange = (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -230,6 +242,7 @@ const BookList = () => {
                                 <th style={{ padding: '0.75rem 1rem', textAlign: 'left' }}>Title & Author</th>
                                 <th style={{ padding: '0.75rem 1rem' }}>Category</th>
                                 <th style={{ padding: '0.75rem 1rem' }}>Price</th>
+                                <th style={{ padding: '0.75rem 1rem' }}>Tax</th>
                                 <th style={{ padding: '0.75rem 1rem' }}>Qty</th>
                                 <th style={{ padding: '0.75rem 1rem' }}>Actions</th>
                             </tr>
@@ -245,6 +258,7 @@ const BookList = () => {
                                     </td>
                                     <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}><span style={{background: '#eef2f6', color: '#475569', padding: '0.25rem 0.6rem', borderRadius: 12, fontWeight: 500, fontSize: 13}}>{book.category?.name || 'N/A'}</span></td>
                                     <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>${parseFloat(book.price).toFixed(2)}</td>
+                                    <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>${book.tax ? parseFloat(book.tax).toFixed(2) : ((book.price && !isNaN(book.price)) ? (parseFloat(book.price) * 0.1).toFixed(2) : '0.00')}</td>
                                     <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>{book.quantity || 1}</td>
                                     <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
                                         <button onClick={() => openModal(book)} style={{ background: '#f0fdf4', color: '#15803d', border: '1px solid #bbf7d0', borderRadius: 6, padding: '0.4rem 0.7rem', marginRight: 8, cursor: 'pointer' }}><FaEdit /></button>
@@ -314,11 +328,16 @@ const BookList = () => {
                                     <input type="number" step="0.01" name="price" value={form.price} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
                                 </div>
                                 <div style={{flex: 1}}>
-                                    <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Rental Price ($)</label>
-                                    <input type="number" step="0.01" name="rental_price" value={form.rental_price} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                                    <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Tax ($)</label>
+                                    <input type="number" step="0.01" name="tax" value={form.tax} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16, background: '#f3f4f6' }} />
+                                    <small style={{ color: '#64748b', fontSize: 13 }}>Calculated automatically as 10% of price, but you can edit it.</small>
                                 </div>
                              </div>
                              <div style={{display: 'flex', gap: '1rem'}}>
+                                <div style={{flex: 1}}>
+                                    <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Rental Price ($)</label>
+                                    <input type="number" step="0.01" name="rental_price" value={form.rental_price} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
+                                </div>
                                 <div style={{flex: 1}}>
                                     <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Quantity</label>
                                     <input type="number" name="quantity" value={form.quantity} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }} />
@@ -330,6 +349,8 @@ const BookList = () => {
                                         <option value="used">Used</option>
                                     </select>
                                 </div>
+                            </div>
+                            <div style={{display: 'flex', gap: '1rem'}}>
                                 <div style={{flex: 1}}>
                                     <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Status</label>
                                     <select name="status" value={form.status} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }}>
@@ -337,8 +358,6 @@ const BookList = () => {
                                         <option value="unavailable">Unavailable</option>
                                     </select>
                                 </div>
-                            </div>
-                            <div style={{display: 'flex', gap: '1rem'}}>
                                 <div style={{flex: 1}}>
                                     <label style={{ display: 'block', marginBottom: 6, color: '#374151', fontWeight: 600 }}>Educational Level</label>
                                     <select name="educational_level" value={form.educational_level} onChange={handleFormChange} style={{ width: '100%', padding: '0.6rem', borderRadius: 6, border: '1px solid #d1d5db', fontSize: 16 }}>
