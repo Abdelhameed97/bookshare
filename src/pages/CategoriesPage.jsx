@@ -5,6 +5,9 @@ import "../style/Homepagestyle.css"
 import { useEffect, useState } from "react"
 import api from "../api/auth"
 import { useNavigate } from "react-router-dom"
+import Navbar from '../components/HomePage/Navbar';
+import Footer from '../components/HomePage/Footer';
+
 
 const BookCategories = () => {
     const [categories, setCategories] = useState([])
@@ -71,141 +74,147 @@ const BookCategories = () => {
     }
 
     return (
-        <section className="book-categories-section">
-            <div className="book-categories-container">
-                <div className="section-header">
-                    <HomePageTitle>Explore Our Categories</HomePageTitle>
-                    <p className="section-description">
-                        Discover your next favorite read across our carefully
-                        curated collection of genres
-                    </p>
-                    <div className="section-divider"></div>
-                    <button
-                        className="view-all-categories-btn"
-                        style={{
-                            background:
-                                "linear-gradient(hsl(216, 98.3%, 45.7%))",
-                            color: "#fff",
-                            border: "none",
-                            borderRadius: 8,
-                            padding: "8px 20px",
-                            fontWeight: 600,
-                            marginTop: 12,
-                            cursor: "pointer",
-                        }}
-                        onClick={() => navigate("/categories")}
-                    >
-                        View All Categories
-                    </button>
-                </div>
+        <>
+            <Navbar />
+            
+            <section className="book-categories-section">
+                <div className="book-categories-container">
+                    <div className="section-header">
+                        <HomePageTitle>Explore Our Categories</HomePageTitle>
+                        <p className="section-description">
+                            Discover your next favorite read across our carefully
+                            curated collection of genres
+                        </p>
+                        <div className="section-divider"></div>
+                        <button
+                            className="view-all-categories-btn"
+                            style={{
+                                background:
+                                    "linear-gradient(hsl(216, 98.3%, 45.7%))",
+                                color: "#fff",
+                                border: "none",
+                                borderRadius: 8,
+                                padding: "8px 20px",
+                                fontWeight: 600,
+                                marginTop: 12,
+                                cursor: "pointer",
+                            }}
+                            onClick={() => navigate("/categories")}
+                        >
+                            View All Categories
+                        </button>
+                    </div>
 
-                <div className="categories-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
-                    {categories.map((category, idx) => {
-                        const IconComponent = getIconComponent(category.icon)
-                        const books = categoryBooks[category.id] || []
+                    <div className="categories-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
+                        {categories.map((category, idx) => {
+                            const IconComponent = getIconComponent(category.icon)
+                            const books = categoryBooks[category.id] || []
 
-                        return (
-                            <div
-                                key={category.id}
-                                className="category-card hover:shadow-lg transition-shadow duration-300 relative"
-                                style={{
-                                    borderRadius: 16,
-                                    overflow: "hidden",
-                                    background:
-                                        categoryColors[
-                                            idx % categoryColors.length
-                                        ],
-                                }}
-                            >
-                                <div className="card-overlay"></div>
-                                <div className="card-content p-6 relative z-10">
-                                    <div className="icon-container mb-4">
-                                        <IconComponent className="category-icon w-12 h-12" />
-                                    </div>
-                                    <h3 className="category-title text-xl font-bold mb-2">
-                                        {category.name}
-                                    </h3>
-                                    <p className="category-description mb-4">
-                                        {category.description}
-                                    </p>
-
-                                    {/* زر Explore Collection */}
-                                    <div className="explore-link mb-4">
-                                        <button
-                                            className="explore-text flex items-center text-primary font-medium"
-                                            onClick={() =>
-                                                navigate(
-                                                    `/categories/${category.id}`
-                                                )
-                                            }
-                                        >
-                                            Explore Collection
-                                            <svg
-                                                className="explore-arrow ml-2 w-4 h-4"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                viewBox="0 0 24 24"
-                                            >
-                                                <path
-                                                    strokeLinecap="round"
-                                                    strokeLinejoin="round"
-                                                    strokeWidth={2}
-                                                    d="M9 5l7 7-7 7"
-                                                />
-                                            </svg>
-                                        </button>
-                                    </div>
-
-                                    {/* صور الكتب */}
-                                    {books.length > 0 && (
-                                        <div className="d-flex gap-2 mt-2">
-                                            {books.map((book) => (
-                                                <div
-                                                    key={book.id}
-                                                    style={{
-                                                        width: 60,
-                                                        textAlign: "center",
-                                                    }}
-                                                >
-                                                    <img
-                                                        src={
-                                                            book.images?.[0]
-                                                                ? book.images[0].startsWith(
-                                                                      "http"
-                                                                  )
-                                                                    ? book
-                                                                          .images[0]
-                                                                    : `${process.env.REACT_APP_API_URL}/storage/${book.images[0]}`
-                                                                : "/placeholder.svg"
-                                                        }
-                                                        alt={book.title}
-                                                        className="img-fluid rounded mb-1"
-                                                        style={{
-                                                            height: 60,
-                                                            objectFit: "cover",
-                                                        }}
-                                                    />
-                                                    <div
-                                                        className="small text-truncate text-white"
-                                                        title={book.title}
-                                                    >
-                                                        {book.title}
-                                                    </div>
-                                                </div>
-                                            ))}
+                            return (
+                                <div
+                                    key={category.id}
+                                    className="category-card hover:shadow-lg transition-shadow duration-300 relative"
+                                    style={{
+                                        borderRadius: 16,
+                                        overflow: "hidden",
+                                        background:
+                                            categoryColors[
+                                                idx % categoryColors.length
+                                            ],
+                                    }}
+                                >
+                                    <div className="card-overlay"></div>
+                                    <div className="card-content p-6 relative z-10">
+                                        <div className="icon-container mb-4">
+                                            <IconComponent className="category-icon w-12 h-12" />
                                         </div>
-                                    )}
-                                </div>
+                                        <h3 className="category-title text-xl font-bold mb-2">
+                                            {category.name}
+                                        </h3>
+                                        <p className="category-description mb-4">
+                                            {category.description}
+                                        </p>
 
-                                {/* الدوائر التزيينية */}
-                                <div className="decorative-circle-1"></div>
-                                <div className="decorative-circle-2"></div>
-                            </div>
-                        )
-                    })}
+                                        {/* زر Explore Collection */}
+                                        <div className="explore-link mb-4">
+                                            <button
+                                                className="explore-text flex items-center text-primary font-medium"
+                                                onClick={() =>
+                                                    navigate(
+                                                        `/categories/${category.id}`
+                                                    )
+                                                }
+                                            >
+                                                Explore Collection
+                                                <svg
+                                                    className="explore-arrow ml-2 w-4 h-4"
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path
+                                                        strokeLinecap="round"
+                                                        strokeLinejoin="round"
+                                                        strokeWidth={2}
+                                                        d="M9 5l7 7-7 7"
+                                                    />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        {/* صور الكتب */}
+                                        {books.length > 0 && (
+                                            <div className="d-flex gap-2 mt-2">
+                                                {books.map((book) => (
+                                                    <div
+                                                        key={book.id}
+                                                        style={{
+                                                            width: 60,
+                                                            textAlign: "center",
+                                                        }}
+                                                    >
+                                                        <img
+                                                            src={
+                                                                book.images?.[0]
+                                                                    ? book.images[0].startsWith(
+                                                                          "http"
+                                                                      )
+                                                                        ? book
+                                                                              .images[0]
+                                                                        : `${process.env.REACT_APP_API_URL}/storage/${book.images[0]}`
+                                                                    : "/placeholder.svg"
+                                                            }
+                                                            alt={book.title}
+                                                            className="img-fluid rounded mb-1"
+                                                            style={{
+                                                                height: 60,
+                                                                objectFit: "cover",
+                                                            }}
+                                                        />
+                                                        <div
+                                                            className="small text-truncate text-white"
+                                                            title={book.title}
+                                                        >
+                                                            {book.title}
+                                                        </div>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    {/* الدوائر التزيينية */}
+                                    <div className="decorative-circle-1"></div>
+                                    <div className="decorative-circle-2"></div>
+                                </div>
+                            )
+                        })}
+                    </div>
                 </div>
-            </div>
-        </section>
+            </section>
+
+            <Footer />
+        </>
     )
 }
 
