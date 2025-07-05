@@ -8,7 +8,7 @@ import {
   Eye,
   EyeOff
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import apiService from '../../services/api';
 import Swal from 'sweetalert2';
 import Navbar from '../HomePage/Navbar';
@@ -34,6 +34,7 @@ const EditClientProfile = () => {
   const [errors, setErrors] = useState({});
   
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Memoize currentUser to prevent unnecessary re-renders
   const currentUser = useMemo(() => {
@@ -53,6 +54,7 @@ const EditClientProfile = () => {
       navigate('/login');
       return;
     }
+    
     // Load current user data
     setFormData({
       name: currentUser.name || '',
@@ -72,6 +74,8 @@ const EditClientProfile = () => {
       ...prev,
       [name]: value
     }));
+    
+    // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -82,17 +86,22 @@ const EditClientProfile = () => {
 
   const validateForm = (e) => {
     const newErrors = {};
+
+    // Basic validation
     if (!formData.name.trim()) {
       newErrors.name = 'Name is required';
     }
+
     if (!formData.email.trim()) {
       newErrors.email = 'Email is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
       newErrors.email = 'Email is invalid';
     }
+
     if (formData.phone_number && !/^01[0-9]\d{8}$/.test(formData.phone_number)) {
       newErrors.phone_number = 'Phone number must be a valid 11-digit Egyptian mobile number.';
     }
+
     // National ID validation (only if not set)
     if (!currentUser.national_id) {
       if (!formData.national_id.trim()) {
@@ -101,86 +110,116 @@ const EditClientProfile = () => {
         newErrors.national_id = 'National ID must be 14 digits.';
       }
     }
-    // Password validation logic
+
+    // Password validation logic - modified for social media users
     const isChangingPassword = formData.new_password || formData.confirm_password || formData.current_password;
+    const isSocialUser = currentUser.provider && currentUser.provider !== 'local';
+
+    // If on the password tab, and fields are empty, but user clicks save, show errors.
+    // Or if user has started filling any password field, enforce all fields.
     if ((activeTab === 'password' && !isChangingPassword && e?.type === 'submit') || isChangingPassword) {
-      if (!formData.current_password) {
+      // For social media users, don't require current password
+      if (!isSocialUser && !formData.current_password) {
         newErrors.current_password = 'Current password is required.';
       }
+
       if (!formData.new_password) {
         newErrors.new_password = 'New password is required.';
       } else if (formData.new_password.length < 6) {
         newErrors.new_password = 'New password must be at least 6 characters.';
       }
+      
       if (!formData.confirm_password) {
         newErrors.confirm_password = 'Please confirm your new password.';
       } else if (formData.new_password !== formData.confirm_password) {
         newErrors.confirm_password = 'Passwords do not match.';
       }
     }
+    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    
     if (!validateForm(e)) {
       return;
     }
+
     try {
       setLoading(true);
-      const updateData = {
-        name: formData.name,
-        email: formData.email,
-        phone_number: formData.phone_number,
-        location: formData.location,
-      };
+      console.log('=== CLIENT PROFILE UPDATE DEBUG ===');
+      console.log('Current user:', currentUser);
+      console.log('Form data:', formData);
+      console.log('Token:', localStorage.getItem('token'));
+
+      // Prepare FormData for file upload
+      const form = new FormData();
+      form.append('name', formData.name);
+      form.append('email', formData.email);
+      form.append('phone_number', formData.phone_number);
+      form.append('location', formData.location);
       if (!currentUser.national_id && formData.national_id) {
-        updateData.national_id = formData.national_id;
+        form.append('national_id', formData.national_id);
       }
       if (formData.new_password) {
-        updateData.password = formData.new_password;
-        updateData.password_confirmation = formData.confirm_password;
-        updateData.current_password = formData.current_password;
+        form.append('password', formData.new_password);
+        form.append('password_confirmation', formData.confirm_password);
+        // Only send current_password if user is not from social media
+        if (!currentUser.provider || currentUser.provider === 'local') {
+          form.append('current_password', formData.current_password);
       }
-      const response = await apiService.updateUser(currentUser.id, updateData);
-      const passwordWasChanged = !!formData.new_password;
-      if (passwordWasChanged) {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        await Swal.fire({
-          icon: 'success',
-          title: 'Password Updated!',
-          text: 'Your password has been changed successfully. Please log in again.',
-        });
-        navigate('/login');
-      } else {
-        const updatedUser = { ...currentUser, ...response.data.data };
+      }
+      // Laravel: use POST with _method=PUT for file upload
+      form.append('_method', 'PUT');
+      // Use fetch directly for multipart/form-data
+      const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/users/${currentUser.id}`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: form
+      });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.message || 'Failed to update profile');
+      // Update localStorage with new user data
+      const updatedUser = { ...currentUser, ...data.data };
         localStorage.setItem('user', JSON.stringify(updatedUser));
+      // Notify Navbar to update
+      window.dispatchEvent(new Event('storage'));
         await Swal.fire({
           icon: 'success',
           title: 'Profile Updated!',
           text: 'Your profile has been updated successfully.',
           timer: 2000
         });
-        setFormData(prev => ({
-          ...prev,
-          current_password: '',
-          new_password: '',
-          confirm_password: ''
-        }));
-      }
+      setFormData(prev => ({ ...prev, current_password: '', new_password: '', confirm_password: '' }));
     } catch (error) {
+      console.error('=== CLIENT PROFILE UPDATE ERROR ===');
+      console.error('Error object:', error);
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      console.error('Error message:', error.message);
+      
       let errorMessage = 'Failed to update profile';
+      
       if (error.response?.data?.message) {
         errorMessage = error.response.data.message;
       } else if (error.response?.data?.errors) {
+        // Handle validation errors
         const validationErrors = error.response.data.errors;
+        console.error('Validation errors:', validationErrors);
         const errorMessages = Object.values(validationErrors).flat();
         errorMessage = errorMessages.join(', ');
       } else if (error.message) {
         errorMessage = error.message;
       }
+      
+      console.error('Final error message:', errorMessage);
+      
+      // Specifically check for incorrect current password error
       if (error.response?.data?.errors?.current_password) {
         Swal.fire({
           icon: 'error',
@@ -207,6 +246,8 @@ const EditClientProfile = () => {
     return null;
   }
 
+  const isSocialUser = currentUser.provider && currentUser.provider !== 'local';
+
   return (
     <>
       <Navbar />
@@ -216,6 +257,7 @@ const EditClientProfile = () => {
             <h1>Edit Profile</h1>
             <p>Update your client profile information</p>
           </div>
+
           <div className="profile-tabs">
             <button
               className={`tab-button ${activeTab === 'personal' ? 'active' : ''}`}
@@ -230,10 +272,12 @@ const EditClientProfile = () => {
               Change Password
             </button>
           </div>
+
           <form onSubmit={handleSubmit} className="profile-form">
             {activeTab === 'personal' && (
               <div className="form-section">
                 <h2>Personal Information</h2>
+                
                 <div className="form-group">
                   <label htmlFor="name">
                     <User size={18} />
@@ -251,6 +295,7 @@ const EditClientProfile = () => {
                   />
                   {errors.name && <span className="error-message">{errors.name}</span>}
                 </div>
+
                 <div className="form-group">
                   <label htmlFor="email">
                     <Mail size={18} />
@@ -268,6 +313,7 @@ const EditClientProfile = () => {
                   />
                   {errors.email && <span className="error-message">{errors.email}</span>}
                 </div>
+
                 <div className="form-group">
                   <label htmlFor="phone_number">
                     <Phone size={18} />
@@ -284,6 +330,7 @@ const EditClientProfile = () => {
                   />
                   {errors.phone_number && <span className="error-message">{errors.phone_number}</span>}
                 </div>
+
                 <div className="form-group">
                   <label htmlFor="location">
                     <MapPin size={18} />
@@ -298,7 +345,7 @@ const EditClientProfile = () => {
                     rows="3"
                   />
                 </div>
-                {/* National ID Field */}
+
                 <div className="form-group">
                   <label htmlFor="national_id">
                     الرقم القومي (National ID)
@@ -328,13 +375,30 @@ const EditClientProfile = () => {
                 </div>
               </div>
             )}
+
             {activeTab === 'password' && (
               <div className="form-section">
                 <h2>Change Password</h2>
+                {isSocialUser && (
+                  <div style={{
+                    background: '#f0f9ff',
+                    border: '1px solid #0ea5e9',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '20px'
+                  }}>
+                    <p style={{ margin: 0, color: '#0369a1', fontSize: '0.9rem' }}>
+                      <strong>Social Media Account:</strong> Since you signed up with {currentUser.provider}, 
+                      you can set a new password without entering your current password.
+                    </p>
+                  </div>
+                )}
                 <p className="section-description">
                   Leave blank if you don't want to change your password. 
                   New password must be at least 6 characters long.
                 </p>
+                
+                {!isSocialUser && (
                 <div className="form-group">
                   <label htmlFor="current_password">
                     <Eye size={18} />
@@ -361,6 +425,8 @@ const EditClientProfile = () => {
                   </div>
                   {errors.current_password && <span className="error-message">{errors.current_password}</span>}
                 </div>
+                )}
+
                 <div className="form-group">
                   <label htmlFor="new_password">
                     <Eye size={18} />
@@ -392,6 +458,7 @@ const EditClientProfile = () => {
                     </small>
                   )}
                 </div>
+
                 <div className="form-group">
                   <label htmlFor="confirm_password">
                     <Eye size={18} />
@@ -430,6 +497,7 @@ const EditClientProfile = () => {
                 </div>
               </div>
             )}
+
             {/* Form Actions */}
             <div className="form-actions">
               <button
