@@ -126,6 +126,12 @@ const BookDetails = () => {
     }
   }, [id, user, mounted, checkWishlistStatus, checkCartStatus]);
 
+  useEffect(() => {
+    if (book?.id) {
+      fetchRatings(book.id);
+    }
+  }, [book]);
+
   const fetchBookWithComments = useCallback(async () => {
     try {
       const response = await axios.get(`http://localhost:8000/api/books/${id}`);
@@ -145,10 +151,15 @@ const BookDetails = () => {
   // Fetch other books by the same author (not just same owner)
   useEffect(() => {
     if (book && book.author) {
-      axios.get(`http://localhost:8000/api/books?author=${encodeURIComponent(book.author)}`)
-        .then(res => {
+      axios
+        .get(
+          `http://localhost:8000/api/books?author=${encodeURIComponent(
+            book.author
+          )}`
+        )
+        .then((res) => {
           // Filter out the current book
-          setAuthorBooks((res.data.data || []).filter(b => b.id !== book.id));
+          setAuthorBooks((res.data.data || []).filter((b) => b.id !== book.id));
         })
         .catch(() => setAuthorBooks([]));
     } else {
@@ -186,19 +197,19 @@ const BookDetails = () => {
         user_id: user.id,
         user: response.data.user || {
           id: user.id,
-          name: user.name
+          name: user.name,
         },
         book_id: id,
         parent_id: parentId,
         created_at: response.data.created_at || new Date().toISOString(),
         updated_at: response.data.updated_at || new Date().toISOString(),
-        replies: []
+        replies: [],
       };
 
       // Update local state immediately
-      setBook(prevBook => {
+      setBook((prevBook) => {
         const updatedBook = { ...prevBook };
-        
+
         if (!updatedBook.comments) {
           updatedBook.comments = [];
         }
@@ -206,17 +217,17 @@ const BookDetails = () => {
         if (parentId) {
           // Add reply to parent comment
           const addReplyToComment = (comments) => {
-            return comments.map(comment => {
+            return comments.map((comment) => {
               if (comment.id === parentId) {
                 return {
                   ...comment,
-                  replies: [...(comment.replies || []), newComment]
+                  replies: [...(comment.replies || []), newComment],
                 };
               }
               if (comment.replies && comment.replies.length > 0) {
                 return {
                   ...comment,
-                  replies: addReplyToComment(comment.replies)
+                  replies: addReplyToComment(comment.replies),
                 };
               }
               return comment;
@@ -227,22 +238,26 @@ const BookDetails = () => {
           // Add new top-level comment
           updatedBook.comments = [newComment, ...updatedBook.comments];
         }
-        
+
         return updatedBook;
       });
 
       setCommentInput("");
       setParentId(null);
       setReplyingTo(null);
-      
+
       // Scroll to new comment with highlight
       scrollToComment(newComment.id);
-      
+
       toast.success("Comment added successfully!");
     } catch (error) {
       console.error("Error submitting comment:", error);
       console.error("Error response:", error.response?.data);
-      toast.error(error.response?.data?.message || error.response?.data?.error || "Failed to add comment");
+      toast.error(
+        error.response?.data?.message ||
+          error.response?.data?.error ||
+          "Failed to add comment"
+      );
     }
   };
 
@@ -283,28 +298,28 @@ const BookDetails = () => {
       );
 
       // Update local state immediately
-      setBook(prevBook => {
+      setBook((prevBook) => {
         const updatedBook = { ...prevBook };
-        
+
         const updateCommentInArray = (comments) => {
-          return comments.map(comment => {
+          return comments.map((comment) => {
             if (comment.id === editingComment) {
               return {
                 ...comment,
                 comment: editCommentText,
-                updated_at: new Date().toISOString()
+                updated_at: new Date().toISOString(),
               };
             }
             if (comment.replies && comment.replies.length > 0) {
               return {
                 ...comment,
-                replies: updateCommentInArray(comment.replies)
+                replies: updateCommentInArray(comment.replies),
               };
             }
             return comment;
           });
         };
-        
+
         updatedBook.comments = updateCommentInArray(updatedBook.comments);
         return updatedBook;
       });
@@ -340,19 +355,19 @@ const BookDetails = () => {
         // Update local state immediately, recursively remove from all levels
         setBook((prevBook) => {
           const updatedBook = { ...prevBook };
-          
+
           const removeCommentFromArray = (comments) => {
             if (!comments) return [];
             return comments
               .filter((comment) => comment.id !== commentId)
               .map((comment) => ({
-                  ...comment,
+                ...comment,
                 replies: comment.replies
                   ? removeCommentFromArray(comment.replies)
                   : [],
               }));
           };
-          
+
           updatedBook.comments = removeCommentFromArray(updatedBook.comments);
           return updatedBook;
         });
@@ -489,17 +504,17 @@ const BookDetails = () => {
     setTimeout(() => {
       const commentElement = document.getElementById(`comment-${commentId}`);
       if (commentElement) {
-        commentElement.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'center' 
+        commentElement.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
         });
-        
+
         // Add highlight effect
-        commentElement.classList.add('comment-highlight');
-        
+        commentElement.classList.add("comment-highlight");
+
         // Remove highlight class after animation
         setTimeout(() => {
-          commentElement.classList.remove('comment-highlight');
+          commentElement.classList.remove("comment-highlight");
         }, 3000);
       }
     }, 100);
@@ -772,7 +787,8 @@ const BookDetails = () => {
                       <div className="d-flex align-items-center mb-2">
                         <StarRating rating={avgRating} size={24} />
                         <span className="ms-2 text-muted">
-                          ({ratingCount} {ratingCount === 1 ? "rating" : "ratings"})
+                          ({ratingCount}{" "}
+                          {ratingCount === 1 ? "rating" : "ratings"})
                         </span>
                       </div>
 
@@ -866,7 +882,9 @@ const BookDetails = () => {
                     </div>
                   </div>
 
-                  <p className="text-muted mb-4">{book.description || "No description available."}</p>
+                  <p className="text-muted mb-4">
+                    {book.description || "No description available."}
+                  </p>
 
                   <div className="row mb-4">
                     <div className="col-md-6">
@@ -889,9 +907,11 @@ const BookDetails = () => {
                         <div>
                           <h6 className="mb-0 fw-bold">Quantity</h6>
                           {book.quantity === 0 ? (
-                            <span className="badge bg-danger">Out of Stock</span>
+                            <span className="badge bg-danger">
+                              Out of Stock
+                            </span>
                           ) : (
-                            <p className="mb-0">{book.quantity ?? 'N/A'}</p>
+                            <p className="mb-0">{book.quantity ?? "N/A"}</p>
                           )}
                         </div>
                       </div>
@@ -1076,11 +1096,26 @@ const BookDetails = () => {
                       <div key={authorBook.id} className="col">
                         <div className="card h-100 border-0 shadow-sm hover-shadow transition position-relative">
                           {/* Only show details icon */}
-                          <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 2, display: 'flex', gap: 8 }}>
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: 10,
+                              right: 10,
+                              zIndex: 2,
+                              display: "flex",
+                              gap: 8,
+                            }}
+                          >
                             <button
                               className="btn btn-sm rounded-circle btn-outline-secondary"
                               title="View details"
-                              style={{ width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                              style={{
+                                width: 36,
+                                height: 36,
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                              }}
                               onClick={(e) => {
                                 e.stopPropagation();
                                 e.preventDefault();
@@ -1090,42 +1125,53 @@ const BookDetails = () => {
                               <FaBook />
                             </button>
                           </div>
-                          <div className="card-img-top" style={{ height: "200px", overflow: "hidden" }}>
-                              {authorBookImageUrl ? (
-                                <img
-                                  src={authorBookImageUrl}
-                                  alt={authorBook.title}
-                                  className="img-fluid h-100 w-100 object-fit-cover"
-                                  loading="lazy"
-                                />
+                          <div
+                            className="card-img-top"
+                            style={{ height: "200px", overflow: "hidden" }}
+                          >
+                            {authorBookImageUrl ? (
+                              <img
+                                src={authorBookImageUrl}
+                                alt={authorBook.title}
+                                className="img-fluid h-100 w-100 object-fit-cover"
+                                loading="lazy"
+                              />
+                            ) : (
+                              <div className="h-100 d-flex align-items-center justify-content-center bg-light text-muted">
+                                <FaBook className="display-4" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="card-body">
+                            <h5 className="card-title text-truncate">
+                              {authorBook.title}
+                            </h5>
+                            <p className="card-text text-muted small text-truncate">
+                              {authorBook.category?.name || "Uncategorized"}
+                            </p>
+                            <div className="d-flex justify-content-between align-items-center">
+                              <span
+                                className={`badge ${getStatusBadgeStyle(
+                                  authorBook.status
+                                )}`}
+                              >
+                                {authorBook.status}
+                              </span>
+                              <span className="text-success fw-bold">
+                                {authorBook.price} $
+                              </span>
+                              {authorBook.quantity === 0 ? (
+                                <span className="badge bg-danger ms-2">
+                                  Out of Stock
+                                </span>
                               ) : (
-                                <div className="h-100 d-flex align-items-center justify-content-center bg-light text-muted">
-                                  <FaBook className="display-4" />
-                                </div>
+                                <span className="badge bg-secondary ms-2">
+                                  Qty: {authorBook.quantity ?? "N/A"}
+                                </span>
                               )}
                             </div>
-                            <div className="card-body">
-                              <h5 className="card-title text-truncate">
-                                {authorBook.title}
-                              </h5>
-                              <p className="card-text text-muted small text-truncate">
-                                {authorBook.category?.name || "Uncategorized"}
-                              </p>
-                              <div className="d-flex justify-content-between align-items-center">
-                              <span className={`badge ${getStatusBadgeStyle(authorBook.status)}`}>
-                                  {authorBook.status}
-                                </span>
-                                <span className="text-success fw-bold">
-                                  {authorBook.price} $
-                                </span>
-                                {authorBook.quantity === 0 ? (
-                                  <span className="badge bg-danger ms-2">Out of Stock</span>
-                                ) : (
-                                  <span className="badge bg-secondary ms-2">Qty: {authorBook.quantity ?? 'N/A'}</span>
-                                )}
-                              </div>
-                            </div>
                           </div>
+                        </div>
                       </div>
                     );
                   })}
