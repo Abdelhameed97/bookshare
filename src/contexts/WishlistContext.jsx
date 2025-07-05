@@ -110,9 +110,10 @@ export const WishlistProvider = ({ children }) => {
       }
 
       await api.moveToCart(itemId);
+
       setWishlistItems((prev) => prev.filter((item) => item.id !== itemId));
 
-      await fetchCartItems(); 
+      await fetchCartItems();
 
       return { success: true };
     } catch (err) {
@@ -122,7 +123,7 @@ export const WishlistProvider = ({ children }) => {
       };
     }
   };
-
+  
   const moveAllToCart = async () => {
     try {
       if (!user?.id) {
@@ -131,7 +132,10 @@ export const WishlistProvider = ({ children }) => {
       }
 
       const response = await api.moveAllToCart();
-      setWishlistItems([]);
+
+      setWishlistItems((prev) =>
+        prev.filter((item) => item.book?.status !== "available")
+      );
 
       await fetchCartItems();
 
@@ -146,6 +150,7 @@ export const WishlistProvider = ({ children }) => {
       };
     }
   };
+  
 
   useEffect(() => {
     fetchWishlist();
