@@ -162,6 +162,19 @@ export const usePayment = () => {
         }
     }, []);
 
+    const updatePaymentMethod = async (orderId, paymentMethod) => {
+        setProcessing(true);
+        try {
+            const response = await api.updateOrderPaymentMethod(orderId, paymentMethod);
+            return response.data;
+        } catch (err) {
+            console.error('Error updating payment method:', err);
+            throw err;
+        } finally {
+            setProcessing(false);
+        }
+    };
+
     return {
         payment,
         order,
@@ -175,6 +188,7 @@ export const usePayment = () => {
         fetchUserPayments,
         createStripePayment,
         confirmStripePayment,
-        createPayPalPayment
+        createPayPalPayment,
+        updatePaymentMethod
     };
 };

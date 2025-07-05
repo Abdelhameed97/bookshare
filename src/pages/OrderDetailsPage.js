@@ -145,7 +145,6 @@ const OrderDetailsPage = () => {
                 'Your order has been cancelled successfully.',
                 'success'
             );
-
             navigate('/orders', { state: { activeTab: 'cancelled' } });
         } catch (err) {
             console.error("Error cancelling order:", err);

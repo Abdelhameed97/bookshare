@@ -59,6 +59,16 @@ export const useOrders = (userId) => {
         }
     };
 
+    const countPendingOrders = () => {
+        return orders.filter(order => order.status === 'pending').length;
+    };
+
+    const countBooksInPendingOrders = () => {
+        return orders
+            .filter(order => order.status === 'pending')
+            .reduce((total, order) => total + (order.order_items?.length || 0), 0);
+    };
+
     useEffect(() => {
         fetchOrders();
     }, [userId]);
@@ -68,6 +78,8 @@ export const useOrders = (userId) => {
         loading,
         error,
         fetchOrders,
-        cancelOrder
+        cancelOrder,
+        countPendingOrders,
+        countBooksInPendingOrders
     };
 };

@@ -3,47 +3,34 @@ import { Book, Heart, Palette, Clock } from "lucide-react"
 import HomePageTitle from "../shared/HomePageTitle"
 import "../../style/Homepagestyle.css"
 import { useEffect, useState } from "react"
+import api from "../../api/auth" // تأكد من المسار الصحيح
 
 const BookCategories = () => {
     const [categories, setCategories] = useState([])
+    const [categoryBooks, setCategoryBooks] = useState({})
     const [loading, setLoading] = useState(true)
 
-    // جلب الكتب لكل كاتيجوري (لعرض preview)
-    const [categoryBooks, setCategoryBooks] = useState({})
-    useEffect(() => {
-        const fetchBooksForCategories = async () => {
-            const booksMap = {}
-            for (const cat of categories) {
-                try {
-                    const res = await fetch(
-                        `http://localhost:8000/api/categories/${cat.id}`
-                    )
-                    if (res.ok) {
-                        const data = await res.json()
-                        booksMap[cat.id] = data.books
-                            ? data.books.slice(0, 3)
-                            : []
-                    } else {
-                        booksMap[cat.id] = []
-                    }
-                } catch {
-                    booksMap[cat.id] = []
-                }
-            }
-            setCategoryBooks(booksMap)
-        }
-        if (categories.length > 0) fetchBooksForCategories()
-    }, [categories])
+    const categoryColors = [
+        "#A7C7E7",
+        "#C8A2C8",
+        "#89CFF0",
+        "#B19CD9",
+        "#ADD8E6",
+    ]
 
+    const getDefaultCategories = () => []
+
+    const getIconComponent = (iconName) => {
+        const icons = { Book, Heart, Palette, Clock }
+        return icons[iconName] || Book
+    }
+
+    // جلب الفئات
     useEffect(() => {
         const fetchCategories = async () => {
             try {
-                const response = await fetch(
-                    "http://localhost:8000/api/categories"
-                )
-                if (!response.ok) throw new Error("Failed to fetch categories")
-                const data = await response.json()
-                setCategories(data.categories)
+                const response = await api.get("/categories")
+                setCategories(response.data.categories || [])
             } catch (error) {
                 console.error("Error fetching categories:", error)
                 setCategories(getDefaultCategories())
@@ -55,59 +42,25 @@ const BookCategories = () => {
         fetchCategories()
     }, [])
 
-    const getIconComponent = iconName => {
-        const icons = {
-            Book: Book,
-            Heart: Heart,
-            Palette: Palette,
-            Clock: Clock,
+    // جلب الكتب لكل فئة
+    useEffect(() => {
+        const fetchBooksForCategories = async () => {
+            const booksMap = {}
+            for (const cat of categories) {
+                try {
+                    const res = await api.get(`/categories/${cat.id}`)
+                    booksMap[cat.id] = res.data.books
+                        ? res.data.books.slice(0, 3)
+                        : []
+                } catch {
+                    booksMap[cat.id] = []
+                }
+            }
+            setCategoryBooks(booksMap)
         }
-        return icons[iconName] || Book
-    }
 
-    const getDefaultCategories = () => [
-        {
-            id: 1,
-            name: "Children's Books",
-            description:
-                "Discover magical worlds and adventures that spark imagination and foster a lifelong love of reading in young minds.",
-            color_class: "blue",
-            icon: "Book",
-        },
-        {
-            id: 2,
-            name: "Romance",
-            description:
-                "Explore passionate love stories and heartwarming tales that celebrate the beauty of human connection and emotion.",
-            color_class: "pink",
-            icon: "Heart",
-        },
-        {
-            id: 3,
-            name: "Art & Architecture",
-            description:
-                "Immerse yourself in visual masterpieces and architectural wonders that showcase human creativity and design excellence.",
-            color_class: "purple",
-            icon: "Palette",
-        },
-        {
-            id: 4,
-            name: "History",
-            description:
-                "Journey through time and uncover fascinating stories of civilizations, cultures, and events that shaped our world.",
-            color_class: "amber",
-            icon: "Clock",
-        },
-    ]
-
-    // الألوان الجديدة (أزرق فاتح وبنفسجي)
-    const categoryColors = [
-        "#A7C7E7", // أزرق فاتح
-        "#C8A2C8", // بنفسجي فاتح (ليلكي)
-        "#89CFF0", // أزرق سماوي فاتح
-        "#B19CD9", // بنفسجي متوسط
-        "#ADD8E6", // أزرق فاتح جداً
-    ]
+        if (categories.length > 0) fetchBooksForCategories()
+    }, [categories])
 
     if (loading) {
         return (
@@ -133,7 +86,7 @@ const BookCategories = () => {
                         className="view-all-categories-btn"
                         style={{
                             background:
-                                "linear-gradient(hsl(216, 98.30%, 45.70%))",
+                                "linear-gradient(hsl(216, 98.3%, 45.7%))",
                             color: "#fff",
                             border: "none",
                             borderRadius: 8,
@@ -147,14 +100,16 @@ const BookCategories = () => {
                         View All Categories
                     </button>
                 </div>
+
                 <div className="categories-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                     {categories.map((category, idx) => {
                         const IconComponent = getIconComponent(category.icon)
                         const books = categoryBooks[category.id] || []
+
                         return (
                             <div
                                 key={category.id}
-                                className={`category-card hover:shadow-lg transition-shadow duration-300`}
+                                className="category-card hover:shadow-lg transition-shadow duration-300"
                                 style={{
                                     borderRadius: 16,
                                     overflow: "hidden",
@@ -193,9 +148,10 @@ const BookCategories = () => {
                                             </svg>
                                         </span>
                                     </div>
+
                                     {books.length > 0 && (
                                         <div className="d-flex gap-2 mt-2">
-                                            {books.map(book => (
+                                            {books.map((book) => (
                                                 <div
                                                     key={book.id}
                                                     style={{
@@ -211,7 +167,7 @@ const BookCategories = () => {
                                                                   )
                                                                     ? book
                                                                           .images[0]
-                                                                    : `http://localhost:8000/storage/${book.images[0]}`
+                                                                    : `${process.env.REACT_APP_API_URL}/storage/${book.images[0]}`
                                                                 : "/placeholder.svg"
                                                         }
                                                         alt={book.title}

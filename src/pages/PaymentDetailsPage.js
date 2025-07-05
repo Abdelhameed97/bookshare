@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from "react"
-import { useNavigate, useParams } from "react-router-dom"
+import React, { useState, useEffect } from 'react';
 import {
     Container,
     Row,
@@ -18,16 +17,17 @@ import {
     AlertCircle,
     ShoppingBag,
     Clock,
-    XCircle,
-} from "lucide-react"
-import Swal from "sweetalert2"
-import { usePayment } from "../hooks/usePayment"
-import Title from "../components/shared/Title"
-import CustomButton from "../components/shared/CustomButton"
-import Navbar from "../components/HomePage/Navbar"
-import Footer from "../components/HomePage/Footer"
-import StripeWrapper from "../components/StripeWrapper"
-import "../style/PaymentPage.css"
+    XCircle
+} from 'lucide-react';
+import { useNavigate, useParams } from 'react-router-dom';
+import Swal from 'sweetalert2';
+import { usePaymentContext } from '../contexts/PaymentContext';
+import Title from '../components/shared/Title';
+import CustomButton from '../components/shared/CustomButton';
+import Navbar from '../components/HomePage/Navbar';
+import Footer from '../components/HomePage/Footer';
+import StripeWrapper from '../components/StripeWrapper';
+import '../style/PaymentPage.css';
 
 const PaymentDetailsPage = () => {
     const { orderId } = useParams()
@@ -47,8 +47,9 @@ const PaymentDetailsPage = () => {
         createStripePayment,
         confirmStripePayment,
         createPayPalPayment,
-        setProcessing,
-    } = usePayment()
+        updatePaymentMethod,
+        setProcessing
+    } = usePaymentContext();
 
     const getBookImage = images => {
         if (!images || images.length === 0) {
@@ -82,13 +83,13 @@ const PaymentDetailsPage = () => {
 
             setIsInitialLoad(false)
         }
-    }, [orderId, fetchData, isInitialLoad, payment?.method])
+    }, [orderId, fetchData, isInitialLoad, payment?.method]);
 
     useEffect(() => {
         if (order && order.status) {
             setIsOrderAccepted(order.status === "accepted")
         }
-    }, [order])
+    }, [order]); 
 
     const handlePaymentError = error => {
         let errorMessage = error.response?.data?.message || error.message
@@ -122,20 +123,23 @@ const PaymentDetailsPage = () => {
     const handlePaymentSubmit = async () => {
         if (!isOrderAccepted) return
 
-        if (selectedMethod === "cash") {
-            await Swal.fire({
-                icon: "info",
-                title: "Payment on Delivery",
-                html: `
-                    <div>
-                        <p>The order will be paid when it's delivered to you.</p>
-                        <p>Our delivery agent will collect the payment upon arrival.</p>
-                    </div>
-                `,
-                confirmButtonText: "OK",
-            })
+        try {
+            // تحديث طريقة الدفع أولاً
+            await updatePaymentMethod(order.id, selectedMethod);
 
-            try {
+            if (selectedMethod === 'cash') {
+                await Swal.fire({
+                    icon: 'info',
+                    title: 'Payment on Delivery',
+                    html: `
+                        <div>
+                            <p>The order will be paid when it's delivered to you.</p>
+                            <p>Our delivery agent will collect the payment upon arrival.</p>
+                        </div>
+                    `,
+                    confirmButtonText: 'OK'
+                });
+
                 const paymentData = {
                     order_id: order.id,
                     method: "cash",
@@ -143,13 +147,9 @@ const PaymentDetailsPage = () => {
                     status: "pending",
                 }
 
-                const result = await createPayment(paymentData)
-                navigate(`/orders/${order.id}`)
-            } catch (err) {
-                handlePaymentError(err)
-            }
-        } else {
-            try {
+                const result = await createPayment(paymentData);
+                navigate(`/orders/${order.id}`);
+            } else {
                 const paymentData = {
                     order_id: order.id,
                     method: selectedMethod,
@@ -157,14 +157,13 @@ const PaymentDetailsPage = () => {
                     status: "pending",
                 }
 
-                const result = await createPayment(paymentData)
-                navigate(`/orders/${order.id}`)
-            } catch (err) {
-                handlePaymentError(err)
+                const result = await createPayment(paymentData);
+                navigate(`/orders/${order.id}`);
             }
+        } catch (err) {
+            handlePaymentError(err);
         }
-    }
-
+    };
     const handlePayPalPayment = async () => {
         if (!isOrderAccepted) return
 
