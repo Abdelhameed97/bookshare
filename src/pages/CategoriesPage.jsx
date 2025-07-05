@@ -79,31 +79,12 @@ const BookCategories = () => {
             
             <section className="book-categories-section">
                 <div className="book-categories-container">
-                    <div className="section-header">
-                        <HomePageTitle>Explore Our Categories</HomePageTitle>
-                        <p className="section-description">
-                            Discover your next favorite read across our carefully
-                            curated collection of genres
-                        </p>
-                        <div className="section-divider"></div>
-                        <button
-                            className="view-all-categories-btn"
-                            style={{
-                                background:
-                                    "linear-gradient(hsl(216, 98.3%, 45.7%))",
-                                color: "#fff",
-                                border: "none",
-                                borderRadius: 8,
-                                padding: "8px 20px",
-                                fontWeight: 600,
-                                marginTop: 12,
-                                cursor: "pointer",
-                            }}
-                            onClick={() => navigate("/categories")}
-                        >
-                            View All Categories
-                        </button>
+
+                    <div className="bg-purple text-white text-center fw-bold fs-4 py-3 rounded">
+                        All Categories
                     </div>
+
+
 
                     <div className="categories-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mt-6">
                         {categories.map((category, idx) => {
