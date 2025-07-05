@@ -431,10 +431,10 @@ const Navbar = () => {
                                       {notif.type === "order" ? (
                                         <>
                                           Your order was
-                                          <span
-                                            className={
+                                      <span
+                                        className={
                                               notif.status === "accepted"
-                                                ? "notif-accepted"
+                                            ? "notif-accepted"
                                                 : notif.status === "rejected"
                                                 ? "notif-rejected"
                                                 : ""
@@ -443,7 +443,7 @@ const Navbar = () => {
                                             {notif.status
                                               ? ` ${notif.status}`
                                               : ""}
-                                          </span>
+                                      </span>
                                         </>
                                       ) : notif.status ? (
                                         `Order ${notif.status}`
@@ -482,14 +482,14 @@ const Navbar = () => {
                           )}
                         </div>
                         <div className="client-view-all-notifications">
-                          <Link
+                            <Link
                             to="/client-notifications"
                             className="client-view-all-link"
-                          >
-                            View All Notifications (
+                            >
+                              View All Notifications (
                             {allClientNotifications.length})
-                          </Link>
-                        </div>
+                            </Link>
+                          </div>
                       </div>
                     )}
                   </div>
