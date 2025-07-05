@@ -92,22 +92,8 @@ function App() {
                 <Route path='/books' element={<BooksPage />} />
                 <Route path='/books/:id' element={<BookDetails />} />
                 <Route path='/register' element={<RegisterPage />} />
-                <Route
-                  path='/login'
-                  element={
-                    <GuestRoute>
-                      <LoginPage />
-                    </GuestRoute>
-                  }
-                />
-                <Route
-                  path='/get-started'
-                  element={
-                    <GuestRoute>
-                      <GetStartedPage />
-                    </GuestRoute>
-                  }
-                />
+                <Route path='/login' element={<LoginPage />} />
+                <Route path='/get-started' element={<GetStartedPage />} />
                 <Route path='/verify-email' element={<VerifyEmailReminder />} />
                 <Route path='/email-verified' element={<EmailVerified />} />
                 <Route path='/social-callback' element={<SocialCallback />} />
