@@ -24,7 +24,7 @@
 .icon-circle {
   width: 80px;
   height: 80px;
-  background: #E5EDF5;
+  background: #e5edf5;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -34,7 +34,7 @@
 }
 
 .contact-card:hover .icon-circle {
-  background: #4B6BFB;
+  background: #4b6bfb;
 }
 
 .contact-card:hover .icon-circle svg {
@@ -69,17 +69,13 @@
 }
 
 .map-container::after {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    to right,
-    rgba(75, 107, 251, 0.1),
-    transparent
-  );
+  background: linear-gradient(to right, rgba(75, 107, 251, 0.1), transparent);
 }
 
 .form-container {
@@ -98,13 +94,13 @@
 }
 
 .form-title::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 0;
   bottom: 0;
   width: 50px;
   height: 3px;
-  background: #4B6BFB;
+  background: #4b6bfb;
   border-radius: 2px;
 }
 
@@ -134,7 +130,7 @@
 }
 
 .form-control:focus {
-  border-color: #4B6BFB;
+  border-color: #4b6bfb;
   box-shadow: 0 0 0 3px rgba(75, 107, 251, 0.1);
   outline: none;
 }
@@ -160,7 +156,7 @@ textarea.form-control {
 
 .submit-button {
   display: inline-block;
-  background: #4B6BFB;
+  background: #4b6bfb;
   color: white;
   font-size: 1rem;
   font-weight: 600;
@@ -192,7 +188,7 @@ textarea.form-control {
 }
 
 .submit-button.loading::after {
-  content: '';
+  content: "";
   position: absolute;
   left: 50%;
   top: 50%;
@@ -242,4 +238,4 @@ textarea.form-control {
   .submit-button {
     padding: 0.875rem 1.5rem;
   }
-} 
+}
