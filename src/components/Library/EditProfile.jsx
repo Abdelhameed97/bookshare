@@ -5,7 +5,6 @@ import {
   Phone, 
   MapPin, 
   Save, 
-  Camera,
   Eye,
   EyeOff
 } from 'lucide-react';
@@ -33,8 +32,6 @@ const EditProfile = () => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [logoPreview, setLogoPreview] = useState(null);
-  const [logoFile, setLogoFile] = useState(null);
   
   const navigate = useNavigate();
   const location = useLocation();
@@ -69,10 +66,6 @@ const EditProfile = () => {
       new_password: '',
       confirm_password: ''
     });
-    // Set logo preview if exists
-    if (currentUser.owner && currentUser.owner.library_logo) {
-      setLogoPreview(`${process.env.REACT_APP_API_URL || ''}/storage/${currentUser.owner.library_logo}`);
-    }
   }, [currentUser, navigate]);
 
   const handleInputChange = (e) => {
@@ -88,14 +81,6 @@ const EditProfile = () => {
         ...prev,
         [name]: ''
       }));
-    }
-  };
-
-  const handleLogoChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setLogoFile(file);
-      setLogoPreview(URL.createObjectURL(file));
     }
   };
 
@@ -126,13 +111,15 @@ const EditProfile = () => {
       }
     }
 
-    // Password validation logic
+    // Password validation logic - modified for social media users
     const isChangingPassword = formData.new_password || formData.confirm_password || formData.current_password;
+    const isSocialUser = currentUser.provider && currentUser.provider !== 'local';
 
     // If on the password tab, and fields are empty, but user clicks save, show errors.
     // Or if user has started filling any password field, enforce all fields.
     if ((activeTab === 'password' && !isChangingPassword && e?.type === 'submit') || isChangingPassword) {
-      if (!formData.current_password) {
+      // For social media users, don't require current password
+      if (!isSocialUser && !formData.current_password) {
         newErrors.current_password = 'Current password is required.';
       }
 
@@ -179,10 +166,10 @@ const EditProfile = () => {
       if (formData.new_password) {
         form.append('password', formData.new_password);
         form.append('password_confirmation', formData.confirm_password);
-        form.append('current_password', formData.current_password);
-      }
-      if (logoFile) {
-        form.append('library_logo', logoFile);
+        // Only send current_password if user is not from social media
+        if (!currentUser.provider || currentUser.provider === 'local') {
+          form.append('current_password', formData.current_password);
+        }
       }
       // Laravel: use POST with _method=PUT for file upload
       form.append('_method', 'PUT');
@@ -261,6 +248,8 @@ const EditProfile = () => {
   if (!currentUser) {
     return null;
   }
+
+  const isSocialUser = currentUser.provider && currentUser.provider !== 'local';
 
   return (
     <>
@@ -387,62 +376,59 @@ const EditProfile = () => {
                   )}
                   {errors.national_id && <span className="error-message">{errors.national_id}</span>}
                 </div>
-
-                <div className="form-group">
-                  <label htmlFor="library_logo">
-                    <Camera size={18} />
-                    Library Logo
-                  </label>
-                  <input
-                    type="file"
-                    id="library_logo"
-                    name="library_logo"
-                    accept="image/*"
-                    onChange={handleLogoChange}
-                  />
-                  {logoPreview && (
-                    <div style={{ marginTop: '0.5rem' }}>
-                      <img src={logoPreview} alt="Library Logo Preview" style={{ maxWidth: 120, maxHeight: 120, borderRadius: 8, border: '1px solid #eee' }} />
-                    </div>
-                  )}
-                </div>
               </div>
             )}
 
             {activeTab === 'password' && (
               <div className="form-section">
                 <h2>Change Password</h2>
+                {isSocialUser && (
+                  <div style={{
+                    background: '#f0f9ff',
+                    border: '1px solid #0ea5e9',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    marginBottom: '20px'
+                  }}>
+                    <p style={{ margin: 0, color: '#0369a1', fontSize: '0.9rem' }}>
+                      <strong>Social Media Account:</strong> Since you signed up with {currentUser.provider}, 
+                      you can set a new password without entering your current password.
+                    </p>
+                  </div>
+                )}
                 <p className="section-description">
                   Leave blank if you don't want to change your password. 
                   New password must be at least 6 characters long.
                 </p>
                 
-                <div className="form-group">
-                  <label htmlFor="current_password">
-                    <Eye size={18} />
-                    Current Password
-                  </label>
-                  <div className="password-input">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      id="current_password"
-                      name="current_password"
-                      value={formData.current_password}
-                      onChange={handleInputChange}
-                      className={errors.current_password ? 'error' : ''}
-                      placeholder="Enter current password"
-                    />
-                    <button
-                      type="button"
-                      className="password-toggle"
-                      onClick={() => setShowPassword(!showPassword)}
-                      title={showPassword ? 'Hide password' : 'Show password'}
-                    >
-                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
-                    </button>
+                {!isSocialUser && (
+                  <div className="form-group">
+                    <label htmlFor="current_password">
+                      <Eye size={18} />
+                      Current Password
+                    </label>
+                    <div className="password-input">
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        id="current_password"
+                        name="current_password"
+                        value={formData.current_password}
+                        onChange={handleInputChange}
+                        className={errors.current_password ? 'error' : ''}
+                        placeholder="Enter current password"
+                      />
+                      <button
+                        type="button"
+                        className="password-toggle"
+                        onClick={() => setShowPassword(!showPassword)}
+                        title={showPassword ? 'Hide password' : 'Show password'}
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                    {errors.current_password && <span className="error-message">{errors.current_password}</span>}
                   </div>
-                  {errors.current_password && <span className="error-message">{errors.current_password}</span>}
-                </div>
+                )}
 
                 <div className="form-group">
                   <label htmlFor="new_password">

@@ -2,7 +2,11 @@
 import { useState, useEffect } from "react"
 import HomePageTitle from '../shared/HomePageTitle'
 import '../../style/Homepagestyle.css'; 
-import clientImage from '../../images/img-client2.jpg';
+import abdelhamedImage from '../../images/00b7d56b-dd82-4993-b028-cc4557925cf2.jpg';
+import rehabImage from '../../images/0d040d00-d512-44c9-a2ef-6712e074fdde.jpg';
+import harbiImage from '../../images/74cce63a-be6d-43ee-a6c3-24d9f8e1c194.jpg';
+
+
 import MarwaImage from '../../images/Marwa.Nasser.jpg';
 
 const Testimonials = () => {
@@ -14,7 +18,7 @@ const Testimonials = () => {
       text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
       clientName: "Rehab Kamal",
       clientPosition: "Marketing Manager",
-      clientImage: clientImage,
+      clientImage: rehabImage,
     },
     {
       id: 2,
@@ -28,14 +32,14 @@ const Testimonials = () => {
       text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
       clientName: "Abdelhameed Mohammed",
       clientPosition: "Creative Director",
-      clientImage: clientImage,
+      clientImage: abdelhamedImage,
     },
     {
       id: 4,
       text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
       clientName: "Harbi Abdelallah",
       clientPosition: "Content Strategist",
-      clientImage: clientImage,
+      clientImage: harbiImage,
     },
   ];
 
