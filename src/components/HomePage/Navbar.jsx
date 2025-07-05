@@ -90,9 +90,9 @@ const Navbar = () => {
   const ownerNavLinks = [
     { to: "/dashboard", label: "dashboard", icon: FaTachometerAlt },
     { to: "/categories", label: "categories", icon: FaBook },
-    { to: "/edit-profile", label: "editProfile", icon: FaUserEdit },
-    { to: "/add-book", label: "addBook", icon: FaBook },
-    { to: "/libraries", label: "allLibraries", icon: FaBook },
+    // { to: "/edit-profile", label: "editProfile", icon: FaUserEdit },
+    { to: "/add-book", label: "Book", icon: FaBook },
+    { to: "/libraries", label: "Libraries", icon: FaBook },
     { to: "/all-orders", label: "orders", icon: FaBoxOpen },
   ];
 
