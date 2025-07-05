@@ -35,7 +35,7 @@ import EditClientProfile from "./components/forms/EditClientProfile";
 import useAuth from "./hooks/useAuth";
 import NotFound from "./pages/NotFound";
 import SocialCallback from "./pages/SocialCallback";
-import RagChat from "./pages/RagChat";
+// import RagChat from "./pages/RagChat";
 import FloatingChatButton from "./components/FloatingChatButton";
 import ForgotPassword from "./components/forms/ForgotPassword";
 import ResetPassword from "./components/forms/ResetPassword";
@@ -58,6 +58,13 @@ import { PaymentProvider } from "./contexts/PaymentContext";
 
 import VerifyEmailReminder from "./pages/form/VerifyEmailReminder";
 import EmailVerified from "./pages/form/EmailVerified";
+
+import CategoriesPage from "./pages/CategoriesPage";
+import CategoryPage from "./pages/CategoryPage";
+
+import RagChatModal from "./pages/RagChatModal";
+
+
 
 function RedirectToDashboardOrHome() {
   const { user } = useAuth();
@@ -100,6 +107,9 @@ function App() {
                 <Route path='/forgot-password' element={<ForgotPassword />} />
                 <Route path='/reset-password' element={<ResetPassword />} />
                 <Route path='/contact' element={<ContactPage />} />
+                {/* <Route path='/rag-chat' element={<RagChat />} /> */}
+                <Route path='/categories/:id' element={<CategoryPage />} />
+                <Route path='/categories' element={<CategoriesPage />} />
                 <Route
                   path='/client-notifications'
                   element={<ClientNotificationsPage />}
@@ -232,6 +242,7 @@ function App() {
                 <Route path='*' element={<NotFound />} />
               </Routes>
               <FloatingChatButton />
+              <RagChatModal />
             </PaymentProvider>
           </OrderProvider>
         </WishlistProvider>

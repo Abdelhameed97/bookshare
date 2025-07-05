@@ -1,59 +1,185 @@
+:root {
+    --platinum: #cfdbd5;
+    --alabaster: #e8eddf;
+    --saffron: #f5cb5c;
+    --eerie-black: #242423;
+    --jet: #333533;
+}
+
 .App {
-  text-align: center;
+    text-align: center;
 }
 
 .App-logo {
-  height: 40vmin;
-  pointer-events: none;
+    height: 40vmin;
+    pointer-events: none;
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+    .App-logo {
+        animation: App-logo-spin infinite 20s linear;
+    }
 }
 
 .App-header {
-  background-color: #282c34;
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+    background-color: #282c34;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: calc(10px + 2vmin);
+    color: white;
 }
 
 .App-link {
-  color: #61dafb;
+    color: #61dafb;
 }
 
 @keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+    from {
+        transform: rotate(0deg);
+    }
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 .floating-chat-btn {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  background-color: #0d6efd;
-  color: white;
-  border-radius: 50%;
-  width: 55px;
-  height: 55px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-decoration: none;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
-  z-index: 9999;
-  transition: background-color 0.3s ease;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #0d6efd;
+    color: white;
+    border-radius: 50%;
+    width: 55px;
+    height: 55px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    z-index: 9999;
+    transition: background-color 0.3s ease;
 }
 .floating-chat-btn:hover {
-  background-color: #0b5ed7;
+    background-color: #0b5ed7;
+}
+
+body[data-theme="dark"] {
+    background: var(--eerie-black) !important;
+    color: var(--platinum) !important;
+}
+body[data-theme="dark"] .bookshare-navbar,
+body[data-theme="dark"] .card,
+body[data-theme="dark"] .category-card,
+body[data-theme="dark"] .modal-content {
+    background: linear-gradient(
+        135deg,
+        var(--jet) 70%,
+        var(--eerie-black) 100%
+    ) !important;
+    color: var(--platinum) !important;
+    border-color: var(--alabaster) !important;
+    box-shadow: 0 4px 32px 0 var(--jet) !important;
+}
+body[data-theme="dark"] .btn,
+body[data-theme="dark"] .btn-outline-secondary {
+    background: var(--jet) !important;
+    color: var(--saffron) !important;
+    border-color: var(--saffron) !important;
+}
+body[data-theme="dark"] .btn-primary,
+body[data-theme="dark"] .btn-outline-primary {
+    background: var(--saffron) !important;
+    color: var(--eerie-black) !important;
+    border-color: var(--saffron) !important;
+}
+body[data-theme="dark"] .form-control {
+    background: var(--jet) !important;
+    color: var(--platinum) !important;
+    border-color: var(--alabaster) !important;
+}
+body[data-theme="dark"] .section-header,
+body[data-theme="dark"] .section-description,
+body[data-theme="dark"] .category-title,
+body[data-theme="dark"] .category-description,
+body[data-theme="dark"] .explore-text,
+body[data-theme="dark"] h1,
+body[data-theme="dark"] h2,
+body[data-theme="dark"] h3,
+body[data-theme="dark"] h4,
+body[data-theme="dark"] h5,
+body[data-theme="dark"] h6,
+body[data-theme="dark"] p,
+body[data-theme="dark"] span,
+body[data-theme="dark"] label,
+body[data-theme="dark"] a,
+body[data-theme="dark"] li,
+body[data-theme="dark"] .text-dark,
+body[data-theme="dark"] .text-primary,
+body[data-theme="dark"] .text-muted,
+body[data-theme="dark"] .text-white,
+body[data-theme="dark"] .small,
+body[data-theme="dark"] .lead {
+    color: var(--platinum) !important;
+}
+body[data-theme="dark"] .card-content {
+    background: transparent !important;
+}
+body[data-theme="dark"] .spinner-border {
+    border-top-color: var(--saffron) !important;
+}
+body[data-theme="dark"] .category-card {
+    border: 1.5px solid var(--alabaster) !important;
+    background: linear-gradient(
+        135deg,
+        var(--jet) 70%,
+        var(--eerie-black) 100%
+    ) !important;
+}
+body[data-theme="dark"] .icon-container {
+    background: linear-gradient(
+        135deg,
+        var(--saffron) 60%,
+        var(--alabaster) 100%
+    ) !important;
+    box-shadow: 0 0 16px var(--jet) !important;
+}
+body[data-theme="dark"] .category-icon {
+    color: var(--saffron) !important;
+}
+body[data-theme="dark"] .badge.bg-light {
+    background: var(--saffron) !important;
+    color: var(--eerie-black) !important;
+}
+body[data-theme="dark"] .pagination .btn-primary {
+    background: var(--saffron) !important;
+    color: var(--eerie-black) !important;
+    border-color: var(--saffron) !important;
+}
+body[data-theme="dark"] .pagination .btn-outline-primary {
+    color: var(--saffron) !important;
+    border-color: var(--saffron) !important;
+}
+
+/* تخصيص ألوان إضافية للويش ليست والكتب والكاتيجوري */
+body[data-theme="dark"] .wishlist-badge,
+body[data-theme="dark"] .wishlist-icon {
+    color: var(--saffron) !important;
+}
+body[data-theme="dark"] .book-title,
+body[data-theme="dark"] .book-card {
+    color: var(--alabaster) !important;
+    background: linear-gradient(
+        135deg,
+        var(--jet) 60%,
+        var(--eerie-black) 100%
+    ) !important;
+}
+body[data-theme="dark"] .category-title {
+    color: var(--saffron) !important;
+}
+body[data-theme="dark"] .category-description {
+    color: var(--platinum) !important;
 }

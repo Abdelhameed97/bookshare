@@ -1,5 +1,5 @@
 // api/auth.js
-import axios from "axios";
+import axios from "axios"
 
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL + "/api", // خليها دايناميكية من .env
@@ -22,4 +22,4 @@ export const register = (data) => api.post("/register", data);
 export const logout = () => api.post("/logout");
 export const getUser = () => api.get("/user");
 
-export default api;
+export default api

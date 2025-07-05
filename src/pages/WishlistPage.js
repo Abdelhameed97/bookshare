@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react"
 import {
     Container,
     Row,
@@ -8,8 +8,8 @@ import {
     Dropdown,
     Badge,
     Spinner,
-    Alert
-} from 'react-bootstrap';
+    Alert,
+} from "react-bootstrap"
 import {
     Heart,
     Share,
@@ -18,38 +18,40 @@ import {
     X,
     ChevronLeft,
     AlertCircle,
-    LogIn
-} from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
-import Title from '../components/shared/Title';
-import CustomButton from '../components/shared/CustomButton';
-import { useWishlistContext } from '../contexts/WishlistContext';
-import '../style/WishlistPage.css';
-import Navbar from '../components/HomePage/Navbar';
-import Footer from "../components/HomePage/Footer.jsx";
-import Swal from 'sweetalert2';
+    LogIn,
+} from "lucide-react"
+import { useNavigate } from "react-router-dom"
+import Title from "../components/shared/Title"
+import CustomButton from "../components/shared/CustomButton"
+import { useWishlistContext } from "../contexts/WishlistContext"
+import "../style/WishlistPage.css"
+import Navbar from "../components/HomePage/Navbar"
+import Footer from "../components/HomePage/Footer.jsx"
+import Swal from "sweetalert2"
 
 const WishlistPage = () => {
-    const getBookImage = (images) => {
+    const getBookImage = images => {
         if (!images || images.length === 0) {
-            return 'https://via.placeholder.com/300x450';
+            return "https://via.placeholder.com/300x450"
         }
 
-        const firstImage = images[0];
-        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
-            return firstImage;
+        const firstImage = images[0]
+        if (typeof firstImage === "string" && firstImage.startsWith("http")) {
+            return firstImage
         }
 
-        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
-    };
+        return `${
+            process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"
+        }/storage/${firstImage}`
+    }
 
-    const [sortBy, setSortBy] = useState('recent');
-    const [filterBy, setFilterBy] = useState('all');
-    const navigate = useNavigate();
+    const [sortBy, setSortBy] = useState("recent")
+    const [filterBy, setFilterBy] = useState("all")
+    const navigate = useNavigate()
 
     // Get user from localStorage
-    const user = JSON.parse(localStorage.getItem('user'));
-    const userId = user?.id;
+    const user = JSON.parse(localStorage.getItem("user"))
+    const userId = user?.id
 
     const {
         wishlistItems,
@@ -59,143 +61,158 @@ const WishlistPage = () => {
         fetchWishlist,
         removeItem,
         moveToCart,
-        moveAllToCart
-    } = useWishlistContext();
+        moveAllToCart,
+    } = useWishlistContext()
 
     const filteredItems = wishlistItems.filter(item => {
-        if (!item.book) return false;
-        if (filterBy === 'in-stock') return item.book.status === 'available';
-        if (filterBy === 'out-of-stock') return item.book.status !== 'available';
-        return true;
-    });
+        if (!item.book) return false
+        if (filterBy === "in-stock") return item.book.status === "available"
+        if (filterBy === "out-of-stock") return item.book.status !== "available"
+        return true
+    })
 
     const sortedItems = [...filteredItems].sort((a, b) => {
-        if (sortBy === 'price-low') return parseFloat(a.book.price) - parseFloat(b.book.price);
-        if (sortBy === 'price-high') return parseFloat(b.book.price) - parseFloat(a.book.price);
-        return new Date(b.created_at) - new Date(a.created_at);
-    });
+        if (sortBy === "price-low")
+            return parseFloat(a.book.price) - parseFloat(b.book.price)
+        if (sortBy === "price-high")
+            return parseFloat(b.book.price) - parseFloat(a.book.price)
+        return new Date(b.created_at) - new Date(a.created_at)
+    })
 
-    const handleRemoveItem = async (itemId) => {
+    const handleRemoveItem = async itemId => {
         const result = await Swal.fire({
-            title: 'Remove from wishlist?',
-            text: 'Are you sure you want to remove this item?',
-            icon: 'question',
+            title: "Remove from wishlist?",
+            text: "Are you sure you want to remove this item?",
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-        });
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
 
-        const { success, error } = await removeItem(itemId);
+        const { success, error } = await removeItem(itemId)
         if (success) {
             await Swal.fire({
-                icon: 'success',
-                title: 'Removed!',
-                text: 'Item removed from wishlist',
-                timer: 1500
-            });
-            fetchWishlist();
+                icon: "success",
+                title: "Removed!",
+                text: "Item removed from wishlist",
+                timer: 1500,
+            })
+            fetchWishlist()
         } else {
             await Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error || 'Failed to remove item',
-            });
+                icon: "error",
+                title: "Error",
+                text: error || "Failed to remove item",
+            })
         }
-    };
+    }
 
-    const handleMoveToCart = async (itemId) => {
+    const handleMoveToCart = async itemId => {
         const result = await Swal.fire({
-            title: 'Move to cart?',
-            text: 'This item will be added to your shopping cart',
-            icon: 'question',
+            title: "Move to cart?",
+            text: "This item will be added to your shopping cart",
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-        });
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#6c757d",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
 
-        const { success, error } = await moveToCart(itemId);
+        const { success, error } = await moveToCart(itemId)
         if (success) {
             await Swal.fire({
-                icon: 'success',
-                title: 'Moved!',
-                text: 'Item added to your cart',
-                timer: 1500
-            });
-            fetchWishlist();
+                icon: "success",
+                title: "Moved!",
+                text: "Item added to your cart",
+                timer: 1500,
+            })
+            fetchWishlist()
         } else {
             await Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: error || 'Failed to move item to cart',
-            });
+                icon: "error",
+                title: "Error",
+                text: error || "Failed to move item to cart",
+            })
         }
-    };
+    }
 
     const handleMoveAllToCart = async () => {
-        const availableItems = wishlistItems.filter(item => item.book?.status === 'available');
+        const availableItems = wishlistItems.filter(
+            item => item.book?.status === "available"
+        )
         if (availableItems.length === 0) {
             await Swal.fire({
-                icon: 'info',
-                title: 'No items available',
-                text: 'There are no available items to move to cart',
-            });
-            return;
+                icon: "info",
+                title: "No items available",
+                text: "There are no available items to move to cart",
+            })
+            return
         }
 
         const result = await Swal.fire({
             title: `Move ${availableItems.length} items to cart?`,
-            text: 'All available items will be added to your shopping cart',
-            icon: 'question',
+            text: "All available items will be added to your shopping cart",
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: `Move All (${availableItems.length})`
-        });
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: `Move All (${availableItems.length})`,
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
 
         try {
-            const response = await moveAllToCart();
+            const response = await moveAllToCart()
             if (response?.success) {
                 await Swal.fire({
-                    icon: 'success',
-                    title: 'Items Moved!',
-                    text: `${response.count || availableItems.length} items added to your cart`,
-                    timer: 2000
-                });
-                fetchWishlist();
+                    icon: "success",
+                    title: "Items Moved!",
+                    text: `${
+                        response.count || availableItems.length
+                    } items added to your cart`,
+                    timer: 2000,
+                })
+                fetchWishlist()
             } else {
-                throw new Error(response?.error);
+                throw new Error(response?.error)
             }
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: err.message || 'Failed to move items to cart',
-            });
+                icon: "error",
+                title: "Error",
+                text: err.message || "Failed to move items to cart",
+            })
         }
-    };
+    }
 
     if (!userId) {
         return (
             <>
                 <Navbar />
                 <Container className="py-5">
-                    <Alert variant="warning" className="d-flex align-items-center">
+                    <Alert
+                        variant="warning"
+                        className="d-flex align-items-center"
+                    >
                         <LogIn size={24} className="me-2" />
                         <div>
                             <h5>Authentication Required</h5>
-                            <p className="mb-0">Please login to view your wishlist.</p>
+                            <p className="mb-0">
+                                Please login to view your wishlist.
+                            </p>
                         </div>
                     </Alert>
                     <div className="d-flex justify-content-center mt-4">
                         <CustomButton
                             variant="primary"
-                            onClick={() => navigate('/login', { state: { from: '/wishlist' } })}
+                            onClick={() =>
+                                navigate("/login", {
+                                    state: { from: "/wishlist" },
+                                })
+                            }
                             className="mt-3 px-4"
                         >
                             Login
@@ -204,7 +221,7 @@ const WishlistPage = () => {
                 </Container>
                 <Footer />
             </>
-        );
+        )
     }
 
     if (loading) {
@@ -213,7 +230,7 @@ const WishlistPage = () => {
                 <Spinner animation="border" variant="primary" />
                 <p className="mt-2">Loading your wishlist...</p>
             </div>
-        );
+        )
     }
 
     if (error) {
@@ -221,7 +238,10 @@ const WishlistPage = () => {
             <>
                 <Navbar />
                 <Container className="py-5">
-                    <Alert variant="danger" className="d-flex align-items-center">
+                    <Alert
+                        variant="danger"
+                        className="d-flex align-items-center"
+                    >
                         <AlertCircle size={24} className="me-2" />
                         <div>
                             <h5>Wishlist Error</h5>
@@ -237,7 +257,7 @@ const WishlistPage = () => {
                         </CustomButton>
                         <CustomButton
                             variant="outline-primary"
-                            onClick={() => navigate('/books')}
+                            onClick={() => navigate("/books")}
                         >
                             Browse Books
                         </CustomButton>
@@ -245,7 +265,7 @@ const WishlistPage = () => {
                 </Container>
                 <Footer />
             </>
-        );
+        )
     }
 
     return (
@@ -264,31 +284,73 @@ const WishlistPage = () => {
                             Back
                         </CustomButton>
                         <Title>
-                            My Wishlist <Badge bg="primary" className="ms-2">{wishlistCount}</Badge>
+                            My Wishlist{" "}
+                            <Badge bg="primary" className="ms-2">
+                                {wishlistCount}
+                            </Badge>
                         </Title>
                     </div>
 
                     <div className="d-flex">
                         <Dropdown className="me-2">
-                            <Dropdown.Toggle variant="outline-secondary" className="d-flex align-items-center">
+                            <Dropdown.Toggle
+                                variant="outline-secondary"
+                                className="d-flex align-items-center"
+                            >
                                 <Filter size={16} className="me-1" />
-                                {filterBy === 'all' ? 'All Items' : filterBy === 'in-stock' ? 'In Stock' : 'Out of Stock'}
+                                {filterBy === "all"
+                                    ? "All Items"
+                                    : filterBy === "in-stock"
+                                    ? "In Stock"
+                                    : "Out of Stock"}
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
-                                <Dropdown.Item onClick={() => setFilterBy('all')}>All Items</Dropdown.Item>
-                                <Dropdown.Item onClick={() => setFilterBy('in-stock')}>In Stock</Dropdown.Item>
-                                <Dropdown.Item onClick={() => setFilterBy('out-of-stock')}>Out of Stock</Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => setFilterBy("all")}
+                                >
+                                    All Items
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => setFilterBy("in-stock")}
+                                >
+                                    In Stock
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => setFilterBy("out-of-stock")}
+                                >
+                                    Out of Stock
+                                </Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown>
 
                         <Dropdown>
-                            <Dropdown.Toggle variant="outline-secondary" className="d-flex align-items-center">
-                                Sort: {sortBy === 'recent' ? 'Recently Added' : sortBy === 'price-low' ? 'Price: Low to High' : 'Price: High to Low'}
+                            <Dropdown.Toggle
+                                variant="outline-secondary"
+                                className="d-flex align-items-center"
+                            >
+                                Sort:{" "}
+                                {sortBy === "recent"
+                                    ? "Recently Added"
+                                    : sortBy === "price-low"
+                                    ? "Price: Low to High"
+                                    : "Price: High to Low"}
                             </Dropdown.Toggle>
                             <Dropdown.Menu>
-                                <Dropdown.Item onClick={() => setSortBy('recent')}>Recently Added</Dropdown.Item>
-                                <Dropdown.Item onClick={() => setSortBy('price-low')}>Price: Low to High</Dropdown.Item>
-                                <Dropdown.Item onClick={() => setSortBy('price-high')}>Price: High to Low</Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => setSortBy("recent")}
+                                >
+                                    Recently Added
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => setSortBy("price-low")}
+                                >
+                                    Price: Low to High
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                    onClick={() => setSortBy("price-high")}
+                                >
+                                    Price: High to Low
+                                </Dropdown.Item>
                             </Dropdown.Menu>
                         </Dropdown>
                     </div>
@@ -300,7 +362,11 @@ const WishlistPage = () => {
                             variant="primary"
                             className="mb-4"
                             onClick={handleMoveAllToCart}
-                            disabled={!wishlistItems.some(item => item.book?.status === 'available')}
+                            disabled={
+                                !wishlistItems.some(
+                                    item => item.book?.status === "available"
+                                )
+                            }
                         >
                             <ShoppingCart size={18} className="me-1" />
                             Move All Available to Cart
@@ -313,23 +379,37 @@ const WishlistPage = () => {
                                         <div className="wishlist-card-img-container">
                                             <Card.Img
                                                 variant="top"
-                                                src={getBookImage(item.book.images)}
+                                                src={getBookImage(
+                                                    item.book.images
+                                                )}
                                                 alt={item.book.title}
                                                 className="wishlist-card-img"
-                                                onError={(e) => {
-                                                    e.target.onerror = null;
-                                                    e.target.src = 'https://via.placeholder.com/300x450';
+                                                onError={e => {
+                                                    e.target.onerror = null
+                                                    e.target.src =
+                                                        "https://via.placeholder.com/300x450"
                                                 }}
                                             />
                                             <button
                                                 className="wishlist-heart-btn"
-                                                onClick={() => handleRemoveItem(item.id)}
+                                                onClick={() =>
+                                                    handleRemoveItem(item.id)
+                                                }
                                             >
-                                                <Heart size={20} className="text-danger" fill="currentColor" />
+                                                <Heart
+                                                    size={20}
+                                                    className="text-danger"
+                                                    fill="currentColor"
+                                                />
                                             </button>
-                                            {item.book.status !== 'available' && (
+                                            {item.book.status !==
+                                                "available" && (
                                                 <div className="out-of-stock-badge">
-                                                    <X size={14} className="me-1" /> Out of Stock
+                                                    <X
+                                                        size={14}
+                                                        className="me-1"
+                                                    />{" "}
+                                                    Out of Stock
                                                 </div>
                                             )}
                                         </div>
@@ -338,11 +418,15 @@ const WishlistPage = () => {
                                                 {item.book.title}
                                             </Card.Title>
                                             <Card.Text className="text-muted mb-2">
-                                                {item.book.author || 'Unknown Author'}
+                                                {item.book.author ||
+                                                    "Unknown Author"}
                                             </Card.Text>
                                             <div className="d-flex justify-content-between align-items-center mt-auto">
                                                 <h5 className="mb-0 text-primary">
-                                                    {parseFloat(item.book.price).toFixed(2)} EGP
+                                                    {parseFloat(
+                                                        item.book.price
+                                                    ).toFixed(2)}{" "}
+                                                    EGP
                                                 </h5>
                                                 <ButtonGroup>
                                                     {item.book.status === 'available' && (
@@ -350,9 +434,15 @@ const WishlistPage = () => {
                                                             variant="primary"
                                                             size="sm"
                                                             title="Add to Cart"
-                                                            onClick={() => handleMoveToCart(item.id)}
+                                                            onClick={() =>
+                                                                handleMoveToCart(
+                                                                    item.id
+                                                                )
+                                                            }
                                                         >
-                                                            <ShoppingCart size={16} />
+                                                            <ShoppingCart
+                                                                size={16}
+                                                            />
                                                         </CustomButton>
                                                     )}
                                                 </ButtonGroup>
@@ -368,15 +458,15 @@ const WishlistPage = () => {
                         <Heart size={48} className="text-muted mb-3" />
                         <h4>Your Wishlist is Empty</h4>
                         <p className="text-muted mb-4">
-                            {filterBy === 'all'
+                            {filterBy === "all"
                                 ? "You haven't added any items to your wishlist yet"
-                                : filterBy === 'in-stock'
-                                    ? "You don't have any in-stock items in your wishlist"
-                                    : "You don't have any out-of-stock items in your wishlist"}
+                                : filterBy === "in-stock"
+                                ? "You don't have any in-stock items in your wishlist"
+                                : "You don't have any out-of-stock items in your wishlist"}
                         </p>
                         <CustomButton
                             variant="primary"
-                            onClick={() => navigate('/books')}
+                            onClick={() => navigate("/books")}
                         >
                             Browse Books
                         </CustomButton>
@@ -386,7 +476,7 @@ const WishlistPage = () => {
 
             <Footer />
         </>
-    );
-};
+    )
+}
 
-export default WishlistPage;
+export default WishlistPage

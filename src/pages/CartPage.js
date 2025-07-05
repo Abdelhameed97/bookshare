@@ -28,18 +28,20 @@ import Footer from "../components/HomePage/Footer.jsx";
 import '../style/CartPage.css';
 
 const CartPage = () => {
-    const getBookImage = (images) => {
+    const getBookImage = images => {
         if (!images || images.length === 0) {
-            return 'https://via.placeholder.com/300x450';
+            return "https://via.placeholder.com/300x450"
         }
 
-        const firstImage = images[0];
-        if (typeof firstImage === 'string' && firstImage.startsWith('http')) {
-            return firstImage;
+        const firstImage = images[0]
+        if (typeof firstImage === "string" && firstImage.startsWith("http")) {
+            return firstImage
         }
 
-        return `${process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000'}/storage/${firstImage}`;
-    };
+        return `${
+            process.env.REACT_APP_API_BASE_URL || "http://localhost:8000"
+        }/storage/${firstImage}`
+    }
 
     const user = JSON.parse(localStorage.getItem('user'));
     const {
@@ -80,13 +82,13 @@ const CartPage = () => {
     const total = subtotal + shippingFee + tax - discount;
 
     const applyCoupon = async () => {
-        if (!couponCode.trim()) return;
+        if (!couponCode.trim()) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
-        setIsApplyingCoupon(true);
+        setIsApplyingCoupon(true)
         try {
             const result = await api.applyCoupon(couponCode, subtotal);
 
@@ -103,57 +105,58 @@ const CartPage = () => {
                 throw new Error(result.error);
             }
         } catch (err) {
-            setDiscount(0);
-            setAppliedCoupon(null);
+            setDiscount(0)
+            setAppliedCoupon(null)
             await Swal.fire({
                 icon: 'error',
                 title: 'Invalid Coupon',
                 text: err.message || 'This coupon code is not valid',
             });
         } finally {
-            setIsApplyingCoupon(false);
+            setIsApplyingCoupon(false)
         }
-    };
+    }
 
     const removeCoupon = async () => {
-        setDiscount(0);
-        setCouponCode('');
-        setAppliedCoupon(null);
+        setDiscount(0)
+        setCouponCode("")
+        setAppliedCoupon(null)
         await Swal.fire({
-            icon: 'info',
-            title: 'Coupon Removed',
-            text: 'The coupon has been removed from your order',
-            timer: 1500
-        });
-    };
+            icon: "info",
+            title: "Coupon Removed",
+            text: "The coupon has been removed from your order",
+            timer: 1500,
+        })
+    }
 
     const handleQuantityChange = async (itemId, newQuantity) => {
-        const parsedQuantity = parseInt(newQuantity, 10);
+        const parsedQuantity = parseInt(newQuantity, 10)
 
         if (isNaN(parsedQuantity) || parsedQuantity < 1) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Invalid Quantity',
-                text: 'Please enter a whole number 1 or greater'
-            });
-            return;
+                icon: "error",
+                title: "Invalid Quantity",
+                text: "Please enter a whole number 1 or greater",
+            })
+            return
         }
 
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         try {
             await updateCartItemQuantity(itemId, parsedQuantity);
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Update Failed',
-                text: err.response?.data?.message || 'Failed to update quantity',
-            });
+                icon: "error",
+                title: "Update Failed",
+                text:
+                    err.response?.data?.message || "Failed to update quantity",
+            })
         }
-    };
+    }
 
     const handleChangeType = async (itemId, newType) => {
         try {
@@ -164,113 +167,114 @@ const CartPage = () => {
             await fetchCartItems(); // Refresh cart items after type change
 
             await Swal.fire({
-                icon: 'success',
-                title: 'Type Changed',
+                icon: "success",
+                title: "Type Changed",
                 text: `Item changed to ${newType}`,
-                timer: 1500
-            });
+                timer: 1500,
+            })
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Failed to Change Type',
-                text: err.response?.data?.message || 'Failed to update item type',
-            });
+                icon: "error",
+                title: "Failed to Change Type",
+                text:
+                    err.response?.data?.message || "Failed to update item type",
+            })
         }
-    };
+    }
 
-    const handleRemoveItem = async (itemId) => {
+    const handleRemoveItem = async itemId => {
         const result = await Swal.fire({
-            title: 'Remove Item?',
-            text: 'This will remove the item from your cart',
-            icon: 'question',
+            title: "Remove Item?",
+            text: "This will remove the item from your cart",
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-        });
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         try {
             await removeFromCart(itemId);
             await Swal.fire({
-                icon: 'success',
-                title: 'Item Removed',
-                timer: 1500
-            });
+                icon: "success",
+                title: "Item Removed",
+                timer: 1500,
+            })
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Removal Failed',
-                text: err.response?.data?.message || 'Failed to remove item',
-            });
+                icon: "error",
+                title: "Removal Failed",
+                text: err.response?.data?.message || "Failed to remove item",
+            })
         }
-    };
+    }
 
     const handleClearCart = async () => {
         const result = await Swal.fire({
-            title: 'Clear Entire Cart?',
-            text: 'This will remove all items from your cart',
-            icon: 'warning',
+            title: "Clear Entire Cart?",
+            text: "This will remove all items from your cart",
+            icon: "warning",
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, clear it!'
-        });
+            confirmButtonColor: "#d33",
+            cancelButtonColor: "#3085d6",
+            confirmButtonText: "Yes, clear it!",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         try {
             await clearCart();
             await Swal.fire({
-                icon: 'success',
-                title: 'Cart Cleared!',
-                text: 'All items have been removed from your cart',
-                timer: 2000
-            });
+                icon: "success",
+                title: "Cart Cleared!",
+                text: "All items have been removed from your cart",
+                timer: 2000,
+            })
         } catch (err) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Clear Failed',
-                text: err.response?.data?.message || 'Failed to clear cart',
-            });
+                icon: "error",
+                title: "Clear Failed",
+                text: err.response?.data?.message || "Failed to clear cart",
+            })
         }
-    };
+    }
 
     const handleOrderNow = async () => {
-        if (cartItems.length === 0) return;
+        if (cartItems.length === 0) return
         if (!user) {
-            navigate('/login', { state: { from: '/cart' } });
-            return;
+            navigate("/login", { state: { from: "/cart" } })
+            return
         }
 
         if (!selectedPaymentMethod) {
             await Swal.fire({
-                icon: 'error',
-                title: 'Payment Method Required',
-                text: 'Please select a payment method before proceeding',
-            });
-            return;
+                icon: "error",
+                title: "Payment Method Required",
+                text: "Please select a payment method before proceeding",
+            })
+            return
         }
 
         const result = await Swal.fire({
-            title: 'Proceed to Checkout?',
-            text: 'You will be redirected to complete your order',
-            icon: 'question',
+            title: "Proceed to Checkout?",
+            text: "You will be redirected to complete your order",
+            icon: "question",
             showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Continue to Order'
-        });
+            confirmButtonColor: "#28a745",
+            cancelButtonColor: "#6c757d",
+            confirmButtonText: "Continue to Order",
+        })
 
-        if (!result.isConfirmed) return;
+        if (!result.isConfirmed) return
 
         setProcessing(true);
         try {
@@ -284,17 +288,20 @@ const CartPage = () => {
                 coupon_code: appliedCoupon?.code || null
             };
 
-            const response = await api.createOrder(orderData);
-            const orderList = response.data?.data;
-            const orderId = Array.isArray(orderList) && orderList.length > 0 ? orderList[0].id : null;
+            const response = await api.createOrder(orderData)
+            const orderList = response.data?.data
+            const orderId =
+                Array.isArray(orderList) && orderList.length > 0
+                    ? orderList[0].id
+                    : null
 
             if (!orderId) {
-                throw new Error("Order ID not found in response");
+                throw new Error("Order ID not found in response")
             }
 
             navigate(`/orders/${orderId}`);
         } catch (err) {
-            console.error("Checkout error:", err);
+            console.error("Checkout error:", err)
             await Swal.fire({
                 icon: 'error',
                 title: 'Checkout Failed',
@@ -303,7 +310,7 @@ const CartPage = () => {
         } finally {
             setProcessing(false);
         }
-    };
+    }
 
     if (loading) {
         return (
@@ -311,7 +318,7 @@ const CartPage = () => {
                 <Spinner animation="border" variant="primary" />
                 <p className="mt-2">Loading your cart...</p>
             </div>
-        );
+        )
     }
 
     if (error) {
@@ -335,7 +342,7 @@ const CartPage = () => {
                         </CustomButton>
                         <CustomButton
                             variant="outline-primary"
-                            onClick={() => navigate('/books')}
+                            onClick={() => navigate("/books")}
                         >
                             Browse Books
                         </CustomButton>
@@ -343,7 +350,7 @@ const CartPage = () => {
                 </Container>
                 <Footer />
             </>
-        );
+        )
     }
 
     return (
@@ -382,11 +389,12 @@ const CartPage = () => {
                                         <FaShoppingCart size={48} className="text-muted mb-3" />
                                         <h4>Your cart is empty</h4>
                                         <p className="text-muted mb-3">
-                                            Looks like you haven't added any items to your cart yet
+                                            Looks like you haven't added any
+                                            items to your cart yet
                                         </p>
                                         <CustomButton
                                             variant="primary"
-                                            onClick={() => navigate('/books')}
+                                            onClick={() => navigate("/books")}
                                             className="browse-btn"
                                         >
                                             Browse Books
@@ -394,7 +402,10 @@ const CartPage = () => {
                                     </div>
                                 ) : (
                                     <>
-                                        <Table responsive className="cart-table">
+                                        <Table
+                                            responsive
+                                            className="cart-table"
+                                        >
                                             <thead>
                                                 <tr>
                                                     <th>Book</th>
@@ -411,44 +422,119 @@ const CartPage = () => {
                                                         <td>
                                                             <div className="d-flex align-items-center">
                                                                 <img
-                                                                    src={getBookImage(item.book.images)}
-                                                                    alt={item.book?.title}
+                                                                    src={getBookImage(
+                                                                        item
+                                                                            .book
+                                                                            .images
+                                                                    )}
+                                                                    alt={
+                                                                        item
+                                                                            .book
+                                                                            ?.title
+                                                                    }
                                                                     className="book-cover me-3"
-                                                                    onError={(e) => {
-                                                                        e.target.onerror = null;
-                                                                        e.target.src = 'https://via.placeholder.com/300x450';
+                                                                    onError={e => {
+                                                                        e.target.onerror =
+                                                                            null
+                                                                        e.target.src =
+                                                                            "https://via.placeholder.com/300x450"
                                                                     }}
                                                                 />
                                                                 <div>
-                                                                    <h6 className="mb-1">{item.book?.title}</h6>
-                                                                    <small className="text-muted">By {item.book?.author || item.book?.genre}</small>
+                                                                    <h6 className="mb-1">
+                                                                        {
+                                                                            item
+                                                                                .book
+                                                                                ?.title
+                                                                        }
+                                                                    </h6>
+                                                                    <small className="text-muted">
+                                                                        By{" "}
+                                                                        {item
+                                                                            .book
+                                                                            ?.author ||
+                                                                            item
+                                                                                .book
+                                                                                ?.genre}
+                                                                    </small>
                                                                 </div>
                                                             </div>
                                                         </td>
                                                         <td className="align-middle">
                                                             <Dropdown>
                                                                 <Dropdown.Toggle
-                                                                    variant={(item.type ?? 'buy') === 'rent' ? 'warning' : 'success'}
+                                                                    variant={
+                                                                        (item.type ??
+                                                                            "buy") ===
+                                                                        "rent"
+                                                                            ? "warning"
+                                                                            : "success"
+                                                                    }
                                                                     size="sm"
                                                                     id="dropdown-type"
-                                                                    disabled={!item.book?.rental_price && (item.type ?? 'buy') === 'rent'}
+                                                                    disabled={
+                                                                        !item
+                                                                            .book
+                                                                            ?.rental_price &&
+                                                                        (item.type ??
+                                                                            "buy") ===
+                                                                            "rent"
+                                                                    }
                                                                     className="type-toggle"
                                                                 >
-                                                                    {(item.type ?? 'buy') === 'rent' ? 'Rent' : 'Buy'}
+                                                                    {(item.type ??
+                                                                        "buy") ===
+                                                                    "rent"
+                                                                        ? "Rent"
+                                                                        : "Buy"}
                                                                 </Dropdown.Toggle>
                                                                 <Dropdown.Menu>
                                                                     <Dropdown.Item
-                                                                        onClick={() => handleChangeType(item.id, 'buy')}
-                                                                        active={(item.type ?? 'buy') !== 'rent'}
-                                                                        className={(item.type ?? 'buy') !== 'rent' ? 'fw-bold' : ''}
+                                                                        onClick={() =>
+                                                                            handleChangeType(
+                                                                                item.id,
+                                                                                "buy"
+                                                                            )
+                                                                        }
+                                                                        active={
+                                                                            (item.type ??
+                                                                                "buy") !==
+                                                                            "rent"
+                                                                        }
+                                                                        className={
+                                                                            (item.type ??
+                                                                                "buy") !==
+                                                                            "rent"
+                                                                                ? "fw-bold"
+                                                                                : ""
+                                                                        }
                                                                     >
                                                                         Buy
                                                                     </Dropdown.Item>
                                                                     <Dropdown.Item
-                                                                        onClick={() => handleChangeType(item.id, 'rent')}
-                                                                        active={(item.type ?? 'buy') === 'rent'}
-                                                                        disabled={!item.book?.rental_price}
-                                                                        className={(item.type ?? 'buy') === 'rent' ? 'fw-bold' : ''}
+                                                                        onClick={() =>
+                                                                            handleChangeType(
+                                                                                item.id,
+                                                                                "rent"
+                                                                            )
+                                                                        }
+                                                                        active={
+                                                                            (item.type ??
+                                                                                "buy") ===
+                                                                            "rent"
+                                                                        }
+                                                                        disabled={
+                                                                            !item
+                                                                                .book
+                                                                                ?.rental_price
+                                                                        }
+                                                                        className={
+                                                                            (item.type ??
+                                                                                "buy") ===
+                                                                            "rent"
+                                                                                ? "fw-bold"
+                                                                                : ""
+                                                                        }
                                                                     >
                                                                         Rent
                                                                     </Dropdown.Item>
@@ -461,8 +547,17 @@ const CartPage = () => {
                                                                     variant="outline-secondary"
                                                                     size="sm"
                                                                     className="quantity-btn"
-                                                                    onClick={() => handleQuantityChange(item.id, item.quantity - 1)}
-                                                                    disabled={item.quantity <= 1}
+                                                                    onClick={() =>
+                                                                        handleQuantityChange(
+                                                                            item.id,
+                                                                            item.quantity -
+                                                                                1
+                                                                        )
+                                                                    }
+                                                                    disabled={
+                                                                        item.quantity <=
+                                                                        1
+                                                                    }
                                                                 >
                                                                     <FaMinus size={14} />
                                                                 </CustomButton>
@@ -470,11 +565,23 @@ const CartPage = () => {
                                                                     type="number"
                                                                     min="1"
                                                                     step="1"
-                                                                    value={item.quantity}
-                                                                    onChange={(e) => {
-                                                                        const value = e.target.value;
-                                                                        if (/^\d*$/.test(value)) {
-                                                                            handleQuantityChange(item.id, value);
+                                                                    value={
+                                                                        item.quantity
+                                                                    }
+                                                                    onChange={e => {
+                                                                        const value =
+                                                                            e
+                                                                                .target
+                                                                                .value
+                                                                        if (
+                                                                            /^\d*$/.test(
+                                                                                value
+                                                                            )
+                                                                        ) {
+                                                                            handleQuantityChange(
+                                                                                item.id,
+                                                                                value
+                                                                            )
                                                                         }
                                                                     }}
                                                                     className="quantity-input mx-2 text-center"
@@ -483,27 +590,68 @@ const CartPage = () => {
                                                                     variant="outline-secondary"
                                                                     size="sm"
                                                                     className="quantity-btn"
-                                                                    onClick={() => handleQuantityChange(item.id, item.quantity + 1)}
+                                                                    onClick={() =>
+                                                                        handleQuantityChange(
+                                                                            item.id,
+                                                                            item.quantity +
+                                                                                1
+                                                                        )
+                                                                    }
                                                                 >
                                                                     <FaPlus size={14} />
                                                                 </CustomButton>
                                                             </div>
                                                         </td>
                                                         <td className="align-middle price">
-                                                            {item.type === 'rent' ?
-                                                                (parseFloat(item.book?.rental_price || item.book?.price || 0).toFixed(2)) :
-                                                                parseFloat(item.book?.price || 0).toFixed(2)} EGP
+                                                            {item.type ===
+                                                            "rent"
+                                                                ? parseFloat(
+                                                                      item.book
+                                                                          ?.rental_price ||
+                                                                          item
+                                                                              .book
+                                                                              ?.price ||
+                                                                          0
+                                                                  ).toFixed(2)
+                                                                : parseFloat(
+                                                                      item.book
+                                                                          ?.price ||
+                                                                          0
+                                                                  ).toFixed(
+                                                                      2
+                                                                  )}{" "}
+                                                            EGP
                                                         </td>
                                                         <td className="align-middle price">
-                                                            {(item.type === 'rent' ?
-                                                                (parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity) :
-                                                                parseFloat(item.book?.price || 0) * item.quantity).toFixed(2)} EGP
+                                                            {(item.type ===
+                                                            "rent"
+                                                                ? parseFloat(
+                                                                      item.book
+                                                                          ?.rental_price ||
+                                                                          item
+                                                                              .book
+                                                                              ?.price ||
+                                                                          0
+                                                                  ) *
+                                                                  item.quantity
+                                                                : parseFloat(
+                                                                      item.book
+                                                                          ?.price ||
+                                                                          0
+                                                                  ) *
+                                                                  item.quantity
+                                                            ).toFixed(2)}{" "}
+                                                            EGP
                                                         </td>
                                                         <td className="align-middle text-center">
                                                             <CustomButton
                                                                 variant="outline-danger"
                                                                 size="sm"
-                                                                onClick={() => handleRemoveItem(item.id)}
+                                                                onClick={() =>
+                                                                    handleRemoveItem(
+                                                                        item.id
+                                                                    )
+                                                                }
                                                                 className="remove-btn"
                                                             >
                                                                 <FaTrashAlt size={16} />
@@ -517,7 +665,9 @@ const CartPage = () => {
                                         <div className="d-flex justify-content-between mt-4 cart-actions">
                                             <CustomButton
                                                 variant="outline-primary"
-                                                onClick={() => navigate('/books')}
+                                                onClick={() =>
+                                                    navigate("/books")
+                                                }
                                                 className="continue-btn"
                                             >
                                                 <FaChevronLeft size={18} className="me-1" />
@@ -542,14 +692,20 @@ const CartPage = () => {
                                     <Col md={4} className="benefit-item">
                                         <FaTruck size={24} className="me-2 text-primary" />
                                         <div>
-                                            <h6 className="mb-0">Free Shipping</h6>
-                                            <small>On orders over 200 EGP</small>
+                                            <h6 className="mb-0">
+                                                Free Shipping
+                                            </h6>
+                                            <small>
+                                                On orders over 200 EGP
+                                            </small>
                                         </div>
                                     </Col>
                                     <Col md={4} className="benefit-item">
                                         <FaShieldAlt size={24} className="me-2 text-primary" />
                                         <div>
-                                            <h6 className="mb-0">Secure Checkout</h6>
+                                            <h6 className="mb-0">
+                                                Secure Checkout
+                                            </h6>
                                             <small>100% Protected</small>
                                         </div>
                                     </Col>
@@ -561,20 +717,34 @@ const CartPage = () => {
                     <Col lg={4}>
                         <Card className="summary-card">
                             <Card.Body>
-                                <h5 className="summary-title mb-3">Order Summary</h5>
+                                <h5 className="summary-title mb-3">
+                                    Order Summary
+                                </h5>
 
                                 <div className="cart-items-summary mb-3">
                                     {cartItems.map(item => (
-                                        <div key={item.id} className="d-flex justify-content-between mb-2 small summary-item">
+                                        <div
+                                            key={item.id}
+                                            className="d-flex justify-content-between mb-2 small summary-item"
+                                        >
                                             <span className="text-muted">
-                                                {item.book?.title} ({item.type}) × {item.quantity}
+                                                {item.book?.title} ({item.type})
+                                                × {item.quantity}
                                             </span>
                                             <span className="price">
-                                                {(
-                                                    item.type === 'rent'
-                                                        ? parseFloat(item.book?.rental_price || item.book?.price || 0) * item.quantity
-                                                        : parseFloat(item.book?.price || 0) * item.quantity
-                                                ).toFixed(2)} EGP
+                                                {(item.type === "rent"
+                                                    ? parseFloat(
+                                                          item.book
+                                                              ?.rental_price ||
+                                                              item.book
+                                                                  ?.price ||
+                                                              0
+                                                      ) * item.quantity
+                                                    : parseFloat(
+                                                          item.book?.price || 0
+                                                      ) * item.quantity
+                                                ).toFixed(2)}{" "}
+                                                EGP
                                             </span>
                                         </div>
                                     ))}
@@ -582,7 +752,9 @@ const CartPage = () => {
 
                                 <div className="d-flex justify-content-between mb-2 summary-item">
                                     <span>Subtotal:</span>
-                                    <span className="price">{subtotal.toFixed(2)} EGP</span>
+                                    <span className="price">
+                                        {subtotal.toFixed(2)} EGP
+                                    </span>
                                 </div>
 
                                 {appliedCoupon ? (
@@ -598,7 +770,9 @@ const CartPage = () => {
                                                 Remove
                                             </Button>
                                         </span>
-                                        <span className="price">-{discount.toFixed(2)} EGP</span>
+                                        <span className="price">
+                                            -{discount.toFixed(2)} EGP
+                                        </span>
                                     </div>
                                 ) : (
                                     <div className="coupon-section mb-3">
@@ -607,18 +781,27 @@ const CartPage = () => {
                                                 type="text"
                                                 placeholder="Coupon code"
                                                 value={couponCode}
-                                                onChange={(e) => setCouponCode(e.target.value)}
+                                                onChange={e =>
+                                                    setCouponCode(
+                                                        e.target.value
+                                                    )
+                                                }
                                                 size="sm"
                                                 className="coupon-input"
                                             />
                                             <Button
                                                 variant="outline-secondary"
                                                 onClick={applyCoupon}
-                                                disabled={isApplyingCoupon || !couponCode.trim()}
+                                                disabled={
+                                                    isApplyingCoupon ||
+                                                    !couponCode.trim()
+                                                }
                                                 size="sm"
                                                 className="apply-btn"
                                             >
-                                                {isApplyingCoupon ? 'Applying...' : 'Apply'}
+                                                {isApplyingCoupon
+                                                    ? "Applying..."
+                                                    : "Apply"}
                                             </Button>
                                         </Form.Group>
                                     </div>
@@ -631,8 +814,16 @@ const CartPage = () => {
 
                                 <div className="d-flex justify-content-between mb-2 summary-item">
                                     <span>Shipping:</span>
-                                    <span className={shippingFee === 0 ? 'text-success price' : 'price'}>
-                                        {shippingFee === 0 ? 'FREE' : `${shippingFee.toFixed(2)} EGP`}
+                                    <span
+                                        className={
+                                            shippingFee === 0
+                                                ? "text-success price"
+                                                : "price"
+                                        }
+                                    >
+                                        {shippingFee === 0
+                                            ? "FREE"
+                                            : `${shippingFee.toFixed(2)} EGP`}
                                     </span>
                                 </div>
 
@@ -640,12 +831,16 @@ const CartPage = () => {
 
                                 <div className="d-flex justify-content-between mb-4 total-summary">
                                     <strong>Total:</strong>
-                                    <strong className="total-price">{total.toFixed(2)} EGP</strong>
+                                    <strong className="total-price">
+                                        {total.toFixed(2)} EGP
+                                    </strong>
                                 </div>
 
                                 <div className="payment-methods mb-4">
                                     <Form.Group>
-                                        <Form.Label className="fw-bold">Payment Method</Form.Label>
+                                        <Form.Label className="fw-bold">
+                                            Payment Method
+                                        </Form.Label>
                                         <Form.Select
                                             value={selectedPaymentMethod || ''}
                                             onChange={(e) => setSelectedPaymentMethod(e.target.value)}
@@ -686,7 +881,7 @@ const CartPage = () => {
             </Container>
             <Footer />
         </>
-    );
-};
+    )
+}
 
-export default CartPage;
+export default CartPage
