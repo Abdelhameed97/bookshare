@@ -4007,3 +4007,7 @@ body[data-theme="dark"] .book-card {
         var(--eerie-black) 100%
     ) !important;
 }
+
+.bg-purple {
+    background-color: #7e3ff2; /* بنفسجي جذاب */
+}

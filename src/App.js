@@ -62,7 +62,6 @@ import EmailVerified from "./pages/form/EmailVerified";
 import CategoriesPage from "./pages/CategoriesPage";
 import CategoryPage from "./pages/CategoryPage";
 
-import RagChatModal from "./pages/RagChatModal";
 
 
 
@@ -242,7 +241,6 @@ function App() {
                 <Route path='*' element={<NotFound />} />
               </Routes>
               <FloatingChatButton />
-              <RagChatModal />
             </PaymentProvider>
           </OrderProvider>
         </WishlistProvider>
