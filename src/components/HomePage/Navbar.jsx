@@ -91,6 +91,7 @@ const Navbar = () => {
     { to: "/about", label: "about", icon: FaInfoCircle },
     { to: "/categories", label: "categories", icon: FaBook },
     { to: "/books", label: "books", icon: FaBook },
+    { to: "/edit-client-profile", label: "Profile", icon: FaUserEdit },
     { to: "/contact", label: "contact", icon: FaEnvelope },
   ];
 
