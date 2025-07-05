@@ -2,7 +2,7 @@ import React from 'react';
 import blog1 from '../../images/midsection-man-working-office_1048944-27784392.avif'
 import blog2 from '../../images/what-we-do.jpg';
 import blog3 from '../../images/business-brainstorming-graph-chart-report-data-concept_53876-31213.avif';
-import '../../style/Homepagestyle.css'; // Ensure the path is correct
+import '../../style/Homepagestyle.css'; 
 import HomePageTitle from '../shared/HomePageTitle'
 
 

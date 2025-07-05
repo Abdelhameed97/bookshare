@@ -9,6 +9,7 @@ import Welcome from "../components/HomePage/Welcome.jsx";
 import NewReleases from "../components/HomePage/NewRelease.jsx";
 import Estimonialssection from "../components/HomePage/Estimonialssection.jsx";
 import Categories from "../components/HomePage/Categories.jsx";
+import Library from "../components/HomePage/Library.jsx";
 
 const Home = () => {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ const Home = () => {
       <Categories/>
       <Welcome />
       <NewReleases />
-      <Blog />
+      <Library />
       <Estimonialssection />
       <Footer />
     </>

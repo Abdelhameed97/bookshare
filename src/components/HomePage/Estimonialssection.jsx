@@ -1,20 +1,22 @@
-"use client"
-import { useState, useEffect } from "react"
-import HomePageTitle from '../shared/HomePageTitle'
-import '../../style/Homepagestyle.css'; 
-import clientImage from '../../images/img-client2.jpg';
-import MarwaImage from '../../images/Marwa.Nasser.jpg';
+"use client";
+import { useState, useEffect } from "react";
+import HomePageTitle from "../shared/HomePageTitle";
+import "../../style/Homepagestyle.css";
+import RehabImage from "../../images/Rehab.Kamal.jpg";
+import MarwaImage from "../../images/Marwa.Nasser.jpg";
+import AbdelhameedImage from "../../images/Abdelhameed.Mohammed.jpg";
+import HarbiImage from "../../images/Harbi.Abdelallah.jpg";
 
 const Testimonials = () => {
-  const [currentIndex, setCurrentIndex] = useState(0)
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   const testimonials = [
     {
       id: 1,
-      text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
+      text: "Code with purpose, design with empathy — full-stack from idea to impact.",
       clientName: "Rehab Kamal",
-      clientPosition: "Marketing Manager",
-      clientImage: clientImage,
+      clientPosition: "Full Stack Developer",
+      clientImage: RehabImage,
     },
     {
       id: 2,
@@ -25,47 +27,50 @@ const Testimonials = () => {
     },
     {
       id: 3,
-      text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
+      text: "Blending form and function — interfaces users love, and backends developers trust.",
       clientName: "Abdelhameed Mohammed",
-      clientPosition: "Creative Director",
-      clientImage: clientImage,
+      clientPosition: "Full Stack Developer",
+      clientImage: AbdelhameedImage,
     },
     {
       id: 4,
-      text: "Far far away, behind the word mountains, far from the countries Vokalia and Consonantia, there live the blind texts.",
+      text: "Where logic meets design — crafting web apps that think, feel, and perform.",
       clientName: "Harbi Abdelallah",
-      clientPosition: "Content Strategist",
-      clientImage: clientImage,
+      clientPosition: "Full Stack Developer",
+      clientImage: HarbiImage,
     },
   ];
 
   // Auto-play functionality
   useEffect(() => {
     const interval = setInterval(() => {
-      setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length)
-    }, 5000) // 5 seconds
+      setCurrentIndex((prevIndex) => (prevIndex + 1) % testimonials.length);
+    }, 5000); // 5 seconds
 
-    return () => clearInterval(interval)
-  }, [testimonials.length])
+    return () => clearInterval(interval);
+  }, [testimonials.length]);
 
-  const goToSlide = (index) => { 
-    setCurrentIndex(index)
-  }
+  const goToSlide = (index) => {
+    setCurrentIndex(index);
+  };
 
   return (
     <section className="testimonials-section">
-      <div className="testimonials-container">
+      <div className="container mx-auto px-4">
         {/* Section Header */}
-        <div className="section-header">
+        <div className="text-center mb-12">
           <HomePageTitle>BookShare Team</HomePageTitle>
-          <p className="section-description">
+          <p className="text-lg text-gray-600 mt-4 max-w-2xl mx-auto">
             Meet our dedicated team of professionals who make BookShare possible
           </p>
         </div>
 
         {/* Testimonials Slider */}
         <div className="testimonials-slider">
-          <div className="testimonials-track" style={{ transform: `translateX(-${currentIndex * 100}%)` }}>
+          <div
+            className="testimonials-track"
+            style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+          >
             {testimonials.map((testimonial) => (
               <div key={testimonial.id} className="testimonial-slide">
                 <div className="testimonial-content">
@@ -78,14 +83,17 @@ const Testimonials = () => {
                         alt={testimonial.clientName}
                         className="client-image"
                         onError={(e) => {
-                          e.currentTarget.src = "/placeholder.svg?height=80&width=80"
+                          e.currentTarget.src =
+                            "/placeholder.svg?height=80&width=80";
                         }}
                       />
                       <div className="image-ring"></div>
                     </div>
                     <div className="client-details">
                       <h4 className="client-name">{testimonial.clientName}</h4>
-                      <span className="client-position">{testimonial.clientPosition}</span>
+                      <span className="client-position">
+                        {testimonial.clientPosition}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -112,7 +120,7 @@ const Testimonials = () => {
       <div className="bg-decoration decoration-2"></div>
       <div className="bg-decoration decoration-3"></div>
     </section>
-  )
-}
+  );
+};
 
-export default Testimonials
+export default Testimonials;

@@ -146,17 +146,13 @@ function App() {
                 <Route
                   path='/libraries'
                   element={
-                    <OwnerRoute>
                       <LibrariesPage />
-                    </OwnerRoute>
                   }
                 />
                 <Route
                   path='/library/:id'
                   element={
-                    <OwnerRoute>
                       <LibraryDetails />
-                    </OwnerRoute>
                   }
                 />
                 <Route
