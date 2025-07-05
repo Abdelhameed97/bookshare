@@ -99,7 +99,6 @@ const WishlistPage = () => {
                 text: "Item removed from wishlist",
                 timer: 1500,
             })
-            fetchWishlist()
         } else {
             await Swal.fire({
                 icon: "error",
@@ -175,7 +174,6 @@ const WishlistPage = () => {
                     } items added to your cart`,
                     timer: 2000,
                 })
-                fetchWishlist()
             } else {
                 throw new Error(response?.error)
             }
