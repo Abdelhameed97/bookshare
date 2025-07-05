@@ -113,7 +113,7 @@ const PaymentsPage = () => {
             default:
                 return <CreditCard size={16} />;
         }
-    };    
+    };
 
     const formatMethodName = (method) => {
         const map = {
@@ -123,7 +123,7 @@ const PaymentsPage = () => {
             card: 'Card'
         };
         return map[method] || method.charAt(0).toUpperCase() + method.slice(1);
-    };    
+    };
 
     if (!userId) {
         return (
@@ -290,47 +290,47 @@ const PaymentsPage = () => {
                                                 <th>Actions</th>
                                             </tr>
                                         </thead>
-                                            <tbody>
-                                                {filteredPayments.map(payment => (
-                                                    <tr key={payment.id}>
-                                                        <td>#{payment.id}</td>
-                                                        <td>{formatDate(payment.created_at)}</td>
-                                                        <td>
-                                                            <div>
-                                                                <strong>Order #{payment.order_id}</strong>
-                                                                {payment.order && (
-                                                                    <div className="text-muted small">
-                                                                        Items: {payment.order.quantity}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td className="text-capitalize">
-                                                            <CreditCard size={16} className="me-1" />
-                                                            {payment.method}
-                                                        </td>
+                                        <tbody>
+                                            {filteredPayments.map(payment => (
+                                                <tr key={payment.id}>
+                                                    <td>#{payment.id}</td>
+                                                    <td>{formatDate(payment.created_at)}</td>
+                                                    <td>
+                                                        <div>
+                                                            <strong>Order #{payment.order_id}</strong>
+                                                            {payment.order && (
+                                                                <div className="text-muted small">
+                                                                    Items: {payment.order.quantity}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td className="text-capitalize">
+                                                        <CreditCard size={16} className="me-1" />
+                                                        {payment.method}
+                                                    </td>
 
-                                                        <td>{formatPrice(payment.amount)} EGP</td>
-                                                        <td>{getStatusBadge(payment.status)}</td>
-                                                        <td>
-                                                            {payment.order ?
-                                                                getOrderStatusBadge(payment.order.status) :
-                                                                <Badge bg="secondary">N/A</Badge>
-                                                            }
-                                                        </td>
-                                                        <td>
-                                                            <Button
-                                                                variant="outline-primary"
-                                                                size="sm"
-                                                                onClick={() => navigate(`/orders/${payment.order_id}`)}
-                                                                className="me-2"
-                                                            >
-                                                                View Order
-                                                            </Button>
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
+                                                    <td>{formatPrice(payment.amount)} EGP</td>
+                                                    <td>{getStatusBadge(payment.status)}</td>
+                                                    <td>
+                                                        {payment.order ?
+                                                            getOrderStatusBadge(payment.order.status) :
+                                                            <Badge bg="secondary">N/A</Badge>
+                                                        }
+                                                    </td>
+                                                    <td>
+                                                        <Button
+                                                            variant="outline-primary"
+                                                            size="sm"
+                                                            onClick={() => navigate(`/orders/${payment.order_id}`)}
+                                                            className="me-2"
+                                                        >
+                                                            View Order
+                                                        </Button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
 
                                     </Table>
                                 )}

@@ -294,10 +294,7 @@ const LibraryDetails = () => {
                                                               "http"
                                                           )
                                                             ? book.images[0]
-                                                            : `http://localhost:8000/storage/${book.images[0].replace(
-                                                                  /^books\//,
-                                                                  ""
-                                                              )}`
+                                                            : `${process.env.REACT_APP_API_URL || "http://localhost:8000"}/storage/${book.images[0]}`
                                                         : "/placeholder.svg"
                                                 }
                                                 alt={book.title}

@@ -25,8 +25,10 @@ const AddBookPage = () => {
     status: 'available',
     quantity: 1,
     isbn: '',
+    
     pages: '',
-    images: []
+    images: [],
+    tax: '',
   });
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -71,10 +73,14 @@ const AddBookPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData(prev => {
+      let updated = { ...prev, [name]: value };
+      if (name === 'price') {
+        const priceVal = parseFloat(value) || 0;
+        updated.tax = (priceVal * 0.1).toFixed(2);
+      }
+      return updated;
+    });
     
     // Clear error when user starts typing
     if (errors[name]) {
@@ -181,6 +187,7 @@ const AddBookPage = () => {
       formDataToSend.append('educational_level', formData.educational_level);
       formDataToSend.append('condition', formData.condition);
       formDataToSend.append('price', formData.price);
+      formDataToSend.append('tax', formData.tax);
       formDataToSend.append('rental_price', formData.rental_price || '');
       formDataToSend.append('category_id', formData.category_id);
       formDataToSend.append('status', formData.status);
@@ -224,7 +231,8 @@ const AddBookPage = () => {
         quantity: 1,
         isbn: '',
         pages: '',
-        images: []
+        images: [],
+        tax: '',
       });
       setErrors({});
 
@@ -454,6 +462,45 @@ const AddBookPage = () => {
                     marginBottom: '8px'
                   }}>
                     <DollarSign size={18} />
+                    Tax (10%)
+                  </label>
+                  <input
+                    type="number"
+                    name="tax"
+                    value={formData.tax}
+                    readOnly
+                    style={{
+                      width: '100%',
+                      padding: '12px',
+                      border: '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      fontSize: '1rem',
+                      color: '#1f2937',
+                      background: '#f3f4f6',
+                      transition: 'all 0.2s ease'
+                    }}
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                  />
+                  <small style={{ color: '#64748b', fontSize: '0.8rem', marginTop: '0.5rem', display: 'block' }}>
+                    Calculated automatically as 10% of price
+                  </small>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                <div>
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontSize: '0.9rem',
+                    fontWeight: '500',
+                    color: '#4b5563',
+                    marginBottom: '8px'
+                  }}>
+                    <BookOpen size={18} />
                     Rental Price
                   </label>
                   <input

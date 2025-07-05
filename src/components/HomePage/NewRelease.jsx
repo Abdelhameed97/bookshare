@@ -203,7 +203,7 @@ const NewReleases = () => {
             <div className='no-books'>No books available</div>
           ) : (
             books.map((book, index) => (
-              <div key={book.id} className='book-card' style={{ animationDelay: `${index * 0.2}s` }}>
+              <div key={book.id} className='book-card visible' style={{ animationDelay: `${index * 0.2}s`, opacity: 1, animation: 'none' }}>
                 <div className={`book-badge ${book.badge.toLowerCase()}`}>{book.badge}</div>
 
                 <div className='book-image-container'>

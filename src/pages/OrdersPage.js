@@ -101,7 +101,7 @@ const OrdersPage = () => {
                 const updated = [...readNotifications, orderId];
                 localStorage.setItem('readNotifications', JSON.stringify(updated));
                 console.log('Marked order notification as read:', orderId);
-                
+
                 // Dispatch custom event to notify navbar
                 window.dispatchEvent(new CustomEvent('notificationRead', {
                     detail: { orderId: orderId }

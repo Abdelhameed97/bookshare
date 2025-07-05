@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
+import { useCartContext } from "./CartContext"; // ✅ جديد
 
 const WishlistContext = createContext();
 
@@ -19,6 +20,8 @@ export const WishlistProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+
+  const { fetchCartItems } = useCartContext(); 
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
@@ -60,20 +63,15 @@ export const WishlistProvider = ({ children }) => {
       const bookResponse = await api.getBookDetails(bookId);
       const book = bookResponse.data;
 
-      if (!book) {
-        throw new Error("Book not found");
-      }
-
-      if (book.user_id === user.id) {
+      if (!book) throw new Error("Book not found");
+      if (book.user_id === user.id)
         throw new Error("You cannot add your own book to your wishlist");
-      }
 
       const response = await api.addToWishlist(bookId);
       if (!response.data || !response.data.success) {
         throw new Error("Failed to add to wishlist");
       }
 
-      // Update local state immediately
       setWishlistItems((prev) => {
         const existingItem = prev.find((item) => item.book_id === bookId);
         if (!existingItem) {
@@ -113,6 +111,9 @@ export const WishlistProvider = ({ children }) => {
 
       await api.moveToCart(itemId);
       setWishlistItems((prev) => prev.filter((item) => item.id !== itemId));
+
+      await fetchCartItems(); 
+
       return { success: true };
     } catch (err) {
       return {
@@ -130,7 +131,10 @@ export const WishlistProvider = ({ children }) => {
       }
 
       const response = await api.moveAllToCart();
-      setWishlistItems([]); // Clear wishlist after moving all items
+      setWishlistItems([]);
+
+      await fetchCartItems();
+
       return {
         success: true,
         count: response.data.moved_items_count,

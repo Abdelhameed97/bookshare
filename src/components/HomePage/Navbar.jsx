@@ -20,12 +20,16 @@ import {
   FaInfoCircle,
   FaEnvelope,
   FaUser,
+  FaMoon,
+  FaSun,
 } from "react-icons/fa";
 import { useCartContext } from "../../contexts/CartContext";
 import { useWishlistContext } from "../../contexts/WishlistContext";
 import { useOrderContext } from "../../contexts/OrderContext";
 import useTranslation from "../../hooks/useTranslation";
 import LanguageSwitcher from "../shared/LanguageSwitcher";
+import { useTheme } from "../../contexts/ThemeContext";
+import apiService from "../../services/api";
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -33,6 +37,7 @@ const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const navigate = useNavigate();
+  const { theme, toggleTheme } = useTheme();
 
   // Get context values correctly
   const { cartCount } = useCartContext();
@@ -51,6 +56,8 @@ const Navbar = () => {
   });
 
   const [showProfileSidebar, setShowProfileSidebar] = useState(false);
+
+  const [notifications, setNotifications] = useState([]);
 
   // Avatar images based on user role and gender
   const getAvatarImage = (user) => {
@@ -84,15 +91,15 @@ const Navbar = () => {
     { to: "/about", label: "about", icon: FaInfoCircle },
     { to: "/categories", label: "categories", icon: FaBook },
     { to: "/books", label: "books", icon: FaBook },
+    { to: "/edit-client-profile", label: "Profile", icon: FaUserEdit },
     { to: "/contact", label: "contact", icon: FaEnvelope },
   ];
 
   const ownerNavLinks = [
     { to: "/dashboard", label: "dashboard", icon: FaTachometerAlt },
     { to: "/categories", label: "categories", icon: FaBook },
-    { to: "/edit-profile", label: "editProfile", icon: FaUserEdit },
-    { to: "/add-book", label: "addBook", icon: FaBook },
-    { to: "/libraries", label: "allLibraries", icon: FaBook },
+    { to: "/add-book", label: "Book", icon: FaBook },
+    { to: "/libraries", label: "Libraries", icon: FaBook },
     { to: "/all-orders", label: "orders", icon: FaBoxOpen },
   ];
 
@@ -147,6 +154,14 @@ const Navbar = () => {
     return () => window.removeEventListener("storage", handleStorage);
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetchOrders();
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [user?.id]);
+
   // Listen for changes in readNotifications to update notification count
   useEffect(() => {
     const handleStorageChange = () => {
@@ -164,6 +179,29 @@ const Navbar = () => {
       window.removeEventListener("notificationRead", handleStorageChange);
     };
   }, []);
+
+  useEffect(() => {
+    // جلب إشعارات قاعدة البيانات للعميل
+    const fetchNotifications = async () => {
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) return;
+      const user = JSON.parse(storedUser);
+      try {
+        const response = await apiService.getNotifications();
+        if (response.data && response.data.data) {
+          // فلترة الإشعارات الخاصة بالعميل فقط
+          setNotifications(
+            response.data.data.filter((n) => n.notifiable_id === user.id)
+          );
+        }
+      } catch (err) {
+        setNotifications([]);
+      }
+    };
+    if (user && user.role === "client") {
+      fetchNotifications();
+    }
+  }, [user]);
 
   const handleLogout = () => {
     localStorage.removeItem("user");
@@ -191,12 +229,33 @@ const Navbar = () => {
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }, [user, orders]);
 
+  // دمج إشعارات الطلبات مع إشعارات قاعدة البيانات
+  const allClientNotifications = useMemo(() => {
+    if (!user || user.role !== "client") return [];
+    // إشعارات الطلبات + إشعارات قاعدة البيانات
+    return [
+      ...notifications.map((n) => ({
+        id: n.id,
+        type: "db",
+        status: n.data?.status,
+        created_at: n.created_at,
+      })),
+      ...clientOrderNotifications.map((o) => ({
+        id: o.id,
+        type: "order",
+        status: o.status,
+        created_at: o.updated_at,
+      })),
+    ];
+  }, [user, notifications, clientOrderNotifications]);
+
+  // عداد غير المقروء
   const unreadNotifications = useMemo(() => {
-    if (!user || user.role !== "client" || !orders) return [];
-    return clientOrderNotifications.filter(
+    if (!user || user.role !== "client") return [];
+    return allClientNotifications.filter(
       (n) => !readNotifications.includes(n.id)
     );
-  }, [user, orders, clientOrderNotifications, readNotifications]);
+  }, [user, allClientNotifications, readNotifications]);
 
   const handleShowNotifications = async () => {
     if (!showClientNotifications) {
@@ -222,25 +281,25 @@ const Navbar = () => {
 
   return (
     <>
-      <header className='bookshare-navbar'>
-        <div className='navbar-header'>
-          <div className='navbar-content-wrapper'>
-            <div className='navbar-header-container'>
-              <Link to='/' className='company-title-link'>
-                <h1 className='company-title'>
+      <header className="bookshare-navbar">
+        <div className="navbar-header">
+          <div className="navbar-content-wrapper">
+            <div className="navbar-header-container">
+              <Link to="/" className="company-title-link">
+                <h1 className="company-title">
                   {t("book")}
-                  <span className='company-title-accent'>{t("share")}</span>
+                  <span className="company-title-accent">{t("share")}</span>
                 </h1>
-                <p className='company-subtitle'>{t("publishingExcellence")}</p>
+                <p className="company-subtitle">{t("publishingExcellence")}</p>
               </Link>
             </div>
           </div>
         </div>
 
-        <nav className='navbar-nav'>
-          <div className='navbar-content-wrapper'>
-            <div className='navbar-content'>
-              <div className='nav-links-desktop'>
+        <nav className="navbar-nav">
+          <div className="navbar-content-wrapper">
+            <div className="navbar-content">
+              <div className="nav-links-desktop">
                 {navLinks.map((link) => {
                   const isActive = navLocation.pathname === link.to;
                   const IconComponent = link.icon;
@@ -278,9 +337,9 @@ const Navbar = () => {
                 })}
               </div>
 
-              <div className='navbar-actions'>
+              <div className="navbar-actions">
                 <button
-                  className='icon-button'
+                  className="icon-button"
                   title={t("search")}
                   onClick={toggleSearch}
                 >
@@ -289,81 +348,130 @@ const Navbar = () => {
 
                 <LanguageSwitcher />
 
+                <button
+                  className="btn btn-sm btn-outline-secondary ms-2"
+                  onClick={toggleTheme}
+                  title={
+                    theme === "light"
+                      ? "Switch to dark mode"
+                      : "Switch to light mode"
+                  }
+                  style={{
+                    borderRadius: "50%",
+                    width: 36,
+                    height: 36,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  {theme === "light" ? <FaMoon /> : <FaSun />}
+                </button>
+
                 {/* Client Notifications Bell */}
                 {user?.role === "client" && (
-                  <div className='client-notification-section'>
+                  <div className="client-notification-section">
                     <button
-                      className='icon-button client-notification-btn'
+                      className="icon-button client-notification-btn"
                       title={t("notifications")}
                       onClick={handleShowNotifications}
                     >
                       <FaBell size={20} />
                       {unreadNotifications.length > 0 && (
-                        <span className='client-notification-badge'>
+                        <span className="client-notification-badge">
                           {unreadNotifications.length}
                         </span>
                       )}
                     </button>
                     {showClientNotifications && (
-                      <div className='client-notification-dropdown'>
-                        <h4>Order Updates</h4>
-                        <div className='client-notifications-scroll-container'>
-                          {unreadNotifications.length === 0 ? (
-                            <div className='no-notifications'>
+                      <div className="client-notification-dropdown">
+                        <h4>Notifications</h4>
+                        <div
+                          className="client-notifications-scroll-container"
+                          style={{ maxHeight: 320, overflowY: "auto" }}
+                        >
+                          {allClientNotifications.length === 0 ? (
+                            <div className="no-notifications">
                               No notifications
                             </div>
                           ) : (
-                            unreadNotifications
-                              .slice(0, 2)
-                              .map((order, index) => (
+                            allClientNotifications
+                              .slice(0, 10)
+                              .map((notif, index) => (
                                 <div
-                                  key={order.id}
-                                  className={`client-notification-item ${
-                                    index === 0 ? "first-notification" : ""
-                                  }`}
+                                  key={notif.id}
+                                  className={`client-notification-item${
+                                    !readNotifications.includes(notif.id)
+                                      ? " unread"
+                                      : ""
+                                  } ${index === 0 ? "first-notification" : ""}`}
                                 >
-                                  <div className='client-notification-row'>
-                                    <span className='client-notif-icon'>
-                                      {order.status === "accepted"
-                                        ? "✅"
-                                        : "❌"}
-                                    </span>
-                                    <span className='client-notification-message'>
-                                      Your order for{" "}
-                                      <span className='client-notif-book'>
-                                        "
-                                        {order.order_items?.[0]?.book?.title ||
-                                          "a book"}
-                                        "
-                                      </span>{" "}
-                                      was
+                                  <div className="client-notification-row">
+                                    {!readNotifications.includes(notif.id) && (
                                       <span
-                                        className={
-                                          order.status === "accepted"
-                                            ? "notif-accepted"
-                                            : "notif-rejected"
-                                        }
-                                      >
-                                        {order.status === "accepted"
-                                          ? " accepted"
-                                          : " rejected"}
-                                      </span>
+                                        className="notif-dot"
+                                        style={{
+                                          display: "inline-block",
+                                          width: 8,
+                                          height: 8,
+                                          background: "#3b82f6",
+                                          borderRadius: "50%",
+                                          marginRight: 8,
+                                        }}
+                                      ></span>
+                                    )}
+                                    <span className="client-notif-icon">
+                                      {notif.status === "accepted"
+                                        ? "✅"
+                                        : notif.status === "rejected"
+                                        ? "❌"
+                                        : "🔔"}
+                                    </span>
+                                    <span className="client-notification-message">
+                                      {notif.type === "order" ? (
+                                        <>
+                                          Your order was
+                                          <span
+                                            className={
+                                              notif.status === "accepted"
+                                                ? "notif-accepted"
+                                                : notif.status === "rejected"
+                                                ? "notif-rejected"
+                                                : ""
+                                            }
+                                          >
+                                            {notif.status
+                                              ? ` ${notif.status}`
+                                              : ""}
+                                          </span>
+                                        </>
+                                      ) : notif.status ? (
+                                        `Order ${notif.status}`
+                                      ) : (
+                                        "Notification"
+                                      )}
                                     </span>
                                     {index === 0 && (
-                                      <span className='new-badge'>new</span>
+                                      <span className="new-badge">new</span>
                                     )}
                                   </div>
-                                  <div className='client-notification-meta'>
+                                  <div className="client-notification-meta">
                                     <small>
-                                      {new Date(
-                                        order.updated_at
-                                      ).toLocaleString()}
+                                      {notif.created_at
+                                        ? new Date(
+                                            notif.created_at
+                                          ).toLocaleString()
+                                        : ""}
                                     </small>
                                     <Link
-                                      to={`/orders/${order.id}`}
-                                      className='client-notification-link-btn'
+                                      to={
+                                        notif.type === "order"
+                                          ? `/orders/${notif.id}`
+                                          : "/client-notifications"
+                                      }
+                                      className="client-notification-link-btn"
                                       onClick={() =>
-                                        handleNotificationView(order.id)
+                                        handleNotificationView(notif.id)
                                       }
                                     >
                                       View
@@ -373,17 +481,15 @@ const Navbar = () => {
                               ))
                           )}
                         </div>
-                        {unreadNotifications.length > 0 && (
-                          <div className='client-view-all-notifications'>
-                            <Link
-                              to='/client-notifications'
-                              className='client-view-all-link'
-                            >
-                              View All Notifications (
-                              {unreadNotifications.length})
-                            </Link>
-                          </div>
-                        )}
+                        <div className="client-view-all-notifications">
+                          <Link
+                            to="/client-notifications"
+                            className="client-view-all-link"
+                          >
+                            View All Notifications (
+                            {allClientNotifications.length})
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -392,37 +498,37 @@ const Navbar = () => {
                 {user?.role !== "admin" && !isLibraryOwner && (
                   <>
                     <button
-                      className='icon-button wishlist-badge'
+                      className="icon-button wishlist-badge"
                       title={t("wishlist")}
                       onClick={() => handleProtectedAction("/wishlist")}
                     >
                       <FaHeart size={18} />
                       {wishlistCount > 0 && (
-                        <span className='wishlist-count'>{wishlistCount}</span>
+                        <span className="wishlist-count">{wishlistCount}</span>
                       )}
                     </button>
 
                     <button
-                      className='icon-button order-badge'
+                      className="icon-button order-badge"
                       title={t("orders")}
                       onClick={() => handleProtectedAction("/orders")}
                     >
                       <FaBoxOpen size={18} />
                       {pendingOrdersCount > 0 && (
-                        <span className='order-count'>
+                        <span className="order-count">
                           {pendingOrdersCount}
                         </span>
                       )}
                     </button>
 
                     <button
-                      className='icon-button cart-badge'
+                      className="icon-button cart-badge"
                       title={t("cart")}
                       onClick={() => handleProtectedAction("/cart")}
                     >
                       <FaShoppingCart size={18} />
                       {cartCount > 0 && (
-                        <span className='cart-count'>{cartCount}</span>
+                        <span className="cart-count">{cartCount}</span>
                       )}
                     </button>
                   </>
@@ -431,7 +537,7 @@ const Navbar = () => {
                 {isLibraryOwner && (
                   <>
                     <button
-                      className='icon-button'
+                      className="icon-button"
                       title={t("dashboard")}
                       onClick={() => navigate("/dashboard")}
                       style={{
@@ -442,7 +548,7 @@ const Navbar = () => {
                       <FaBook size={18} />
                     </button>
                     <button
-                      className='icon-button'
+                      className="icon-button"
                       title={t("editProfile")}
                       onClick={() => navigate("/edit-profile")}
                       style={{
@@ -455,24 +561,24 @@ const Navbar = () => {
                   </>
                 )}
 
-                <div className='auth-buttons-desktop'>
+                <div className="auth-buttons-desktop">
                   {!user ? (
                     <>
-                      <Link to='/login' className='btn btn-outline'>
+                      <Link to="/login" className="btn btn-outline">
                         {t("signIn")}
                       </Link>
-                      <Link to='/register' className='btn btn-primary'>
+                      <Link to="/register" className="btn btn-primary">
                         {t("register")}
                       </Link>
                     </>
                   ) : (
                     <>
-                      <div className='user-avatar-section'>
+                      <div className="user-avatar-section">
                         <img
                           key={avatarKey}
                           src={avatarImage}
-                          alt='User Avatar'
-                          className='user-avatar'
+                          alt="User Avatar"
+                          className="user-avatar"
                           style={{
                             width: "40px",
                             height: "40px",
@@ -484,15 +590,15 @@ const Navbar = () => {
                             marginRight: 8,
                           }}
                           onMouseOver={(e) => {
-                            e.target.style.transform = "scale(1.1)";
+                            e.currentTarget.style.transform = "scale(1.1)";
                           }}
                           onMouseOut={(e) => {
-                            e.target.style.transform = "scale(1)";
+                            e.currentTarget.style.transform = "scale(1)";
                           }}
                           onClick={() => setIsOpen(true)}
                         />
                         <div
-                          className='user-info'
+                          className="user-info"
                           style={{
                             display: "flex",
                             flexDirection: "column",
@@ -549,7 +655,7 @@ const Navbar = () => {
                 </div>
 
                 <button
-                  className='mobile-menu-toggle icon-button'
+                  className="mobile-menu-toggle icon-button"
                   onClick={toggleMobileMenu}
                   title={t("menu")}
                 >
@@ -572,28 +678,28 @@ const Navbar = () => {
       ></div>
 
       <div className={`mobile-menu ${isOpen ? "open" : ""}`}>
-        <div className='mobile-menu-content'>
+        <div className="mobile-menu-content">
           <button
-            className='icon-button mobile-close-button'
+            className="icon-button mobile-close-button"
             onClick={closeMobileMenu}
             title={t("closeMenu")}
           >
             <FaTimes size={20} />
           </button>
 
-          <div className='mobile-auth-section'>
+          <div className="mobile-auth-section">
             {!user ? (
               <>
                 <Link
-                  to='/register'
-                  className='btn btn-primary'
+                  to="/register"
+                  className="btn btn-primary"
                   onClick={closeMobileMenu}
                 >
                   {t("register")}
                 </Link>
                 <Link
-                  to='/login'
-                  className='btn btn-outline'
+                  to="/login"
+                  className="btn btn-outline"
                   onClick={closeMobileMenu}
                 >
                   {t("signIn")}
@@ -602,7 +708,7 @@ const Navbar = () => {
             ) : (
               <>
                 <div
-                  className='mobile-user-avatar-section'
+                  className="mobile-user-avatar-section"
                   style={{
                     display: "flex",
                     flexDirection: "column",
@@ -612,8 +718,8 @@ const Navbar = () => {
                   <img
                     key={avatarKey}
                     src={avatarImage}
-                    alt='User Avatar'
-                    className='mobile-user-avatar'
+                    alt="User Avatar"
+                    className="mobile-user-avatar"
                     style={{
                       width: "50px",
                       height: "50px",
@@ -652,7 +758,7 @@ const Navbar = () => {
                   </span>
                 </div>
                 <button
-                  className='btn'
+                  className="btn"
                   style={{
                     background: "#EF4444",
                     color: "white",
@@ -672,7 +778,7 @@ const Navbar = () => {
             )}
           </div>
 
-          <div className='mobile-nav-links'>
+          <div className="mobile-nav-links">
             {navLinks.map((link) => {
               const isActive = navLocation.pathname === link.to;
               const IconComponent = link.icon;
@@ -695,33 +801,33 @@ const Navbar = () => {
             })}
           </div>
 
-          <div className='mobile-account-section'>
+          <div className="mobile-account-section">
             {!isLibraryOwner ? (
               <>
                 <Link
-                  to='/wishlist'
-                  className='mobile-account-link'
+                  to="/wishlist"
+                  className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
                   {t("wishlist")} ({wishlistCount})
                 </Link>
                 <Link
-                  to='/cart'
-                  className='mobile-account-link'
+                  to="/cart"
+                  className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
                   {t("cart")} ({cartCount})
                 </Link>
                 <Link
-                  to='/orders'
-                  className='mobile-account-link'
+                  to="/orders"
+                  className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
                   {t("orders")} ({pendingOrdersCount})
                 </Link>
                 <Link
-                  to='/client-notifications'
-                  className='mobile-account-link'
+                  to="/client-notifications"
+                  className="mobile-account-link"
                   onClick={closeMobileMenu}
                 >
                   <FaBell size={16} style={{ marginRight: "0.5rem" }} />
@@ -731,8 +837,8 @@ const Navbar = () => {
             ) : (
               <>
                 <Link
-                  to='/dashboard'
-                  className='mobile-account-link'
+                  to="/dashboard"
+                  className="mobile-account-link"
                   onClick={closeMobileMenu}
                   style={{ color: "#3B82F6", fontWeight: 600 }}
                 >
@@ -743,8 +849,8 @@ const Navbar = () => {
                   {t("dashboard")}
                 </Link>
                 <Link
-                  to='/edit-profile'
-                  className='mobile-account-link'
+                  to="/edit-profile"
+                  className="mobile-account-link"
                   onClick={closeMobileMenu}
                   style={{ color: "#10B981", fontWeight: 600 }}
                 >
@@ -759,7 +865,7 @@ const Navbar = () => {
 
       {showProfileSidebar && (
         <div
-          className='profile-sidebar-overlay'
+          className="profile-sidebar-overlay"
           onClick={() => setShowProfileSidebar(false)}
           style={{
             position: "fixed",
@@ -772,7 +878,7 @@ const Navbar = () => {
           }}
         >
           <div
-            className='profile-sidebar'
+            className="profile-sidebar"
             onClick={(e) => e.stopPropagation()}
             style={{
               position: "fixed",
@@ -820,7 +926,7 @@ const Navbar = () => {
             >
               <img
                 src={avatarImage}
-                alt='User Avatar'
+                alt="User Avatar"
                 style={{
                   width: 70,
                   height: 70,
@@ -861,7 +967,7 @@ const Navbar = () => {
               }}
             />
             <button
-              className='btn'
+              className="btn"
               style={{
                 background: "#EF4444",
                 color: "white",
