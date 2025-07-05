@@ -26,6 +26,7 @@ import { useWishlistContext } from "../../contexts/WishlistContext";
 import { useOrderContext } from "../../contexts/OrderContext";
 import useTranslation from "../../hooks/useTranslation";
 import LanguageSwitcher from "../shared/LanguageSwitcher";
+import apiService from '../../services/api';
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
@@ -51,6 +52,8 @@ const Navbar = () => {
   });
 
   const [showProfileSidebar, setShowProfileSidebar] = useState(false);
+
+  const [notifications, setNotifications] = useState([]);
 
   // Avatar images based on user role and gender
   const getAvatarImage = (user) => {
@@ -165,6 +168,27 @@ const Navbar = () => {
     };
   }, []);
 
+  useEffect(() => {
+    // جلب إشعارات قاعدة البيانات للعميل
+    const fetchNotifications = async () => {
+      const storedUser = localStorage.getItem('user');
+      if (!storedUser) return;
+      const user = JSON.parse(storedUser);
+      try {
+        const response = await apiService.getNotifications();
+        if (response.data && response.data.data) {
+          // فلترة الإشعارات الخاصة بالعميل فقط
+          setNotifications(response.data.data.filter(n => n.notifiable_id === user.id));
+        }
+      } catch (err) {
+        setNotifications([]);
+      }
+    };
+    if (user && user.role === 'client') {
+      fetchNotifications();
+    }
+  }, [user]);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -191,12 +215,23 @@ const Navbar = () => {
       .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
   }, [user, orders]);
 
+  // دمج إشعارات الطلبات مع إشعارات قاعدة البيانات
+  const allClientNotifications = useMemo(() => {
+    if (!user || user.role !== 'client') return [];
+    // إشعارات الطلبات + إشعارات قاعدة البيانات
+    return [
+      ...notifications.map(n => ({ id: n.id, type: 'db', status: n.data?.status, created_at: n.created_at })),
+      ...clientOrderNotifications.map(o => ({ id: o.id, type: 'order', status: o.status, created_at: o.updated_at }))
+    ];
+  }, [user, notifications, clientOrderNotifications]);
+
+  // عداد غير المقروء
   const unreadNotifications = useMemo(() => {
-    if (!user || user.role !== "client" || !orders) return [];
-    return clientOrderNotifications.filter(
+    if (!user || user.role !== "client") return [];
+    return allClientNotifications.filter(
       (n) => !readNotifications.includes(n.id)
     );
-  }, [user, orders, clientOrderNotifications, readNotifications]);
+  }, [user, allClientNotifications, readNotifications]);
 
   const handleShowNotifications = async () => {
     if (!showClientNotifications) {
@@ -306,48 +341,40 @@ const Navbar = () => {
                     </button>
                     {showClientNotifications && (
                       <div className='client-notification-dropdown'>
-                        <h4>Order Updates</h4>
-                        <div className='client-notifications-scroll-container'>
-                          {unreadNotifications.length === 0 ? (
-                            <div className='no-notifications'>
-                              No notifications
-                            </div>
+                        <h4>Notifications</h4>
+                        <div className='client-notifications-scroll-container' style={{ maxHeight: 320, overflowY: 'auto' }}>
+                          {allClientNotifications.length === 0 ? (
+                            <div className='no-notifications'>No notifications</div>
                           ) : (
-                            unreadNotifications
-                              .slice(0, 2)
-                              .map((order, index) => (
+                            allClientNotifications
+                              .slice(0, 10)
+                              .map((notif, index) => (
                                 <div
-                                  key={order.id}
-                                  className={`client-notification-item ${
-                                    index === 0 ? "first-notification" : ""
-                                  }`}
+                                  key={notif.id}
+                                  className={`client-notification-item${!readNotifications.includes(notif.id) ? " unread" : ""} ${index === 0 ? "first-notification" : ""}`}
                                 >
                                   <div className='client-notification-row'>
+                                    {!readNotifications.includes(notif.id) && (
+                                      <span className="notif-dot" style={{ display: 'inline-block', width: 8, height: 8, background: '#3b82f6', borderRadius: '50%', marginRight: 8 }}></span>
+                                    )}
                                     <span className='client-notif-icon'>
-                                      {order.status === "accepted"
+                                      {notif.status === "accepted"
                                         ? "✅"
-                                        : "❌"}
+                                        : notif.status === "rejected"
+                                        ? "❌"
+                                        : "🔔"}
                                     </span>
                                     <span className='client-notification-message'>
-                                      Your order for{" "}
-                                      <span className='client-notif-book'>
-                                        "
-                                        {order.order_items?.[0]?.book?.title ||
-                                          "a book"}
-                                        "
-                                      </span>{" "}
-                                      was
-                                      <span
-                                        className={
-                                          order.status === "accepted"
-                                            ? "notif-accepted"
-                                            : "notif-rejected"
-                                        }
-                                      >
-                                        {order.status === "accepted"
-                                          ? " accepted"
-                                          : " rejected"}
-                                      </span>
+                                      {notif.type === 'order' ? (
+                                        <>
+                                          Your order was
+                                          <span className={notif.status === "accepted" ? "notif-accepted" : notif.status === "rejected" ? "notif-rejected" : ""}>
+                                            {notif.status ? ` ${notif.status}` : ''}
+                                          </span>
+                                        </>
+                                      ) : (
+                                        notif.status ? `Order ${notif.status}` : 'Notification'
+                                      )}
                                     </span>
                                     {index === 0 && (
                                       <span className='new-badge'>new</span>
@@ -355,16 +382,12 @@ const Navbar = () => {
                                   </div>
                                   <div className='client-notification-meta'>
                                     <small>
-                                      {new Date(
-                                        order.updated_at
-                                      ).toLocaleString()}
+                                      {notif.created_at ? new Date(notif.created_at).toLocaleString() : ''}
                                     </small>
                                     <Link
-                                      to={`/orders/${order.id}`}
+                                      to={notif.type === 'order' ? `/orders/${notif.id}` : '/client-notifications'}
                                       className='client-notification-link-btn'
-                                      onClick={() =>
-                                        handleNotificationView(order.id)
-                                      }
+                                      onClick={() => handleNotificationView(notif.id)}
                                     >
                                       View
                                     </Link>
@@ -373,17 +396,14 @@ const Navbar = () => {
                               ))
                           )}
                         </div>
-                        {unreadNotifications.length > 0 && (
-                          <div className='client-view-all-notifications'>
-                            <Link
-                              to='/client-notifications'
-                              className='client-view-all-link'
-                            >
-                              View All Notifications (
-                              {unreadNotifications.length})
-                            </Link>
-                          </div>
-                        )}
+                        <div className='client-view-all-notifications'>
+                          <Link
+                            to='/client-notifications'
+                            className='client-view-all-link'
+                          >
+                            View All Notifications ({allClientNotifications.length})
+                          </Link>
+                        </div>
                       </div>
                     )}
                   </div>
