@@ -28,9 +28,12 @@ export const useWishlist = (userId) => {
                 localStorage.removeItem('user');
                 navigate('/login', { state: { from: window.location.pathname } });
             }
-            setError(err.response?.data?.message || err.message);
+            const message = err.response?.data?.message || err.message;
+            console.error('fetchWishlist error:', message, err.response?.data || err);
+            setError(message);
             setWishlistItems([]);
-            throw err;
+            // Do not re-throw to avoid uncaught promise rejections in callers
+            return [];
         } finally {
             setLoading(false);
         }

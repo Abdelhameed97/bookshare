@@ -27,6 +27,7 @@ import CustomButton from '../components/shared/CustomButton';
 import Navbar from '../components/HomePage/Navbar';
 import Footer from '../components/HomePage/Footer';
 import StripeWrapper from '../components/StripeWrapper';
+import PayPalButton from '../components/PayPalButton';
 import '../style/PaymentPage.css';
 
 const PaymentDetailsPage = () => {
@@ -118,7 +119,6 @@ const PaymentDetailsPage = () => {
         if (!isOrderAccepted) return;
 
         try {
-            // تحديث طريقة الدفع أولاً
             await updatePaymentMethod(order.id, selectedMethod);
 
             if (selectedMethod === 'cash') {
@@ -160,9 +160,17 @@ const PaymentDetailsPage = () => {
     };
     const handlePayPalPayment = async () => {
         if (!isOrderAccepted) return;
-
+        if (!order || !order.id) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Invalid Order',
+                text: 'لا يوجد طلب صالح للدفع أو الطلب غير موجود.'
+            });
+            return;
+        }
         try {
             setProcessing(true);
+            console.log("PayPal order.id:", order.id);
             const result = await createPayPalPayment(order.id);
 
             if (result.success && result.approval_url) {
@@ -369,14 +377,14 @@ const PaymentDetailsPage = () => {
                                                 onError={handlePaymentError}
                                             />
                                         ) : selectedMethod === 'paypal' ? (
-                                            <CustomButton
-                                                variant="success"
-                                                onClick={handlePayPalPayment}
-                                                disabled={processing}
-                                                className="w-100"
-                                            >
-                                                {processing ? 'Processing...' : 'Pay with PayPal'}
-                                            </CustomButton>
+                                            <div className="d-flex flex-column align-items-center">
+                                                <PayPalButton
+                                                    amount={order.total_price || order.total}
+                                                    onSuccess={handlePaymentSuccess}
+                                                    onError={handlePaymentError}
+                                                />
+                                                <div className="text-muted small mt-2">قد يستغرق تحميل زر بايبال بضع ثوانٍ...</div>
+                                            </div>
                                         ) : (
                                             <CustomButton
                                                 variant="success"

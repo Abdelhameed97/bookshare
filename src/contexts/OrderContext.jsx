@@ -4,6 +4,7 @@ import React, {
   useState,
   useEffect,
   useMemo,
+  useRef,
 } from "react";
 import api from "../services/api";
 import { useNavigate } from "react-router-dom";
@@ -25,11 +26,15 @@ export const OrderProvider = ({ children }) => {
   const navigate = useNavigate();
 
   const user = JSON.parse(localStorage.getItem("user") || "null");
+  const isFetching = useRef(false);
 
   const fetchOrders = async () => {
+    if (isFetching.current) return;
+    isFetching.current = true;
     if (!user?.id) {
       setOrders([]);
       setLoading(false);
+      isFetching.current = false;
       return;
     }
 
@@ -60,6 +65,7 @@ export const OrderProvider = ({ children }) => {
       setOrders([]);
     } finally {
       setLoading(false);
+      isFetching.current = false;
     }
   };
 
@@ -111,9 +117,10 @@ export const OrderProvider = ({ children }) => {
 
     window.addEventListener("storage", handleStorageChange);
 
+    // Poll orders every 60s instead of every 1s to avoid overwhelming the API
     const interval = setInterval(() => {
       fetchOrders();
-    }, 1000);
+    }, 60000);
 
     return () => {
       window.removeEventListener("storage", handleStorageChange);

@@ -45,9 +45,12 @@ export const WishlistProvider = ({ children }) => {
         localStorage.removeItem("user");
         navigate("/login", { state: { from: window.location.pathname } });
       }
-      setError(err.response?.data?.message || err.message);
+      const message = err.response?.data?.message || err.message;
+      console.error('WishlistContext.fetchWishlist error:', message, err.response?.data || err);
+      setError(message);
       setWishlistItems([]);
-      throw err;
+      // Don't re-throw to avoid uncaught promise rejections in components
+      return [];
     } finally {
       setLoading(false);
     }
